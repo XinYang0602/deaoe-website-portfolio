@@ -1,0 +1,10 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('src/service/phase2.js','utf8').split('// One searchable')[1].split('// Sales product picker:')[0];
+const nodes={},events={};const $=s=>nodes[s]??=( {innerHTML:'',textContent:'',classList:{add(){}},querySelectorAll:()=>[]} );
+const ctx={names:{},render(){},location:{hash:'#documents'},data:null,$,page:'',E:s=>String(s??''),party:id=>id,product:id=>({name:id}),money:n=>(n/100).toFixed(2),kinds:{sale:'销售单',purchase:'采购单'},states:{draft:'草稿',submitted:'待审核'},button:(l,a,id)=>id,table:(h,rows)=>JSON.stringify(rows),document:{addEventListener:(name,fn)=>events[name]=fn}};
+vm.createContext(ctx);vm.runInContext('// One searchable'+source,ctx);
+ctx.data={docs:[{id:'S1',kind:'sale',status:'draft',party_id:'张三'},{id:'P1',kind:'purchase',status:'submitted',party_id:'工厂'}],lines:[{doc_id:'S1',product_id:'灶具',qty:2,price_cents:1200}]};ctx.render();assert.equal($('#document-count').textContent,'共 2 张单据');
+events.input({target:{id:'document-keyword',value:'灶具'}});assert.match($('#document-results').innerHTML,/S1/);assert.doesNotMatch($('#document-results').innerHTML,/P1/);
+events.change({target:{id:'document-mode',value:'submitted'}});assert.equal($('#document-count').textContent,'共 0 张单据');
+events.input({target:{id:'document-keyword',value:''}});assert.match($('#document-results').innerHTML,/P1/);
+events.change({target:{id:'document-kind',value:'sale'}});assert.equal($('#document-count').textContent,'共 0 张单据');console.log('PASS document center: product search, status and type intersection');

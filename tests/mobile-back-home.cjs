@@ -1,0 +1,12 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('src/service/app.js','utf8').split('// Browser back / iOS edge-back')[1].split('// Customer master data')[0];
+let back, rendered=0,closed=0;const location={hash:'#inventory/sale/new'};
+const viewport={matches:true};
+const context={location,window:{addEventListener(t,f){if(t==='popstate')back=f}},matchMedia:()=>viewport,history:{replaceState(a,b,h){location.hash=h}},document:{querySelector(){return {close(){closed++}}},body:{classList:{remove(){}}}},query:'old',ready:true,render(){rendered++}};
+vm.runInNewContext('//'+source,context);
+back({state:{deaoeStaffEntry:true}});assert.equal(location.hash,'#dashboard');assert.equal(rendered,1);assert.equal(closed,1);
+location.hash='#inventory/purchase';viewport.matches=false;back({state:{deaoeStaffEntry:true}});assert.equal(location.hash,'#inventory/purchase');assert.equal(rendered,1);
+viewport.matches=true;back({state:null});assert.equal(rendered,1);
+const embedded=fs.readFileSync('src/service/phase2.js','utf8');
+assert.ok(embedded.includes("else location.replace('#'+e.data.route)"));
+console.log('PASS: mobile browser back returns home, desktop preserved, embedded route replaces history');

@@ -1,0 +1,24 @@
+# Public source snapshot: only reviewed files belong here.
+.env
+.env.*
+!.env.example
+*.sqlite*
+*.db
+*.db-*
+*.sql
+*.csv
+*.xlsx
+*.log
+*.pem
+*.key
+*.zip
+*.tar.gz
+account.json
+wechat.json
+project.private.config.json
+uploads/
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+.local-private/

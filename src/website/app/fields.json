@@ -1,0 +1,212 @@
+{
+  "hero_eyebrow": {
+    "label": "首页顶部小标题（可留空）",
+    "group": "首页",
+    "type": "text",
+    "default": "DEAOE KITCHEN · 2026"
+  },
+  "hero_title": {
+    "label": "首页标题第一行",
+    "group": "首页",
+    "type": "text",
+    "default": "净烟有度"
+  },
+  "hero_prefix": {
+    "label": "首页标题第二行 · 前半句（原“烹饪”，可留空）",
+    "group": "首页",
+    "type": "text",
+    "default": "烹饪"
+  },
+  "hero_em": {
+    "label": "首页标题第二行 · 后半句（可留空）",
+    "group": "首页",
+    "type": "text",
+    "default": "自有从容"
+  },
+  "hero_underline": {
+    "label": "首页标题红色下划线",
+    "group": "首页",
+    "type": "hero_underline",
+    "default": "em"
+  },
+  "hero_desc": {
+    "label": "首页介绍",
+    "group": "首页",
+    "type": "text",
+    "default": "德澳新一代厨房电器\n让洁净、安全与舒适，融入每一餐"
+  },
+  "hero_button_text": {
+    "label": "首页按钮文字",
+    "group": "首页",
+    "type": "text",
+    "default": "探索全系产品"
+  },
+  "product_intro": {
+    "label": "产品区域介绍",
+    "group": "产品",
+    "type": "text",
+    "default": "以克制的设计融入不同厨房空间，用稳定性能回应每一次日常烹饪。"
+  },
+  "hood_name": {
+    "label": "净烟系列油烟机：名称",
+    "group": "产品",
+    "type": "text",
+    "default": "净烟系列油烟机"
+  },
+  "hood_desc": {
+    "label": "净烟系列油烟机：介绍",
+    "group": "产品",
+    "type": "text",
+    "default": "强劲吸排 · 低噪运行 · 易清洁设计"
+  },
+  "hob_name": {
+    "label": "精控系列燃气灶：名称",
+    "group": "产品",
+    "type": "text",
+    "default": "精控系列燃气灶"
+  },
+  "hob_desc": {
+    "label": "精控系列燃气灶：介绍",
+    "group": "产品",
+    "type": "text",
+    "default": "稳定火力 · 精准调节 · 多重防护"
+  },
+  "heater_name": {
+    "label": "恒温系列热水器：名称",
+    "group": "产品",
+    "type": "text",
+    "default": "恒温系列热水器"
+  },
+  "heater_desc": {
+    "label": "恒温系列热水器：介绍",
+    "group": "产品",
+    "type": "text",
+    "default": "即开即热 · 舒适恒温 · 节能运行"
+  },
+  "brand_title": {
+    "label": "品牌标题第一行",
+    "group": "品牌",
+    "type": "text",
+    "default": "专注厨房电器"
+  },
+  "brand_em": {
+    "label": "品牌标题强调文字",
+    "group": "品牌",
+    "type": "text",
+    "default": "从容日常"
+  },
+  "brand_desc": {
+    "label": "品牌介绍",
+    "group": "品牌",
+    "type": "text",
+    "default": "德澳 DEAOE 聚焦中国家庭的真实烹饪场景，从排烟、火力到恒温热水，以扎实性能和简洁设计，打造耐用、安心、易于融入家的厨房电器。"
+  },
+  "series": {
+    "label": "核心产品系列数量",
+    "group": "品牌",
+    "type": "text",
+    "default": "3"
+  },
+  "response": {
+    "label": "服务响应",
+    "group": "品牌",
+    "type": "text",
+    "default": "24h"
+  },
+  "days": {
+    "label": "日常守护",
+    "group": "品牌",
+    "type": "text",
+    "default": "365"
+  },
+  "store_title": {
+    "label": "商城标题",
+    "group": "商城",
+    "type": "text",
+    "default": "德澳京东官方商城"
+  },
+  "store_desc": {
+    "label": "商城介绍",
+    "group": "商城",
+    "type": "text",
+    "default": "查看在售产品、优惠信息与官方售后保障"
+  },
+  "store_url": {
+    "label": "京东店铺链接",
+    "group": "商城",
+    "type": "url",
+    "default": "#"
+  },
+  "phone": {
+    "label": "客服电话",
+    "group": "联系",
+    "type": "text",
+    "default": "000-000-0000"
+  },
+  "hours": {
+    "label": "服务时间",
+    "group": "联系",
+    "type": "text",
+    "default": "09:00–18:00"
+  },
+  "email": {
+    "label": "联系邮箱",
+    "group": "联系",
+    "type": "text",
+    "default": "hello@example.com"
+  },
+  "address": {
+    "label": "门店地址",
+    "group": "联系",
+    "type": "text",
+    "default": "Demo showroom — sample address"
+  },
+  "map_url": {
+    "label": "地图链接",
+    "group": "联系",
+    "type": "url",
+    "default": "https://map.baidu.com"
+  },
+  "address_map_urls": {
+    "label": "各地址地图链接（每行对应一条地址，留空则按地址搜索）",
+    "group": "联系",
+    "type": "text",
+    "default": ""
+  },
+  "hero_image": {
+    "label": "首页背景",
+    "group": "图片",
+    "type": "image",
+    "default": "/deaoe-kitchen-hero.png"
+  },
+  "hood_image": {
+    "label": "油烟机图片",
+    "group": "图片",
+    "type": "image",
+    "default": "/deaoe-kitchen-hero.png"
+  },
+  "brand_image": {
+    "label": "品牌配图",
+    "group": "图片",
+    "type": "image",
+    "default": "/deaoe-kitchen-hero.png"
+  },
+  "hob_image": {
+    "label": "燃气灶图片",
+    "group": "图片",
+    "type": "image",
+    "default": ""
+  },
+  "heater_image": {
+    "label": "热水器图片",
+    "group": "图片",
+    "type": "image",
+    "default": ""
+  },
+  "qr_image": {
+    "label": "微信服务号二维码",
+    "group": "图片",
+    "type": "image",
+    "default": ""
+  }
+}
