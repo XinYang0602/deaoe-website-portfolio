@@ -1,8 +1,62 @@
-# DEAOE Website & Application Platform
+# DEAOE | Lightweight ERP & Product Website
 
-A full-stack PHP and JavaScript project featuring a responsive product website, a content management system, and a browser-based operations application.
+A web-based management platform for a home-appliance business: a public product website and CMS, alongside a **lightweight ERP-style system for purchasing, sales, inventory, settlement, and after-sales service**.
 
-**This is a standalone, sanitized portfolio snapshot.** It has a new Git history and contains no imported private commits, production datasets, internal operating manuals, or deployment archives. Contact fields and integration identifiers use demonstration values.
+The system helps staff answer practical questions: **What do we have in stock? Which warehouse will fulfil an order? What do customers owe us, what do we owe suppliers, and which service requests still need attention?** It brings these workflows into one desktop- and mobile-friendly workspace.
+
+## What the system does
+
+| Module | What staff can do |
+| --- | --- |
+| **Sales management** | Create sales documents, select customers and products, set quantities and prices, assign warehouses per item, and preserve delivery details. Approving a sale updates stock and records the receivable. |
+| **Purchasing & receiving** | Create purchase orders, receive goods in batches, validate received quantities, and record supplier payables. |
+| **Inventory management** | Track stock across warehouses, manage products and batches, handle transfers and returns, and perform stocktaking and inventory adjustments. |
+| **Receivables & payables** | Track amounts owed by customers and owed to suppliers, record receipts and payments, and manage advances, refunds, and allocations against documents. |
+| **Customer & supplier records** | Maintain reusable contact records for document entry and account tracking. The customer directory shares the sales customer master. |
+| **After-sales service** | Manage installation and repair requests, service status, device records, and electronic warranty cards. APIs support mini-program integration. |
+| **Product website & CMS** | Publish product categories, series, image galleries, homepage content, and brand information through a separate content-management interface. |
+
+This is a focused operational system for day-to-day appliance sales and service. Its financial module tracks settlement balances; it is not a full general-ledger, payroll, or manufacturing ERP.
+
+## How the business workflow fits together
+
+```mermaid
+flowchart LR
+    PO[Purchase order] --> GR[Goods receipt]
+    GR --> STOCK[Warehouse inventory]
+    GR --> AP[Supplier payables]
+    SO[Sales document] --> APPROVE[Sales approval]
+    STOCK --> APPROVE
+    APPROVE --> OUT[Stock deduction and outbound record]
+    APPROVE --> AR[Customer receivables]
+    AP --> PAY[Payments and settlement]
+    AR --> COLLECT[Receipts and settlement]
+    DEVICE[Device and warranty records] --> SERVICE[Installation and repair requests]
+```
+
+**Example:** a staff member creates a sale, selects a customer, adds products from one or more warehouses, and records delivery details. Approval validates stock and applies stock deductions and receivable entries within a transaction. Subsequent payments are recorded against the customer's balance. Device and warranty records support the separate after-sales workflow.
+
+## Technical structure
+
+```mermaid
+flowchart TB
+    VISITOR[Website visitors] --> WEB[Product website]
+    EDITOR[Content editors] --> CMS[CMS]
+    WEB --> CONTENT[PHP content and catalogue modules]
+    CMS --> CONTENT
+    CONTENT --> FILES[Content files and media]
+
+    STAFF[Staff on desktop or mobile] --> UI[JavaScript application workspace]
+    MINI[Mini-program client - separate project] --> API[PHP APIs and workflow modules]
+    UI --> API
+    API --> DB[(SQLite application database)]
+```
+
+The website handles public presentation and content editing. The application handles operational records through PHP APIs and SQLite. External integrations and runtime content are configured separately.
+
+## Public portfolio scope
+
+This is a standalone, sanitized source snapshot with an independent Git history. It includes generic implementation and synthetic tests, without private commits, production datasets, internal operating manuals, or deployment archives. Contact fields and integration identifiers use demonstration values.
 
 ## What this project demonstrates
 

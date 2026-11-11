@@ -2,6 +2,12 @@
 
 A concise engineering history for reviewers. Dates identify development updates, not deployments. No semantic-version tags or production release status are implied. Earlier overlapping patches are grouped by capability.
 
+## 2026-11-10 — ERP overview and diagrams
+
+- Explained the product purpose and its sales, purchasing, inventory, settlement, and after-sales modules.
+- Added business-flow and technical-structure diagrams, plus a concrete sales workflow example.
+- Clarified the scope of the lightweight ERP and the separation between public website content and application records.
+
 ## 2026-11-10 — Public portfolio baseline
 
 - Created a standalone public repository with a new root commit; no private Git history was imported.
