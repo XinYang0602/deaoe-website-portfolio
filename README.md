@@ -103,7 +103,7 @@ This runs source syntax checks and isolated regressions. Optional browser tests 
 
 ## Version control
 
-This repository starts with one independently reviewed public baseline. Earlier development milestones are summarized in the changelog, not imported as private Git commits. Subsequent public updates should use focused commits, relevant checks, and English changelog entries.
+This repository starts with one independently reviewed public baseline. Earlier development milestones are summarized in the changelog, not imported as private Git commits. Every reviewed website and application update, including small fixes, is synchronized here with focused commits, relevant checks, and English changelog entries. Only allowlisted, sanitized changes are transferred; private history and operational materials are never mirrored.
 
 A push does not deploy an application. This repository supplies no production credentials, infrastructure configuration, or operating runbook.
 

@@ -91,7 +91,7 @@ function handleMini(string $path):never{
   $db=database();miniSchema($db);$method=$_SERVER['REQUEST_METHOD'];
   if($path==='/service/mini/health'&&$method==='GET')jsonReply(200,['service'=>'deaoe-mini','configured'=>is_file(MINI_CONFIG)]);
   if($path==='/service/mini/login'&&$method==='POST'){
-   miniLimit($db,'login:'.hash('sha256',$_SERVER['REMOTE_ADDR']??'unknown'),40,600);
+   miniLimit($db,'login:'.hash('sha256',$_SERVER['REMOTE_ADDR']??'unknown'),120,600);
    $input=miniBody();$code=miniText($input,'code',256);$openid=exchangeWechatCode($code);$now=time();
    $db->exec('BEGIN IMMEDIATE');$q=$db->prepare('SELECT id FROM mini_users WHERE appid=? AND openid=?');$q->execute([MINI_APP_ID,$openid]);$id=$q->fetchColumn();$isNewUser=($id===false);
    if(!$id){$id='WX'.strtoupper(bin2hex(random_bytes(8)));$q=$db->prepare('INSERT INTO mini_users VALUES(?,?,?,?)');$q->execute([$id,MINI_APP_ID,$openid,gmdate('c')]);}
@@ -115,7 +115,7 @@ function handleMini(string $path):never{
    jsonReply(200,['user'=>miniPublicUser($db,$user['id'])]);
   }
   if($path==='/service/mini/phone'&&$method==='POST'){
-   miniLimit($db,'phone:'.$user['id'],10,3600);$input=miniBody();
+   miniLimit($db,'phone:'.$user['id'],60,3600);$input=miniBody();
    if(($input['agreed']??false)!==true)throw new InvalidArgumentException('请先同意服务与信息使用说明');
    $code=miniText($input,'code',512);[$phone,$country]=miniExchangePhone($code);
    $q=$db->prepare('INSERT OR REPLACE INTO mini_phones(user_id,phone,country_code,verified_at) VALUES(?,?,?,?)');$q->execute([$user['id'],$phone,$country,gmdate('c')]);

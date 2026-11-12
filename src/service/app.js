@@ -47,7 +47,7 @@ window.addEventListener('hashchange',()=>{query='';if(ready)render()});window.ad
 // Inventory flyout lives outside the sidebar so short screens never clip it.
 (()=>{
  const groups={
- sales:['销售管理',[['/service/inventory#sale','销售单']]],
+ sales:['销售管理',[['#inventory/sale/new','销售开单'],['/service/inventory#sale','销售单']]],
  purchasing:['采购管理',[['/service/inventory#purchase','采购订单'],['/service/inventory#receipt','采购入库'],['/service/inventory#parties','供应商与往来单位']]],
  stock:['库存管理',[['/service/inventory#balances','库存查询 / 期初归属'],['/service/inventory#products','商品档案'],['/service/inventory#warehouses','仓库管理'],['/service/inventory#operations','退换货与调拨'],['/service/inventory#counting','库存盘点'],['/service/inventory#lots','批次与分区'],['/service/inventory#serials','SN 与标签'],['/service/inventory#templates','打印模板'],['/service/inventory#ledger','库存流水'],['/service/inventory#events','操作日志']]],
  customers:['客户档案',[['#customers','客户资料'],['#cards','电子保修卡'],['#dealers','经销商管理'],['/service/inventory#parties','交易往来单位']]]

@@ -2,6 +2,14 @@
 
 A concise engineering history for reviewers. Dates identify development updates, not deployments. No semantic-version tags or production release status are implied. Earlier overlapping patches are grouped by capability.
 
+## 2026-11-11 — Incremental feature synchronization
+
+- Added a desktop shortcut that opens the sales-entry form directly.
+- Inset carousel controls to avoid the scrollbar edge, with viewport and keyboard checks.
+- Added a responsive dual-filing footer with an embedded icon; this public snapshot uses explicit demo labels and a placeholder query identifier.
+- Updated mini-program API rate limits and included isolated regression coverage.
+- Public source and English release notes now follow every reviewed update, including small fixes; private data and deployment materials remain excluded.
+
 ## 2026-11-10 — ERP overview and diagrams
 
 - Explained the product purpose and its sales, purchasing, inventory, settlement, and after-sales modules.

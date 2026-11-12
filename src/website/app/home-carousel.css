@@ -16,8 +16,8 @@
  border:0;background:rgba(0,0,0,.55);color:#fff;
  font:32px/1 Arial,sans-serif;cursor:pointer;opacity:0;pointer-events:none;
 }
-.home-carousel-arrow.is-prev{left:0;}
-.home-carousel-arrow.is-next{right:0;}
+.home-carousel-arrow.is-prev{left:max(clamp(16px,2vw,32px),env(safe-area-inset-left,0px));}
+.home-carousel-arrow.is-next{right:max(clamp(16px,2vw,32px),env(safe-area-inset-right,0px));}
 @media(any-hover:hover){
  .home-carousel:hover .home-carousel-arrow{opacity:1;pointer-events:auto;}
 }

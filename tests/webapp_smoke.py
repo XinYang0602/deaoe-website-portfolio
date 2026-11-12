@@ -72,7 +72,12 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                             frame = page.frame_locator('#inventory-workspace-frame')
                             expect(frame.get_by_role('heading', name='销售单', exact=True)).to_be_visible()
                             page.on('dialog', lambda dialog: dialog.accept())
-                            frame.locator('[data-action="new-doc"][data-id="sale"]:visible').click()
+                            if name == 'desktop':
+                                page.locator('#nav a[data-section="sales"]').hover()
+                                expect(page.locator('#inventory-flyout').get_by_role('link', name='销售单', exact=False)).to_be_visible()
+                                page.locator('#inventory-flyout').get_by_role('link', name='销售开单', exact=False).click()
+                            else:
+                                frame.locator('[data-action="new-doc"][data-id="sale"]:visible').click()
                             form = frame.locator('#doc-form')
                             form.get_by_role('button', name='保存草稿', exact=True).click()
                             expect(form.locator('.form-error')).to_contain_text('请选择客户')

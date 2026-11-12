@@ -15,6 +15,15 @@ sys.path.insert(0, str(ROOT / 'tools'))
 from preview_website import prepare, command
 
 report = Path(tempfile.mkdtemp(prefix='deaoe-website-report-'))
+def check_filings(page):
+    footer = page.locator('#deaoe-icp-filing')
+    expect(footer).to_have_count(1)
+    expect(footer.get_by_role('link', name='ICP filing (demo)')).to_have_attribute('href', 'https://beian.miit.gov.cn/')
+    police = footer.get_by_role('link', name='Public security filing (demo)')
+    expect(police).to_have_attribute('href', 'https://beian.mps.gov.cn/#/query/webSearch?code=00000000000000')
+    assert police.locator('img').evaluate('(img) => img.complete && img.naturalWidth === 20')
+    assert footer.evaluate('(el) => el.scrollWidth <= el.clientWidth')
+
 with tempfile.TemporaryDirectory(prefix='deaoe-website-test-') as tmp:
     work = Path(tmp)
     password = 'temporary-local-cms-test'
@@ -49,6 +58,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-website-test-') as tmp:
                         page.on('response', lambda response: bad_responses.append(response.url) if response.status >= 400 and not response.url.endswith('/deaoe-kitchen-hero.png') else None)
                         page.on('dialog', lambda dialog: dialog.accept())
                         page.goto(base)
+                        check_filings(page)
                         page.wait_for_load_state('networkidle')
                         expect(page.locator('h1')).to_contain_text('净烟有度')
                         assert '{{' not in page.content()
@@ -85,6 +95,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-website-test-') as tmp:
                         product_id = next(k for k, v in store['items'].items() if v['live'] and v['live']['model']==f'LOCAL-{width}')
                         assert store['items'][product_id]['live']['main'].endswith('.webp')
                         page.goto(base+'/?products=1&category=hood')
+                        check_filings(page)
                         page.wait_for_load_state('networkidle')
                         expect(page.locator('.product-card').filter(has_text=f'LOCAL-{width}')).to_have_count(1)
                         if width == 390:
@@ -94,6 +105,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-website-test-') as tmp:
                             page.keyboard.press('Escape')
                             expect(menu).to_have_attribute('aria-expanded', 'false')
                         page.goto(base+'/?product='+product_id)
+                        check_filings(page)
                         page.wait_for_load_state('networkidle')
                         expect(page.locator('body')).to_contain_text(f'LOCAL-{width}')
                         expect(page.locator('#specifications')).to_have_count(0)
