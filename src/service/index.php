@@ -52,6 +52,15 @@ if(!isset($_SESSION['user'])){
 ?>
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>管理员登录 · 服务管理平台</title><style>
 *{box-sizing:border-box}body{margin:0;background:#202733;color:#252d38;font:14px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh;display:grid;place-items:center;padding:30px}.wrap{width:400px;max-width:100%}.brand{width:235px;display:block;margin:0 auto 18px}.subtitle{text-align:center;color:#aab4c2;letter-spacing:5px;margin:0 0 35px;font-size:14px}.panel{background:#fff;border-radius:12px;padding:36px;box-shadow:0 20px 60px #0002}h1{font-size:23px;margin:0 0 10px}.intro{font-size:12px;color:#8a929d;margin-bottom:28px}label{display:block;font-size:12px;color:#606c7a;margin-bottom:19px}input{width:100%;margin-top:9px;padding:12px;border:1px solid #dfe3e8;border-radius:5px;font:inherit}input:focus{outline:2px solid #d9b3af}button{width:100%;padding:13px;border:0;border-radius:5px;background:#c84039;color:#fff;font:inherit;cursor:pointer}.error{color:#b34036;background:#fff0ee;padding:12px;font-size:12px;line-height:1.6;border-radius:5px}.foot{text-align:center;font-size:11px;color:#8d98a9;margin-top:26px;line-height:1.8}
+
+/* Mobile login: readable inputs prevent focus zoom; shrinkable grid keeps the card centered. */
+@media(max-width:600px){
+ body{grid-template-columns:minmax(0,1fr);padding:24px 16px;min-height:100svh}
+ .wrap{width:100%;max-width:400px;min-width:0;justify-self:center}
+ .brand{max-width:100%;height:auto}
+ .panel{padding:24px;min-width:0}
+ input{min-width:0;max-width:100%;font-size:16px;line-height:1.4}
+}
 </style></head><body><div class="wrap"><svg class="brand" viewBox="365 1223 7952 908" role="img" aria-label="DEAOE 德澳"><defs><filter id="white" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -0.2126 -0.7152 -0.0722 0 1"/><feComposite in2="SourceAlpha" operator="in"/></filter></defs><image href="/service/assets/deaoe-logo.png" width="8661" height="3465" filter="url(#white)"/></svg><p class="subtitle">服务管理平台</p><div class="panel"><h1>管理员登录</h1><p class="intro">登录后管理业务、电子保修卡与库存。</p><?php if($error):?><p class="error" role="alert"><?=e($error)?></p><?php endif;?><form method="post" action="/service/"><input type="hidden" name="action" value="login"><input type="hidden" name="csrf" value="<?=e($_SESSION['csrf'])?>"><label>管理员账号<input name="username" value="admin" autocomplete="username" required></label><label>登录密码<input name="password" type="password" autocomplete="current-password" placeholder="请输入管理员密码" required maxlength="256"></label><button type="submit">登录管理平台</button></form></div><p class="foot">DEAOE 德澳 · 管理员工作空间<br>仅限授权人员访问</p></div></body></html>
 <?php exit; }
 $_SESSION['last']=$now;
