@@ -336,3 +336,13 @@ main.compact-register{max-width:none;padding:16px 20px}
  #main>.panel>.head h1{font-size:25px;margin:0 0 8px}
  #main>.panel>.head .muted{font-size:13px;line-height:1.5}
 }
+
+.sale-date-filters{display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px;margin:12px 0 16px}
+.sale-date-filters label{flex:0 1 180px;min-width:0}
+.sale-date-filters input{width:100%;height:40px}
+.sale-date-filters button{min-height:40px}
+@media(max-width:700px){
+ .sale-date-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+ .sale-date-filters input{font-size:16px;min-width:0}
+ .sale-date-filters button{grid-column:1/-1;justify-self:end}
+}

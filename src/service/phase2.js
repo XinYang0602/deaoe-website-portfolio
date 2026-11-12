@@ -143,7 +143,7 @@ if(new URLSearchParams(location.search).get('embedded')==='1'&&window.parent!==w
   let status = '', store = '', term = '';
   const beforeRender = render;
   const salesRows = () => data.docs.filter(doc => {
-    if (doc.kind !== 'sale' || (status && doc.status !== status) || (store && doc.warehouse_id !== store && !data.lines.some(l=>l.doc_id===doc.id&&l.warehouse_id===store))) return false;
+    if (doc.kind !== 'sale' || !saleDateMatches(doc) || (status && doc.status !== status) || (store && doc.warehouse_id !== store && !data.lines.some(l=>l.doc_id===doc.id&&l.warehouse_id===store))) return false;
     const lines = data.lines.filter(line => line.doc_id === doc.id);
     const text = [doc.id, party(doc.party_id), doc.note, ...lines.map(line => {
       const item = product(line.product_id);
@@ -162,7 +162,7 @@ if(new URLSearchParams(location.search).get('embedded')==='1'&&window.parent!==w
     panel.innerHTML = `<div class="sales-title"><a href="/service/#applications" aria-label="返回工作台">‹</a><h2>销售单</h2><button data-action="new-doc" data-id="sale" aria-label="新增销售单">新增</button></div>
       <input id="sales-query" type="search" placeholder="搜索单号、客户、商品、备注" value="${E(term)}">
       <div class="sales-filters"><label>状态<select id="sales-status"><option value="">全部状态</option>${Object.entries(states).map(([value,label]) => `<option value="${value}" ${status===value?'selected':''}>${label}</option>`).join('')}</select></label>
-      <label>仓库<select id="sales-store"><option value="">全部仓库</option>${opts(data.warehouses,'id','name',store)}</select></label></div><div id="sales-cards"></div>`;
+      <label>仓库<select id="sales-store"><option value="">全部仓库</option>${opts(data.warehouses,'id','name',store)}</select></label></div>${saleDateControls()}<div id="sales-cards"></div>`;
     paintCards();
   }
   function paintCards() {

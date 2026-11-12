@@ -2,6 +2,11 @@
 
 A concise engineering history for reviewers. Dates identify development updates, not deployments. No semantic-version tags or production release status are implied. Earlier overlapping patches are grouped by capability.
 
+## 2026-11-12 — Sales date range filtering
+
+- Filter sales by inclusive business-date ranges on desktop and mobile; support open-ended ranges and clearing dates.
+- Synthetic sales verify same-day, open-ended, invalid ranges and reset.
+
 ## 2026-11-12 — Stable desktop workspace layout
 
 - Align compact and standard workspace panels, toolbars and headings; reset desktop scroll on route changes only.
