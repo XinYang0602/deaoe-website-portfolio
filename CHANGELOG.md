@@ -2,6 +2,11 @@
 
 A concise engineering history for reviewers. Dates identify development updates, not deployments. No semantic-version tags or production release status are implied. Earlier overlapping patches are grouped by capability.
 
+## 2026-11-12 — Collapsible mobile sales filters
+
+- Collapse mobile sales filters by default, show selected criteria in the summary, and place sorting controls side by side.
+- Keep search visible and preserve expansion during filter updates. Desktop layout is unchanged; date and sorting browser regressions cover expansion.
+
 ## 2026-11-12 — Document date sorting
 
 - Shared ascending/descending business-date sorting for desktop/mobile sales and purchases, with document-number tie breaks and highlighted controls.

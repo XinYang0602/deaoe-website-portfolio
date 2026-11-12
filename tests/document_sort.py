@@ -67,6 +67,9 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     for kind in ['sale','purchase']:
                         page.evaluate('(kind)=>location.hash="inventory/"+kind',kind)
                         frame=page.frame_locator('#inventory-workspace-frame')
+                        if width<700 and kind=='sale':
+                            expect(frame.locator('#sales-filter-panel')).not_to_have_attribute('open','')
+                            frame.locator('#sales-filter-panel>summary').click()
                         expect(frame.locator('[data-document-sort="asc"]:visible')).to_be_visible()
                         child=page.locator('#inventory-workspace-frame').element_handle().content_frame()
                         child.evaluate("(kind)=>{data.docs=['2026-11-02','2026-11-01','2026-11-03','2026-11-02'].map((date,i)=>({id:'SORT-'+i,kind,date,status:'draft',party_id:'TEST-C',warehouse_id:'TEST-W',note:''}));render()}",kind)

@@ -140,7 +140,7 @@ if(new URLSearchParams(location.search).get('embedded')==='1'&&window.parent!==w
 // Mobile sales: separate creation and record browsing; reuse server mutations.
 (() => {
   const mobile = window.matchMedia('(max-width: 700px)');
-  let status = '', store = '', term = '';
+  let status = '', store = '', term = '', filtersOpen=false;
   const beforeRender = render;
   const salesRows = () => data.docs.filter(doc => {
     if (doc.kind !== 'sale' || !saleDateMatches(doc) || (status && doc.status !== status) || (store && doc.warehouse_id !== store && !data.lines.some(l=>l.doc_id===doc.id&&l.warehouse_id===store))) return false;
@@ -161,8 +161,9 @@ if(new URLSearchParams(location.search).get('embedded')==='1'&&window.parent!==w
     }
     panel.innerHTML = `<div class="sales-title"><a href="/service/#applications" aria-label="返回工作台">‹</a><h2>销售单</h2><button data-action="new-doc" data-id="sale" aria-label="新增销售单">新增</button></div>
       <input id="sales-query" type="search" placeholder="搜索单号、客户、商品、备注" value="${E(term)}">
-      <div class="sales-filters"><label>状态<select id="sales-status"><option value="">全部状态</option>${Object.entries(states).map(([value,label]) => `<option value="${value}" ${status===value?'selected':''}>${label}</option>`).join('')}</select></label>
-      <label>仓库<select id="sales-store"><option value="">全部仓库</option>${opts(data.warehouses,'id','name',store)}</select></label></div>${saleDateControls()}${documentSortControls('sale')}<div id="sales-cards"></div>`;
+      <details id="sales-filter-panel" ${filtersOpen?'open':''}><summary>筛选与排序 <span>${[status?states[status]:'',store?warehouse(store):'',saleDates.from||saleDates.to?'日期已选':'',documentSort.sale==='asc'?'从旧到新':'从新到旧'].filter(Boolean).map(E).join(' · ')}</span></summary><div class="sales-filters"><label>状态<select id="sales-status"><option value="">全部状态</option>${Object.entries(states).map(([value,label]) => `<option value="${value}" ${status===value?'selected':''}>${label}</option>`).join('')}</select></label>
+      <label>仓库<select id="sales-store"><option value="">全部仓库</option>${opts(data.warehouses,'id','name',store)}</select></label></div>${saleDateControls()}${documentSortControls('sale')}</details><div id="sales-cards"></div>`;
+    panel.querySelector('#sales-filter-panel').addEventListener('toggle',event=>{filtersOpen=event.currentTarget.open;});
     paintCards();
   }
   function paintCards() {
@@ -186,8 +187,8 @@ if(new URLSearchParams(location.search).get('embedded')==='1'&&window.parent!==w
     updateTotal();
   });
   document.addEventListener('change', event => {
-    if (event.target.id === 'sales-status') { status = event.target.value; paintCards(); }
-    if (event.target.id === 'sales-store') { store = event.target.value; paintCards(); }
+    if (event.target.id === 'sales-status') { status = event.target.value; paintSales(); }
+    if (event.target.id === 'sales-store') { store = event.target.value; paintSales(); }
     updateContact();
     updateTotal();
   });
