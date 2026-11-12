@@ -2,6 +2,11 @@
 
 A concise engineering history for reviewers. Dates identify development updates, not deployments. No semantic-version tags or production release status are implied. Earlier overlapping patches are grouped by capability.
 
+## 2026-11-12 — Compact desktop balance lists
+
+- Display one party per row with aligned names, amounts and actions; preserve summary tiles and mobile layout.
+- Synthetic 41-party layout coverage checks vertical flow, scrolling and viewport overflow.
+
 ## 2026-11-12 — Faster workspace navigation
 
 - Preload one hidden ERP workspace after the dashboard is ready.

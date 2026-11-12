@@ -26,7 +26,7 @@ names.finance = '账款管理';
   const amount = (id,bucket) => Number((bucket==='ar' ? data.finance.balances.find(b=>b.party_id===id) : data.finance.aux_balances.find(b=>b.party_id===id&&b.bucket===bucket))?.cents || 0);
   const pending = (id,customer) => (customer?data.finance.sales:data.finance.purchases).filter(f=>f.state==='pending'&&(f.party_id||data.docs.find(d=>d.id===f.sale_id)?.party_id)===id);
   const matches = text => !search || String(text).toLowerCase().includes(search.toLowerCase());
-  const section = (title,rows) => `<h2>${title}</h2><div class="finance-grid">${rows.filter(Boolean).join('')||'<p class="muted">暂无记录</p>'}</div>`;
+  const section = (title,rows,extraClass='') => `<h2>${title}</h2><div class="finance-grid ${extraClass}">${rows.filter(Boolean).join('')||'<p class="muted">暂无记录</p>'}</div>`;
   render = function () {
     previous();
     const isFinance=page==='finance'||Object.keys(buckets).some(k=>page==='finance_'+k);
@@ -79,7 +79,7 @@ names.finance = '账款管理';
       }
       return `<article class="finance-card"><h3>${E(party(e.party_id))} · ${E(labels[e.kind]||e.kind)}</h3><strong>${Number(e.cents)>=0?'+':'−'}¥${money(Math.abs(Number(e.cents)))}</strong><p>${E(e.created_at)} · ${E(e.account||'非现金记账')}</p><p>${E(e.note)}</p><small>${ref?'关联单据：'+E(ref):'往来汇总记录，未指定单据'}<br>${E(e.source)}</small></article>`;
     });
-    $('#main section.panel').innerHTML=head('往来余额与收付款',button('收付款账户设置','fin-accounts'))+`<details class="finance-help"><summary>记账说明</summary><p>销售审核记应收，采购入库审核记应付。预收、预付单独管理，抵扣时选择单据；历史付款不会自动分摊到单据。</p></details>`+`<div class="finance-summary-grid">${totals}</div>`+section(buckets[tab]+' · '+(customer?'客户':'供应商'),cards)+(history.some(Boolean)?section('历史'+(customer?'销售应收':'采购应付')+'待核对',history):'')+(replacements.length?section('退货待补发',replacements):'')+`<details class="finance-details"><summary>${buckets[tab]}流水 · ${entries.length} 条</summary>${section('＋增加余额，−减少余额',entries)}</details>`;
+    $('#main section.panel').innerHTML=head('往来余额与收付款',button('收付款账户设置','fin-accounts'))+`<details class="finance-help"><summary>记账说明</summary><p>销售审核记应收，采购入库审核记应付。预收、预付单独管理，抵扣时选择单据；历史付款不会自动分摊到单据。</p></details>`+`<div class="finance-summary-grid">${totals}</div>`+section(buckets[tab]+' · '+(customer?'客户':'供应商'),cards,'finance-party-list')+(history.some(Boolean)?section('历史'+(customer?'销售应收':'采购应付')+'待核对',history):'')+(replacements.length?section('退货待补发',replacements):'')+`<details class="finance-details"><summary>${buckets[tab]}流水 · ${entries.length} 条</summary>${section('＋增加余额，−减少余额',entries)}</details>`;
   };
   document.addEventListener('click',e=>{
     const b=e.target.closest('[data-action^="fin-"]');if(!b)return;
