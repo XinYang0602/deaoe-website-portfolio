@@ -68,6 +68,12 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     frame=page.frame_locator('#inventory-workspace-frame')
                     rows=frame.locator('.finance-party-list>.finance-card')
                     expect(rows).to_have_count(41)
+                    child=page.locator('#inventory-workspace-frame').element_handle().content_frame()
+                    child.evaluate("data.finance.balances=[{party_id:'LIST-0',cents:59900},{party_id:'LIST-1',cents:159900},{party_id:'LIST-2',cents:123456789}];render()")
+                    labels=rows.locator('.balance-label').evaluate_all('(es)=>es.map(e=>e.getBoundingClientRect().left)')
+                    numbers=rows.locator('.balance-number').evaluate_all('(es)=>es.map(e=>e.getBoundingClientRect().right)')
+                    assert max(labels)-min(labels)<1
+                    assert max(numbers)-min(numbers)<1
                     boxes=rows.evaluate_all('(es)=>es.map(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}})')
                     assert len({round(b['x']) for b in boxes})==1
                     assert all(boxes[i+1]['y']>=boxes[i]['y']+boxes[i]['h'] for i in range(40))

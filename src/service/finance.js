@@ -57,7 +57,7 @@ names.finance = '账款管理';
         if(n>0)actions+=button(customer?'登记收款':'登记付款','fin-'+(customer?'receipt':'payment'),p.id,true);
         if(n<0)actions+=button(customer?'退给客户':'收到供应商退款','fin-'+(customer?'refund':'supplier_refund'),p.id,true);
       }
-      return `<article class="finance-card"><h3>${E(p.name)}</h3><strong>${n<0?(customer?'应退客户':'待供应商退款'):buckets[tab]} ¥${money(Math.abs(n))}</strong>${count?`<p class="muted">${count} 张历史单待核对</p>`:''}<div class="finance-actions">${actions}</div></article>`;
+      return `<article class="finance-card"><h3>${E(p.name)}</h3><strong class="balance-amount"><span class="balance-label">${n<0?(customer?'应退客户':'待供应商退款'):buckets[tab]}</span><span class="balance-number">¥${money(Math.abs(n))}</span></strong>${count?`<p class="muted">${count} 张历史单待核对</p>`:''}<div class="finance-actions">${actions}</div></article>`;
     });
     const history=(customer?f.sales:f.purchases).filter(r=>r.state==='pending').map(r=>{
       const d=data.docs.find(d=>d.id===(r.sale_id||r.doc_id));if(!d||!matches(d.id+party(d.party_id)))return '';

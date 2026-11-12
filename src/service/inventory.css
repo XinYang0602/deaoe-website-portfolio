@@ -298,3 +298,26 @@ main.compact-register{max-width:none;padding:16px 20px}
  .finance-party-list>.finance-card p{grid-column:1/-1;margin:0;font-size:12px}
  .finance-party-list>.finance-card:hover{background:#fafbfc}
 }
+
+/* Shared register rhythm across documents, masters and party balances. */
+:root{--list-line:#edf0f3;--list-muted:#7e8996;--list-heading:#f7f8fa;--list-text:13px}
+#main table{font-size:var(--list-text);font-variant-numeric:tabular-nums}
+#main table th{background:var(--list-heading);color:var(--list-muted)}
+#main table td,#main table th{border-color:var(--list-line)}
+#main table button,.finance-party-list button,#mobile-sales .sales-card button,.compact-register button{border-radius:5px;font-size:13px;text-align:center;line-height:1.4}
+.finance-page .finance-party-list{border:0;border-radius:0;gap:0}
+.finance-page .finance-party-list>.finance-card{border:0;border-bottom:1px solid var(--list-line);border-radius:0;padding:12px;min-height:68px}
+.finance-page .finance-party-list>.finance-card h3{font-size:var(--list-text);font-weight:500;margin:0;line-height:1.5}
+.finance-page .finance-party-list .balance-amount{display:grid;grid-template-columns:6em minmax(0,1fr);gap:12px;align-items:baseline;font-size:var(--list-text);font-weight:500;line-height:1.5}
+.balance-label{text-align:left;color:var(--list-muted)}
+.balance-number{text-align:right;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums}
+@media(min-width:701px){
+ .finance-page .finance-party-list>.finance-card{grid-template-columns:minmax(0,1fr) 24em minmax(150px,1fr);gap:12px}
+ .finance-party-list>.finance-card .finance-actions{align-items:center}
+}
+@media(max-width:700px){
+ #mobile-sales .sales-card,.compact-register table tbody tr{border-radius:0;border-bottom:1px solid var(--list-line);margin:0;padding:12px}
+ .finance-page .finance-party-list>.finance-card{grid-template-columns:minmax(0,1fr);gap:6px}
+ .finance-page .finance-party-list .balance-amount{grid-column:1;grid-template-columns:6em minmax(0,1fr);font-size:14px}
+ .finance-page .finance-party-list .finance-actions{justify-content:flex-end}
+}
