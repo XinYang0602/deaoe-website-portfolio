@@ -125,7 +125,7 @@ function inventoryRoute(){const h=location.hash.slice(1);const route=h.replace(/
   previousRender();
   const route=inventoryRoute();
   const currentHash=location.hash;
-  if(currentHash!==lastHash){lastHash=currentHash;requestId++;}
+  if(currentHash!==lastHash){lastHash=currentHash;requestId++;if(window.matchMedia('(min-width:701px)').matches)window.scrollTo({top:0,left:0,behavior:'instant'});}
   document.body.classList.toggle('inventory-workspace',!!route);
   if(!route){if(frame){frame.hidden=true;frame.contentWindow.postMessage({type:'deaoe-inventory-dismiss'},location.origin);}return;}
   $('#main').hidden=true;

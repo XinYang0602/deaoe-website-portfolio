@@ -66,6 +66,7 @@ Short feature summaries, newest first. Details and validation notes are in the [
 | --- | --- |
 | 2026-11-12 | Simplified desktop customer balances into compact vertical lists. |
 | 2026-11-12 | Unified list styling and aligned variable-length balance amounts. |
+| 2026-11-12 | Aligned desktop workspace panels and reset scrolling between business pages. |
 | 2026-11-12 | Preloaded the ERP workspace and added short-lived memory snapshots with write invalidation. |
 | 2026-11-12 | Improved mobile login input readability and centered layout during focus. |
 | 2026-11-11 | Unified compact website footers with aligned desktop information and responsive mobile wrapping. |

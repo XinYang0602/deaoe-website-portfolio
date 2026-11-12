@@ -258,7 +258,7 @@ names.documents = '单据中心';
     previous();
     if (location.hash !== '#documents' || !data) return;
     page = 'documents';
-    $('#main').innerHTML = `<section class="panel"><h2>单据中心</h2><p class="muted">集中查询销售、采购和收发货单据，查看草稿及审核状态。</p><div class="bar"><input id="document-keyword" type="search" placeholder="单号、客户、商品或备注" value="${E(keyword)}"><label>状态<select id="document-mode"><option value="">全部单据</option>${Object.entries(states).map(([value,label])=>`<option value="${value}" ${mode===value?'selected':''}>${label}</option>`).join('')}</select></label><label>类型<select id="document-kind"><option value="">全部类型</option>${Object.entries(kinds).map(([value,label])=>`<option value="${value}" ${kind===value?'selected':''}>${label}</option>`).join('')}</select></label></div><p id="document-count" class="muted"></p><div id="document-results"></div></section>`;
+    $('#main').innerHTML = `<div class="bar"><input id="document-keyword" type="search" placeholder="单号、客户、商品或备注" value="${E(keyword)}"><label>状态<select id="document-mode"><option value="">全部单据</option>${Object.entries(states).map(([value,label])=>`<option value="${value}" ${mode===value?'selected':''}>${label}</option>`).join('')}</select></label><label>类型<select id="document-kind"><option value="">全部类型</option>${Object.entries(kinds).map(([value,label])=>`<option value="${value}" ${kind===value?'selected':''}>${label}</option>`).join('')}</select></label></div><section class="panel"><div class="head"><div><h1>单据中心</h1><div class="muted">集中查询销售、采购和收发货单据，查看草稿及审核状态。</div></div></div><p id="document-count" class="muted"></p><div id="document-results"></div></section>`;
     draw();
   };
   document.addEventListener('input', event => {if(event.target.id==='document-keyword'){keyword=event.target.value;draw();}});
@@ -414,3 +414,8 @@ names.documents = '单据中心';
     document.querySelector(`[data-register-filter="${field}"]`)?.focus();
   });
 })();
+
+// Reset only on desktop route changes, not re-renders, edits or filtering.
+window.addEventListener('hashchange',()=>{
+ if(window.matchMedia('(min-width:701px)').matches)window.scrollTo({top:0,left:0,behavior:'instant'});
+});

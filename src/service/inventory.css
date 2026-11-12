@@ -321,3 +321,18 @@ main.compact-register{max-width:none;padding:16px 20px}
  .finance-page .finance-party-list .balance-amount{grid-column:1;grid-template-columns:6em minmax(0,1fr);font-size:14px}
  .finance-page .finance-party-list .finance-actions{justify-content:flex-end}
 }
+
+/* A stable desktop workspace anchor across compact and standard registers. */
+@media screen and (min-width:701px){
+ html{scrollbar-gutter:stable}
+ main#main,main#main.compact-register{width:100%;max-width:none;margin:0;padding:24px 28px}
+ #main>.bar,#main.compact-register>.bar{min-height:44px;gap:10px;margin:0 0 20px;align-items:center}
+ #main>.bar input[type=search]{flex:0 1 320px;width:320px;min-width:160px;height:40px}
+ #main>.bar button{min-height:40px}
+ #main>.bar label{flex-direction:row;align-items:center;margin:0}
+ #main>.bar select{height:40px}
+ #main>.panel,#main.compact-register>.panel{margin:0 0 20px;padding:20px;border-radius:8px}
+ #main>.panel>.head,#main.compact-register>.panel>.head{align-items:flex-start;min-height:64px;margin:0 0 16px;gap:16px}
+ #main>.panel>.head h1{font-size:25px;margin:0 0 8px}
+ #main>.panel>.head .muted{font-size:13px;line-height:1.5}
+}
