@@ -2,6 +2,12 @@
 
 A concise engineering history for reviewers. Dates identify development updates, not deployments. No semantic-version tags or production release status are implied. Earlier overlapping patches are grouped by capability.
 
+## 2026-11-11 — Compact footers and README updates
+
+- Aligned brand, copyright, demo filing links, and auxiliary information in a compact desktop footer shared by homepage and product pages.
+- Added responsive wrapping, keyboard focus styling, and layout checks from 320 to 1920 pixels.
+- Added a dated Updates table to the README; every future small update includes both a short README entry and a detailed changelog entry.
+
 ## 2026-11-11 — Incremental feature synchronization
 
 - Added a desktop shortcut that opens the sales-entry form directly.

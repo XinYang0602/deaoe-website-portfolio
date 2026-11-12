@@ -58,6 +58,17 @@ The website handles public presentation and content editing. The application han
 
 This is a standalone, sanitized source snapshot with an independent Git history. It includes generic implementation and synthetic tests, without private commits, production datasets, internal operating manuals, or deployment archives. Contact fields and integration identifiers use demonstration values.
 
+## Updates
+
+Short feature summaries, newest first. Details and validation notes are in the [changelog](CHANGELOG.md).
+
+| Date | Update |
+| --- | --- |
+| 2026-11-11 | Unified compact website footers with aligned desktop information and responsive mobile wrapping. |
+| 2026-11-11 | Added carousel edge spacing, demo filing links, and API rate-limit regression coverage. |
+| 2026-11-10 | Added direct desktop sales entry and clarified the lightweight ERP modules with workflow diagrams. |
+| 2026-11-10 | Published the independent, sanitized source baseline with English documentation and synthetic tests. |
+
 ## What this project demonstrates
 
 - **Responsive UI engineering:** mobile navigation, compact record lists, searchable selectors, fixed-header anchor alignment, and touch-driven image galleries with reduced-motion support.
@@ -103,7 +114,7 @@ This runs source syntax checks and isolated regressions. Optional browser tests 
 
 ## Version control
 
-This repository starts with one independently reviewed public baseline. Earlier development milestones are summarized in the changelog, not imported as private Git commits. Every reviewed website and application update, including small fixes, is synchronized here with focused commits, relevant checks, and English changelog entries. Only allowlisted, sanitized changes are transferred; private history and operational materials are never mirrored.
+This repository starts with one independently reviewed public baseline. Earlier development milestones are summarized in the changelog, not imported as private Git commits. Every reviewed website and application update, including small fixes, is synchronized here with focused commits, relevant checks, and English changelog entries and a short dated summary in this README’s Updates section. Only allowlisted, sanitized changes are transferred; private history and operational materials are never mirrored.
 
 A push does not deploy an application. This repository supplies no production credentials, infrastructure configuration, or operating runbook.
 
