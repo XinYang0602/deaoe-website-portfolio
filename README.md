@@ -64,6 +64,7 @@ Short feature summaries, newest first. Details and validation notes are in the [
 
 | Date | Update |
 | --- | --- |
+| 2026-11-12 | Preloaded the ERP workspace and added short-lived memory snapshots with write invalidation. |
 | 2026-11-12 | Improved mobile login input readability and centered layout during focus. |
 | 2026-11-11 | Unified compact website footers with aligned desktop information and responsive mobile wrapping. |
 | 2026-11-11 | Added carousel edge spacing, demo filing links, and API rate-limit regression coverage. |

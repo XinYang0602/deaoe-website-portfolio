@@ -2,6 +2,12 @@
 
 A concise engineering history for reviewers. Dates identify development updates, not deployments. No semantic-version tags or production release status are implied. Earlier overlapping patches are grouped by capability.
 
+## 2026-11-12 — Faster workspace navigation
+
+- Preload one hidden ERP workspace after the dashboard is ready.
+- Reuse memory snapshots for 15 seconds, revalidate on navigation/focus, and bypass expiry after writes or explicit refresh. Deduplicate reads and retry snapshots overlapping writes. No persistent business-data cache.
+- Passed synthetic cache race/failure tests and desktop/mobile business regressions. With an injected 300ms API delay, three warm navigations issued no extra reads (7–22ms locally); this is not a production latency claim.
+
 ## 2026-11-12 — Mobile login layout
 
 - Set mobile login inputs to 16px and keep the card shrinkable and horizontally centered without disabling user zoom.

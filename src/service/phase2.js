@@ -124,6 +124,7 @@ if(new URLSearchParams(location.search).get('embedded')==='1'&&window.parent!==w
   window.dispatchEvent(new Event('inventory-navigation'));
   if($('#modal').open)$('#modal').close();
   pendingCreate=e.data.create&&['sale','purchase','issue','receipt'].includes(e.data.route)?e.data:null;
+  refreshSnapshot();
   if(location.hash.slice(1)===e.data.route)openPending();
   else location.replace('#'+e.data.route);
  });

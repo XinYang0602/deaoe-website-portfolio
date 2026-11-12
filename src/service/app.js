@@ -133,17 +133,32 @@ function inventoryRoute(){const h=location.hash.slice(1);const route=h.replace(/
   $('#nav a.active')?.classList.remove('active');
   $(`#nav a[data-section="${section}"]`)?.classList.add('active');
   $('#crumb').textContent='工作空间 / '+({accounts:'账款管理',sales:'销售管理',purchasing:'采购管理',stock:'库存管理'}[section])+' / '+label;
-  if(!frame){
-   frame=document.createElement('iframe');frame.id='inventory-workspace-frame';frame.title='进销存业务';
-   frame.addEventListener('load',()=>{
-    if(frame.contentWindow.location.pathname!=='/service/inventory'){location.assign('/service/');return;}
-    const current=inventoryRoute();if(current)frame.contentWindow.postMessage(routeMessage(current),location.origin);
-   });
-   frame.src='/service/inventory?embedded=1#'+route;
-   $('#main').after(frame);
-  }else{
-   frame.hidden=false;
-   frame.contentWindow.postMessage(routeMessage(route),location.origin);
+  ensureFrame(route);
+  frame.hidden=false;
+  frame.contentWindow.postMessage(routeMessage(route),location.origin);
+ };
+ // Warm one hidden workspace after the shell is ready, never create a second frame.
+ function ensureFrame(route='balances'){
+  if(frame)return;
+  frame=document.createElement('iframe');frame.id='inventory-workspace-frame';frame.title='进销存业务';frame.hidden=true;
+  frame.addEventListener('load',()=>{
+   if(frame.contentWindow.location.pathname!=='/service/inventory'){
+    if(inventoryRoute())location.assign('/service/');else{frame.remove();frame=null;}
+    return;
+   }
+   const current=inventoryRoute();if(current)frame.contentWindow.postMessage(routeMessage(current),location.origin);
+  });
+  frame.src='/service/inventory?embedded=1#'+route;
+  $('#main').after(frame);
+ }
+ let warmScheduled=false;
+ const renderBeforeWarm=render;
+ render=function(){
+  renderBeforeWarm();
+  if(ready&&!frame&&!warmScheduled){
+   warmScheduled=true;
+   const warm=()=>{warmScheduled=false;if(ready&&!frame&&document.visibilityState!=='hidden')ensureFrame();};
+   if(window.requestIdleCallback)window.requestIdleCallback(warm,{timeout:1500});else setTimeout(warm,300);
   }
  };
  const wrappedRender=render;

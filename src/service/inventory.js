@@ -13,8 +13,35 @@ const input=(title,name,value='',type='text',extra='')=>`<label>${title}<input n
 function select(title,name,rows,value='',label='name'){return `<label>${title}<select name="${name}"><option value="">请选择</option>${opts(rows,'id',label,value)}</select></label>`;}
 function filtered(rows){const q=search.toLowerCase();return rows.filter(x=>JSON.stringify(x).toLowerCase().includes(q));}
 function toast(s){$('#notice').textContent=s;$('#notice').style.display='block';setTimeout(()=>$('#notice').style.display='none',4000);}
-async function call(a){const r=await fetch('/service/api/inventory',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':data.csrf},body:JSON.stringify(a)});let b;try{b=await r.json();}catch{throw Error('会话可能过期，请返回后台重新登录');}if(!r.ok)throw Error(b.error||'保存失败');return b;}
-async function load(){const r=await fetch('/service/api/inventory',{cache:'no-store'});if(!r.ok)throw Error(r.status===401?'登录已过期，请返回后台登录':'库存读取失败，请确认第一期补丁已安装');data=await r.json();render();}
+async function call(a){snapshotEpoch++;snapshotAt=0;try{const r=await fetch('/service/api/inventory',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':data.csrf},body:JSON.stringify(a)});let b;try{b=await r.json();}catch{throw Error('会话可能过期，请返回后台重新登录');}if(!r.ok)throw Error(b.error||'保存失败');return b;}finally{snapshotEpoch++;snapshotAt=0;}}
+// Memory-only snapshot. Explicit refresh and post-write reloads always bypass the TTL.
+let snapshotAt=0,snapshotEpoch=0,snapshotFlight=null;
+async function load({maxAge=0,quiet=false}={}){
+ if(maxAge&&data&&Date.now()-snapshotAt<maxAge)return;
+ if(snapshotFlight)return snapshotFlight;
+ snapshotFlight=(async()=>{
+  try{
+   let epoch,next;
+   do{
+    epoch=snapshotEpoch;
+    const r=await fetch('/service/api/inventory',{cache:'no-store'});
+    if(!r.ok)throw Error(r.status===401?'登录已过期，请返回后台登录':'数据更新失败，请点击刷新重试');
+    next=await r.json();
+   }while(epoch!==snapshotEpoch);
+   data=next;snapshotAt=Date.now();
+   // Background updates must not replace an open editor or picker.
+   if(!quiet||!$('#modal').open)render();
+  }finally{snapshotFlight=null;}
+ })();
+ return snapshotFlight;
+}
+function refreshSnapshot(){
+ if(!data)return; // The initial load is already running.
+ load({maxAge:15000,quiet:true}).catch(e=>toast(e.message+'（当前显示上次数据）'));
+}
+window.addEventListener('focus',refreshSnapshot);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshSnapshot();});
+
 function show(html){$('#body').innerHTML=html;if(!$('#modal').open)$('#modal').showModal();}
 function foot(label='保存草稿'){return `<div class="foot"><button type="button" data-action="close">取消</button><button type="submit" class="primary">${label}</button></div><p class="form-error error" hidden></p>`;}
 function head(desc,actions=''){return `<div class="head"><div><h1>${names[page]}</h1><div class="muted">${desc}</div></div><div>${actions}</div></div>`;}
@@ -162,7 +189,7 @@ if(e.target.id==='product-page-size'){productPageSize=Number(e.target.value);pro
 if(e.target.matches('[name=name_kind]')){const row=e.target.closest('tr');row.querySelector('[name=name_unit]').value=e.target.value==='整机'?'台':'个';row.querySelector('[name=name_sn]').checked=e.target.value==='整机';}
 if(e.target.matches('.line [name=product]')){const p=product(e.target.value),f=$('#doc-form'),v=['purchase','receipt'].includes(f.dataset.kind)?p.purchase_cents:p.sale_cents;e.target.closest('.line').querySelector('[name=price]').value=v==null?'':money(v);}if(e.target.matches('.sn-file')){try{const file=e.target.files[0];if(!file)return;if(file.size>200000)throw Error('SN 文本不能超过 200KB');const text=await file.text();serialParse(text);e.target.closest('.line').querySelector('[name=serials]').value=text;toast('已导入，保存和审核时将验证 SN');}catch(err){toast(err.message);}}});
 document.addEventListener('input',e=>{if(e.target.id==='search'){search=e.target.value;productPage=1;const pos=e.target.selectionStart;render();$('#search').focus();$('#search').setSelectionRange(pos,pos);}});
-window.addEventListener('hashchange',()=>{$('#modal').close();search='';if(data)render();});window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});load().catch(e=>{$('#main').innerHTML=`<div class="error">${E(e.message)}</div><p><a href="/service/">返回后台</a></p>`;});
+window.addEventListener('hashchange',()=>{$('#modal').close();search='';if(data){render();refreshSnapshot();}});window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});load().catch(e=>{$('#main').innerHTML=`<div class="error">${E(e.message)}</div><p><a href="/service/">返回后台</a></p>`;});
 
 // Product thumbnail preview lives outside the table's scrolling container.
 (() => {
