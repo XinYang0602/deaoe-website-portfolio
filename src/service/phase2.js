@@ -162,11 +162,11 @@ if(new URLSearchParams(location.search).get('embedded')==='1'&&window.parent!==w
     panel.innerHTML = `<div class="sales-title"><a href="/service/#applications" aria-label="返回工作台">‹</a><h2>销售单</h2><button data-action="new-doc" data-id="sale" aria-label="新增销售单">新增</button></div>
       <input id="sales-query" type="search" placeholder="搜索单号、客户、商品、备注" value="${E(term)}">
       <div class="sales-filters"><label>状态<select id="sales-status"><option value="">全部状态</option>${Object.entries(states).map(([value,label]) => `<option value="${value}" ${status===value?'selected':''}>${label}</option>`).join('')}</select></label>
-      <label>仓库<select id="sales-store"><option value="">全部仓库</option>${opts(data.warehouses,'id','name',store)}</select></label></div>${saleDateControls()}<div id="sales-cards"></div>`;
+      <label>仓库<select id="sales-store"><option value="">全部仓库</option>${opts(data.warehouses,'id','name',store)}</select></label></div>${saleDateControls()}${documentSortControls('sale')}<div id="sales-cards"></div>`;
     paintCards();
   }
   function paintCards() {
-    const rows = salesRows().sort((a,b)=>String(b.created_at||b.date||'').localeCompare(String(a.created_at||a.date||''))||b.id.localeCompare(a.id,undefined,{numeric:true}));
+    const rows = salesRows().sort((a,b)=>compareDocuments(a,b,'sale'));
     document.querySelector('#sales-cards').innerHTML = `<p class="muted">共 ${rows.length} 张销售单</p>` + (rows.map(doc => {
       const lines = data.lines.filter(line => line.doc_id === doc.id);
       let actions = button('查看','doc',doc.id);
@@ -392,7 +392,7 @@ names.documents = '单据中心';
     };
     const body=table.querySelector('tbody');
     const rows=body?[...body.querySelectorAll('tr')]:[];
-    if(withStatus)rows.sort((a,b)=>{const x=metadata(a),y=metadata(b);return String(y.sort||'').localeCompare(String(x.sort||''))||String(y.id||'').localeCompare(String(x.id||''),undefined,{numeric:true});}).forEach(r=>body.append(r));
+    if(withStatus&&page!=='purchase')rows.sort((a,b)=>{const x=metadata(a),y=metadata(b);return String(y.sort||'').localeCompare(String(x.sort||''))||String(y.id||'').localeCompare(String(x.id||''),undefined,{numeric:true});}).forEach(r=>body.append(r));
     const filters=document.createElement('div');filters.className='register-filters no-print';
     filters.innerHTML=`${withStatus?`<label>状态<select data-register-filter="status"><option value="">全部状态</option>${Object.entries(states).map(([v,n])=>`<option value="${E(v)}" ${state.status===v?'selected':''}>${E(n)}</option>`).join('')}</select></label>`:''}<label>仓库<select data-register-filter="warehouse"><option value="">全部仓库</option>${opts(data.warehouses,'id','name',state.warehouse)}</select></label>`;
     table.before(filters);

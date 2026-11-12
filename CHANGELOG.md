@@ -2,6 +2,11 @@
 
 A concise engineering history for reviewers. Dates identify development updates, not deployments. No semantic-version tags or production release status are implied. Earlier overlapping patches are grouped by capability.
 
+## 2026-11-12 — Document date sorting
+
+- Shared ascending/descending business-date sorting for desktop/mobile sales and purchases, with document-number tie breaks and highlighted controls.
+- Preserve filters and per-type selection in memory; reload restores newest-first. Synthetic browser checks cover both types and directions.
+
 ## 2026-11-12 — Sales date range filtering
 
 - Filter sales by inclusive business-date ranges on desktop and mobile; support open-ended ranges and clearing dates.

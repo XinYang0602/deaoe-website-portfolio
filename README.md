@@ -64,6 +64,7 @@ Short feature summaries, newest first. Details and validation notes are in the [
 
 | Date | Update |
 | --- | --- |
+| 2026-11-12 | Added consistent ascending/descending business-date sorting for sales and purchases. |
 | 2026-11-12 | Simplified desktop customer balances into compact vertical lists. |
 | 2026-11-12 | Unified list styling and aligned variable-length balance amounts. |
 | 2026-11-12 | Aligned desktop workspace panels and reset scrolling between business pages. |
