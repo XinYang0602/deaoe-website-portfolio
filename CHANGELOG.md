@@ -1,3 +1,10 @@
+## 2026-11-13 — Cached official logo
+
+- Keep the original official PNG and silhouette unchanged; share a content-versioned URL across login, workspace, inventory, and warranty cards.
+- Serve the public logo with long-lived immutable caching, ETag validation, and no session cookie. Retain authenticated page/API cache policies.
+- Preload the logo and reveal the SVG image after loading completes, avoiding progressive appearance.
+- Validation: identical asset bytes, cache headers and 304, private-page no-store, one initial browser download with reuse across navigation/login, and offline cached decoding; source and business regressions pass.
+
 ## 2026-11-13 — Account-specific interface font size
 
 - Add four font sizes (100%, 110%, 125%, 150%) in basic settings, stored server-side for the authenticated account and restored on reload.

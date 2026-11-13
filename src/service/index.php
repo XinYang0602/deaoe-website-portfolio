@@ -10,6 +10,18 @@ header('X-Frame-Options: '.($embeddedInventory?'SAMEORIGIN':'DENY'));
 header("Content-Security-Policy: frame-ancestors ".($embeddedInventory?"'self'":"'none'"));
 if(is_file('/var/lib/showcase-data/phase1-maintenance')&&str_starts_with($miniPath,'/service/mini/')&&$miniPath!=='/service/mini/health'){http_response_code(503);exit('系统正在升级，请稍后重试');}
 if(str_starts_with($miniPath,'/service/mini/')){require __DIR__.'/mini.php';handleMini($miniPath);}
+// The official public logo is versioned and cacheable; authenticated pages remain no-store.
+if($miniPath==='/service/assets/deaoe-logo.png'){
+ if(!in_array($_SERVER['REQUEST_METHOD'],['GET','HEAD'],true)){http_response_code(405);exit;}
+ $logo=__DIR__.'/assets/deaoe-logo.png';$digest=hash_file('sha256',$logo);$etag='"'.$digest.'"';
+ header('Content-Type: image/png');
+ header('Cache-Control: public, max-age='.(($_GET['v']??'')===substr($digest,0,12)?'31536000, immutable':'3600'));
+ header('ETag: '.$etag);
+ header('Last-Modified: '.gmdate('D, d M Y H:i:s',filemtime($logo)).' GMT');
+ if(in_array($etag,array_map('trim',explode(',',$_SERVER['HTTP_IF_NONE_MATCH']??'')),true)){http_response_code(304);exit;}
+ header('Content-Length: '.filesize($logo));
+ if($_SERVER['REQUEST_METHOD']==='GET')readfile($logo);exit;
+}
 session_name('DEAOE_SERVICE');
 ini_set('session.use_strict_mode','1');
 session_set_cookie_params(['lifetime'=>0,'path'=>'/service/','secure'=>true,'httponly'=>true,'samesite'=>'Strict']);
@@ -45,7 +57,7 @@ if(is_file('/var/lib/showcase-data/phase1-maintenance')){http_response_code(503)
  }
 }
 // Logo is the only public asset. All application HTML, CSS and JS require a session.
-if($path==='/service/assets/deaoe-logo.png'){header('Content-Type: image/png');readfile(__DIR__.'/assets/deaoe-logo.png');exit;}
+
 if(!isset($_SESSION['user'])){
  if(!in_array($path,['/service/','/service/index.php','/service/login'],true)){http_response_code(401);exit('请先登录服务管理平台。');}
  header('Content-Type: text/html; charset=utf-8');
@@ -61,7 +73,7 @@ if(!isset($_SESSION['user'])){
  .panel{padding:24px;min-width:0}
  input{min-width:0;max-width:100%;font-size:16px;line-height:1.4}
 }
-</style></head><body><div class="wrap"><svg class="brand" viewBox="365 1223 7952 908" role="img" aria-label="DEAOE 德澳"><defs><filter id="white" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -0.2126 -0.7152 -0.0722 0 1"/><feComposite in2="SourceAlpha" operator="in"/></filter></defs><image href="/service/assets/deaoe-logo.png" width="8661" height="3465" filter="url(#white)"/></svg><p class="subtitle">服务管理平台</p><div class="panel"><h1>管理员登录</h1><p class="intro">登录后管理业务、电子保修卡与库存。</p><?php if($error):?><p class="error" role="alert"><?=e($error)?></p><?php endif;?><form method="post" action="/service/"><input type="hidden" name="action" value="login"><input type="hidden" name="csrf" value="<?=e($_SESSION['csrf'])?>"><label>管理员账号<input name="username" value="admin" autocomplete="username" required></label><label>登录密码<input name="password" type="password" autocomplete="current-password" placeholder="请输入管理员密码" required maxlength="256"></label><button type="submit">登录管理平台</button></form></div><p class="foot">DEAOE 德澳 · 管理员工作空间<br>仅限授权人员访问</p></div></body></html>
+</style><link rel="preload" as="image" type="image/png" fetchpriority="high" href="/service/assets/deaoe-logo.png?v=cc34c68decaf"></head><body><div class="wrap"><svg class="brand" viewBox="365 1223 7952 908" role="img" aria-label="DEAOE 德澳"><defs><filter id="white" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -0.2126 -0.7152 -0.0722 0 1"/><feComposite in2="SourceAlpha" operator="in"/></filter></defs><image href="/service/assets/deaoe-logo.png?v=cc34c68decaf" style="opacity:0" onload="this.style.opacity='1'" width="8661" height="3465" filter="url(#white)"/></svg><p class="subtitle">服务管理平台</p><div class="panel"><h1>管理员登录</h1><p class="intro">登录后管理业务、电子保修卡与库存。</p><?php if($error):?><p class="error" role="alert"><?=e($error)?></p><?php endif;?><form method="post" action="/service/"><input type="hidden" name="action" value="login"><input type="hidden" name="csrf" value="<?=e($_SESSION['csrf'])?>"><label>管理员账号<input name="username" value="admin" autocomplete="username" required></label><label>登录密码<input name="password" type="password" autocomplete="current-password" placeholder="请输入管理员密码" required maxlength="256"></label><button type="submit">登录管理平台</button></form></div><p class="foot">DEAOE 德澳 · 管理员工作空间<br>仅限授权人员访问</p></div></body></html>
 <?php exit; }
 $_SESSION['last']=$now;
 if(is_file('/var/lib/showcase-data/phase1-maintenance')){http_response_code(503);exit('系统正在升级，请稍后刷新');}

@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Cache the versioned official logo locally and display it only after loading completes.
+
 - 2026-11-13 — Add account-specific global font sizing and simplify the sales representative filter.
 
 - 2026-11-13 — Manage sales representatives and assign, reassign, or unassign customer ownership in batches.
