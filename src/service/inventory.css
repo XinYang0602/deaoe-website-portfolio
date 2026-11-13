@@ -663,3 +663,24 @@ main.compact-register{max-width:none;padding:16px 20px}
  .single-product-form .product-code-caption{grid-column:1;grid-row:1;line-height:1.5}
  .single-product-form .product-code-caption .code-edit-hint{display:block;white-space:normal;font-size:10px;line-height:1.5}
 }
+
+/* Production and per-product warehouse notes share the compact desktop workspace. */
+.production-tabs{display:flex;gap:20px;padding:8px 0 14px;border-bottom:1px solid #dce2e9;margin-bottom:12px}
+.production-workspace small{display:block;color:#778398;margin-top:3px}
+.product-locations{border-top:1px solid #dce2e9;margin-top:8px;padding-top:8px}
+.product-locations summary{cursor:pointer;font-weight:600;padding:4px 0}
+.location-scroll{max-height:180px;overflow:auto;margin-top:6px}
+.product-locations table{table-layout:fixed;width:100%}
+.product-locations td,.product-locations th{padding:5px 8px}
+.product-locations input{width:100%;min-width:0;box-sizing:border-box;padding:5px 7px}
+.production-serials{display:flex;flex-wrap:wrap;gap:8px;max-height:150px;overflow:auto}
+.production-serials label{display:flex;align-items:center;gap:5px}
+.production-serials input{width:auto}
+#production-template table select{width:100%;max-width:460px}
+#production-template [name=usage]{width:90px}
+#production-create .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+#production-create input,#production-create select{min-width:0;width:100%;box-sizing:border-box}
+
+.production-tabs a{display:inline-block;padding:4px 6px;margin:0;line-height:1.4;font-size:13px}
+.production-table-scroll{overflow-x:auto;max-width:100%}
+.production-workspace .head>div{display:flex;gap:6px;flex-wrap:wrap}

@@ -182,7 +182,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         expect(frame.locator('.product-tabs')).to_have_count(0)
                         expect(frame.locator('.category-editor')).to_be_visible()
                         expect(frame.locator('.product-image-editor')).to_be_visible()
-                        expect(frame.locator('.code-edit-hint')).to_contain_text('可自行修改')
+                        expect(frame.locator('.code-edit-hint')).to_have_count(0)
                         expect(frame.locator('#master-form [name=code]')).to_have_value('TEST-PART')
                         frame.locator('[data-category-add]').click()
                         frame.locator('.category-new:visible input').fill('未确认分类')

@@ -1,3 +1,11 @@
+## 2026-11-13 — Warehouse locations and production workflows
+
+- Add free-text shelf/floor notes per product and warehouse, edited alongside product details and shown in stock lookup. Notes do not allocate quantities.
+- Introduce versioned BOM templates and assembly/disassembly documents with frozen recipe snapshots, draft/submit/approve/reject/void states, and configurable ZZ/CZ numbering.
+- Apply inventory inputs and outputs atomically; protect against repeated approval, insufficient stock, frozen warehouses and stale versions. Track consumed SNs/batches and generated outputs; require explicit SN selection and reject warranty-bound inputs.
+- Output costs remain unknown; no automatic financial postings or reverse approval. Simplify three product-field helper labels.
+- Verified syntax/business regressions, partial-deduction rollback, recipe snapshots, serial/lot tracking, location conflicts and synthetic desktop browser flows.
+
 ## 2026-11-12 — Free-text product names
 
 - Added a full-width required name input (200 characters) and code guidance below its label.

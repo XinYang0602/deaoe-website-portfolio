@@ -23,7 +23,7 @@ def main():
         run('bash', '-n', str(path))
     run('bash', 'tests/run-sales-regression.sh')
     run('bash', 'tests/run-purchase-regression.sh')
-    for name in ('party-categories.php', 'document-number.php', 'numbering-rules.php', 'sale-multiwarehouse.php', 'finance-ledger.php', 'finance-four.php', 'finance-accounts.php', 'quantity-adjustments.php', 'mini-members.php', 'mini-rate-limits.php'):
+    for name in ('production.php', 'party-categories.php', 'document-number.php', 'numbering-rules.php', 'sale-multiwarehouse.php', 'finance-ledger.php', 'finance-four.php', 'finance-accounts.php', 'quantity-adjustments.php', 'mini-members.php', 'mini-rate-limits.php'):
         run('php', 'tests/'+name)
     for path in sorted((ROOT / 'tests').glob('*.cjs')):
         run('node', str(path))

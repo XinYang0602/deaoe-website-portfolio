@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Per-warehouse shelf/floor notes and BOM-based assembly/disassembly with atomic inventory approval.
+
 - 2026-11-12 — Free-text product names with a full-width required field and clearer code guidance.
 
 - 2026-11-12 — Clearer product field labels with secondary-line helper text.

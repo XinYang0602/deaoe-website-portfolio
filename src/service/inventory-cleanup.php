@@ -5,7 +5,7 @@ declare(strict_types=1);
 // backup and deletion. Master data for indirectly affected products is retained.
 function cleanupValues(mixed $value, string $key = ''): array {
     $references = ['id','product_id','doc_id','source_id','source_line','line_id',
-        'sale_id','reference','request_key','receipt_line','issue_line','sn','lot_id','op_id','return_id','card_id',
+        'bom_id','sale_id','reference','request_key','receipt_line','issue_line','sn','lot_id','op_id','return_id','card_id',
         'inventorySN','manufacturer_sn','stockId','order','cardId','exchange','serials','old_serials','old_sn','new_sn'];
     if (is_string($value) && $key==='source') {
         if(preg_match('/^(sale|history|return|purchase|receipt|purchase-return|purchase-history|purchase_return|payment|offset):(.+)$/',$value,$m))return [$m[2],$value];
@@ -32,7 +32,7 @@ function cleanupPlan(PDO $d, array $a): array {
     $products = $d->query('SELECT * FROM inv_products ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
     foreach ($ids as $id) if (!in_array($id, array_column($products, 'id'), true)) iv('商品已变化，请刷新');
     $tables = ['inv_docs','inv_lines','inv_balances','inv_sn','inv_ledger','inv_sn_events','inv_card_links','inv_ops','inv_lots','inv_lot_moves','inv_allocations','inv_holds','inv_return_lines','inv_exchange_links','inv_freezes'];
-    foreach(['inv_fin_sales','inv_fin_entries','inv_fin_purchases','inv_fin_aux','inv_fin_links','inv_fin_requests','inv_fin_payment_accounts'] as $t)if(iq($d,"SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",[$t])->fetchColumn())$tables[]=$t;
+    foreach(['inv_locations','inv_boms','inv_bom_parts','inv_production','inv_production_parts','inv_fin_sales','inv_fin_entries','inv_fin_purchases','inv_fin_aux','inv_fin_links','inv_fin_requests','inv_fin_payment_accounts'] as $t)if(iq($d,"SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",[$t])->fetchColumn())$tables[]=$t;
     $rows = [];
     foreach ($tables as $t) $rows[$t] = $d->query('SELECT rowid AS cleanup_rowid,* FROM '.$t.' ORDER BY rowid')->fetchAll(PDO::FETCH_ASSOC);
     $state = $d->query('SELECT * FROM state WHERE id=1')->fetch(PDO::FETCH_ASSOC);
