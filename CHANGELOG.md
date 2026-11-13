@@ -265,3 +265,7 @@ Existing records remain unchanged. Local business and browser regression checks;
 ## 2026-11-12 — Product number previews no longer consume codes on cancel; aligned image upload controls.
 
 ## 2026-11-12 — Settings center with clear configuration cards, aligned business fields and a separate export section.
+
+## 2026-11-12 — Unified customer/supplier directory and corrected configurable product numbering previews.
+
+Preserves existing entity IDs and document links. Tested with synthetic records; historical sales numbering remains unchanged.

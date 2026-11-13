@@ -587,3 +587,26 @@ window.addEventListener('hashchange',()=>{
  function details(){const root=$('#main'),p=data.products.find(p=>p.id===state.selected);for(const cls of ['edit','delete','copy'])root.querySelector(`[data-catalog-${cls}]`).disabled=!p;const del=root.querySelector('[data-catalog-delete]');del.dataset.action='delete-product';del.dataset.id=p?.id||'';root.querySelector('.catalog-selected-name').textContent=p?`${p.code} · ${p.name}`:'请选择产品';root.querySelector('.catalog-image-list').innerHTML=p?(data.images.filter(i=>i.product_id===p.id).map(i=>`<a target="_blank" rel="noopener" href="/service/api/images?id=${E(i.id)}"><img src="/service/api/images?id=${E(i.id)}&thumb=1" alt="${E(i.name||p.name)}"></a>`).join('')||'<span class="muted">暂无产品图片</span>'):'';}
  render=function(){base();$('#main').classList.remove('product-catalog');if(data&&page==='products'&&mq.matches)paint();};mq.addEventListener('change',()=>{if(data&&page==='products')render();});
 })();
+
+// One master directory for customers and suppliers; references keep their original IDs.
+(()=>{
+ const base=render,state={kind:'',selected:'',disabled:false,page:1},size=20;
+ function paint(){
+  const root=$('#main');root.classList.add('party-directory');
+  const rows=filtered(data.parties).filter(p=>(!state.kind||p.kind===state.kind)&&(state.disabled||p.active));
+  state.page=Math.max(1,Math.min(state.page,Math.ceil(rows.length/size)||1));
+  const visible=rows.slice((state.page-1)*size,state.page*size);
+  if(!visible.some(p=>p.id===state.selected))state.selected=visible[0]?.id||'';
+  root.innerHTML=`<section class="catalog-panel"><div class="catalog-toolbar"><h1>客户与往来单位</h1>${button('新建','master','parties',true)}<button type="button" data-party-edit ${state.selected?'':'disabled'}>修改</button><a class="button" href="/service/#customer-history" target="_top">服务与保修记录</a><label class="catalog-disabled"><input type="checkbox" data-party-disabled ${state.disabled?'checked':''}>显示停用</label><input id="search" type="search" value="${E(search)}" placeholder="搜索名称、联系人、电话、地址">${button('刷新','refresh')}</div><div class="catalog-layout"><div class="catalog-categories"><h2>单位分类</h2>${[['','全部单位'],['customer','客户'],['supplier','供应商']].map(([id,name])=>`<button type="button" data-party-kind="${id}" aria-current="${state.kind===id}">${name}</button>`).join('')}</div><div class="catalog-content"><div class="catalog-scroll"><table><thead><tr><th>类型</th><th>名称</th><th>联系电话</th><th>联系人</th><th>地址</th><th>状态</th></tr></thead><tbody>${visible.map(p=>`<tr tabindex="0" data-party-row="${E(p.id)}" aria-selected="${p.id===state.selected}"><td>${p.kind==='supplier'?'供应商':'客户'}</td><td><strong>${E(p.name)}</strong></td><td>${E(p.phone||'—')}</td><td>${E(p.contact||'—')}</td><td>${E(p.address||'—')}</td><td>${p.active?'启用':'停用'}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">暂无匹配记录</td></tr>'}</tbody></table></div><div class="party-pager">共 ${rows.length} 条 · 第 ${state.page} / ${Math.ceil(rows.length/size)||1} 页 <button type="button" data-party-page="-1" ${state.page===1?'disabled':''}>上一页</button><button type="button" data-party-page="1" ${state.page*size>=rows.length?'disabled':''}>下一页</button></div><section class="party-details" aria-label="所选单位详情"></section></div></div></section>`;
+  root.querySelectorAll('[data-party-kind]').forEach(b=>b.onclick=()=>{state.kind=b.dataset.partyKind;state.page=1;paint();});
+  root.querySelector('[data-party-disabled]').onchange=e=>{state.disabled=e.target.checked;state.page=1;paint();};
+  root.querySelectorAll('[data-party-page]').forEach(b=>b.onclick=()=>{state.page+=Number(b.dataset.partyPage);paint();});
+  root.querySelector('[data-party-edit]').onclick=()=>master('parties',state.selected);
+  root.querySelectorAll('[data-party-row]').forEach(row=>{const choose=()=>{state.selected=row.dataset.partyRow;root.querySelectorAll('[data-party-row]').forEach(r=>r.setAttribute('aria-selected',String(r===row)));details();};row.onclick=choose;row.ondblclick=()=>master('parties',row.dataset.partyRow);row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}};});details();
+ }
+ function details(){const el=$('#main .party-details'),p=data.parties.find(p=>p.id===state.selected);if(!p){el.innerHTML='<p class="muted">请选择单位查看详情</p>';return;}
+  const docs=data.docs.filter(d=>d.party_id===p.id);
+  el.innerHTML=`<h2>联系资料 · ${E(p.name)}</h2><dl>${[['联系电话',p.phone],['联系人',p.contact],['地址',p.address]].map(([k,v])=>`<div><dt>${k}</dt><dd>${E(v||'未填写')}</dd></div>`).join('')}</dl><details><summary>关联单据 · ${docs.length} 张</summary>${table(['单号','类型','日期','状态','操作'],docs.map(d=>[E(d.id),E(kinds[d.kind]||d.kind),E(d.date),E(states[d.status]||d.status),button('查看','doc',d.id)]))}</details>`;
+ }
+ render=function(){base();$('#main').classList.remove('party-directory');if(data&&page==='parties')paint();};
+})();

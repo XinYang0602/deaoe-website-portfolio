@@ -38,3 +38,12 @@ $before=invCodeRule($d);$count=$d->query('SELECT COUNT(*) FROM inv_meta')->fetch
 for($i=0;$i<5;$i++)checkNumber(invReserveNumber($d,['type'=>'product','request_key'=>str_repeat((string)$i,24)])['number']==='P00002');
 checkNumber(invCodeRule($d)===$before);checkNumber($d->query('SELECT COUNT(*) FROM inv_meta')->fetchColumn()===$count);
 echo "PASS repeated canceled previews leave sequence and metadata unchanged\n";
+
+// A manually lowered next value wins over higher existing codes and canceled legacy previews.
+$d->exec("INSERT INTO inv_products VALUES('HIGH','P00999','示例','','','','台',0,NULL,NULL,1,'',1)");
+$r=invCodeRule($d);invSaveCodeRule($d,['version'=>$r['version'],'prefix'=>'P','digits'=>5,'next'=>1]);
+checkNumber(invNextProductCode($d,true)==='P00001');
+checkNumber(invNextProductCode($d,true)==='P00001');
+$d->exec("INSERT INTO inv_products VALUES('LOW','P00001','示例','','','','台',0,NULL,NULL,1,'',1)");
+checkNumber(invNextProductCode($d,true)==='P00002');
+echo "PASS configured next wins over maximum, skips occupied codes, ignores canceled legacy preview\n";

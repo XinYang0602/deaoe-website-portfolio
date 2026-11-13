@@ -132,10 +132,10 @@ function invSaveCodeRule(PDO $d,array $a):array {
 }
 function invNextProductCode(PDO $d,bool $preview=false):string {
  $r=invCodeRule($d);
- foreach(iq($d,'SELECT code FROM inv_products')->fetchAll(PDO::FETCH_COLUMN) as $existing){if(preg_match('/^'.preg_quote($r['prefix'],'/').'([0-9]{'.$r['digits'].'})$/D',$existing,$m))$r['next']=max($r['next'],(int)$m[1]+1);}
- do {if($r['next']>=10**$r['digits'])iv('产品编号已用尽，请调整编号规则');$code=$r['prefix'].str_pad((string)$r['next']++,$r['digits'],'0',STR_PAD_LEFT);}while(iq($d,'SELECT 1 FROM inv_products WHERE code=?',[$code])->fetchColumn()||iq($d,'SELECT 1 FROM inv_meta WHERE k=?',['issued_product:'.$code])->fetchColumn());
+ if(!iq($d,"SELECT 1 FROM inv_meta WHERE k='product_code_rule'")->fetchColumn())foreach(iq($d,'SELECT code FROM inv_products')->fetchAll(PDO::FETCH_COLUMN) as $existing){if(preg_match('/^'.preg_quote($r['prefix'],'/').'([0-9]{'.$r['digits'].'})$/D',$existing,$m))$r['next']=max($r['next'],(int)$m[1]+1);}
+ do {if($r['next']>=10**$r['digits'])iv('产品编号已用尽，请调整编号规则');$code=$r['prefix'].str_pad((string)$r['next']++,$r['digits'],'0',STR_PAD_LEFT);}while(iq($d,'SELECT 1 FROM inv_products WHERE code=?',[$code])->fetchColumn());
  if($preview)return $code;
- iq($d,'INSERT INTO inv_meta(k,v) VALUES(?,?)',['issued_product:'.$code,'1']);
+ iq($d,'INSERT OR IGNORE INTO inv_meta(k,v) VALUES(?,?)',['issued_product:'.$code,'1']);
  $r['version']++;iq($d,"INSERT INTO inv_meta VALUES('product_code_rule',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",[json_encode($r)]);return $code;
 }
 function invMoveCategory(PDO $d,array $a):array {

@@ -585,3 +585,23 @@ main.compact-register{max-width:none;padding:16px 20px}
  .single-product-form .product-image-editor [data-upload-product-image]{align-self:center;margin:0;min-height:30px;padding:4px 10px}
  .single-product-form .product-image-editor small,.single-product-form .product-image-editor [data-image-status]{grid-column:1/-1}
 }
+
+/* Shared counterparty directory: compact master/detail workspace. */
+.party-directory .catalog-layout{display:grid;grid-template-columns:180px minmax(0,1fr)}
+.party-directory .catalog-toolbar{gap:8px;flex-wrap:wrap}
+.party-directory .catalog-categories>button{display:block;width:100%;text-align:left;margin:4px 0}
+.party-directory [aria-current="true"]{background:#f8e7e5;color:#bb3831;border-color:transparent}
+.party-directory .catalog-scroll{min-height:280px;max-height:50vh;overflow:auto}
+.party-directory table{width:100%;border-collapse:collapse}
+.party-directory th,.party-directory td{padding:9px 12px;border-bottom:1px solid #e5e9ef;text-align:left}
+.party-directory th{background:#f5f7fa;white-space:nowrap}
+.party-directory tr[aria-selected="true"]{background:#faeae8}
+.party-directory tr[data-party-row]{cursor:pointer}
+.party-pager{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:10px;border-top:1px solid #e2e7ed}
+.party-details{padding:14px 16px;border-top:1px solid #e2e7ed}
+.party-details h2{font-size:15px;margin:0 0 12px}
+.party-details dl{display:flex;flex-wrap:wrap;gap:12px 30px;margin:0 0 14px}
+.party-details dl>div{display:flex;gap:10px}.party-details dt{color:#748296}.party-details dd{margin:0;overflow-wrap:anywhere}
+@media(max-width:700px){.party-directory .catalog-layout{grid-template-columns:1fr}.party-directory .catalog-categories{display:flex;gap:6px;padding:8px}.party-directory .catalog-categories h2{display:none}.party-directory .catalog-scroll table{min-width:650px}}
+
+.party-directory .catalog-disabled{flex-direction:row!important;align-items:center}

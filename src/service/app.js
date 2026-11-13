@@ -36,11 +36,13 @@ function settings(){
  const entries=[['numbering','编号管理','设置产品及采购、入库、调拨等单号规则','M5 8h14M5 16h14M9 4l-2 16M17 4l-2 16'],['warehouses','仓库设置','维护仓库资料与默认出货仓库','M3 10l9-7 9 7v11H3zM8 21V12h8v9M8 16h8'],['templates','打印模板','管理单据与标签的打印格式','M6 8V3h12v5M6 17H3V8h18v9h-3M6 14h12v7H6z']];
  return `<div class="settings-center">${title('基础设置','管理业务规则与工作空间配置。')}<section class="panel"><div class="panel-head"><h2>常用配置</h2></div><div class="settings-shortcuts">${entries.map(([route,label,description,path])=>`<a class="settings-entry" href="#inventory/${route}"><span class="settings-entry-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg></span><span><strong>${label}</strong><span class="settings-entry-description">${description}</span></span><span class="settings-entry-arrow" aria-hidden="true">›</span></a>`).join('')}</div></section><div class="settings-sections"><section class="panel"><div class="panel-head"><h2>业务配置</h2></div><form id="settings-form" class="settings"><label>工作空间名称<input name="name" required maxlength="40" value="${esc(db.settings.name)}"></label><label>新保修卡默认期限（月）<input name="months" type="number" min="1" max="240" required value="${db.settings.months}"></label><p class="notice">默认期限只用于新保修卡，已有保修卡不变。</p><div class="settings-save"><button class="primary" type="submit">保存设置</button></div></form></section><section class="panel settings-export"><div class="panel-head"><h2>资料导出</h2></div><div class="settings"><p>导出工单与保修卡资料，便于留存与核对。</p><p class="settings-help">此导出不包含采购、销售、库存 SN 和产品图片，不代替完整系统备份。</p>${btn('导出工单与保卡资料','backup')}</div></section></div></div>`;
 }
+pages['customer-history']=['服务与保修记录','♧'];
+function customerHistory(){return serviceCustomers();}
 function render(){page=pages[location.hash.slice(1)]?location.hash.slice(1):'dashboard';$('#nav').innerHTML='<div class="nav-label">业务工作空间</div>'+[
  ['dashboard','工作台','⌂','#dashboard'],['sales','销售管理','↑','/service/#inventory/sale'],
  ['accounts','账款管理','¥','#inventory/finance'],['purchasing','采购管理','↓','/service/#inventory/purchase'],['stock','库存管理','▦','/service/#inventory/balances'],
  ['customers','客户管理','♧','#customers'],['orders','服务管理','▤','#orders'],['settings','基础设置','⚙','#settings']
-].map(([k,n,i,url])=>`<a href="${url}" data-section="${k}" class="${(page===k||(k==='customers'&&['cards','dealers'].includes(page)))?'active':''}"><i>${i}</i><span>${n}</span></a>`).join('');$('#crumb').textContent='工作空间 / '+(['cards','dealers'].includes(page)?'客户管理 / ':'')+pages[page][0];$('.workspace b').textContent=db.settings.name;$('#today').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});$('#main').innerHTML=page.startsWith('workflow-')?window.renderWorkflow(page):page==='dashboard'?dashboard():page==='orders'?title('业务管理','安装、维修与派工，在同一处跟进。',btn('导出工单','export')+btn('新增工单','new-order',true))+`<section class="panel">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索工单、客户、电话或机器编号')}${table(['工单编号 / 日期','类型','客户信息','产品 / 机身编号','销售渠道','状态','服务人员','操作'],orderRows(db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter)))}<div class="table-foot"><span>共 ${db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter).length} 条符合条件的记录</span><span>安装与维修统一受理</span></div></section>`:({cards,stock,dealers,customers,settings}[page])();}
+].map(([k,n,i,url])=>`<a href="${url}" data-section="${k}" class="${(page===k||(k==='customers'&&['cards','dealers'].includes(page)))?'active':''}"><i>${i}</i><span>${n}</span></a>`).join('');$('#crumb').textContent='工作空间 / '+(['cards','dealers'].includes(page)?'客户管理 / ':'')+pages[page][0];$('.workspace b').textContent=db.settings.name;$('#today').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});$('#main').innerHTML=page.startsWith('workflow-')?window.renderWorkflow(page):page==='dashboard'?dashboard():page==='orders'?title('业务管理','安装、维修与派工，在同一处跟进。',btn('导出工单','export')+btn('新增工单','new-order',true))+`<section class="panel">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索工单、客户、电话或机器编号')}${table(['工单编号 / 日期','类型','客户信息','产品 / 机身编号','销售渠道','状态','服务人员','操作'],orderRows(db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter)))}<div class="table-foot"><span>共 ${db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter).length} 条符合条件的记录</span><span>安装与维修统一受理</span></div></section>`:({cards,stock,dealers,customers,settings,'customer-history':customerHistory}[page])();}
 function openModal(h,content){$('#modalBody').innerHTML=`<div class="modal-head"><h2>${h}</h2><button type="button" data-action="close" aria-label="关闭">×</button></div>${content}`;if(!$('#modal').open)$('#modal').showModal()}
 function field(label,name,type='text',value='',extra=''){return `<label>${label}<input name="${name}" type="${type}" value="${esc(value)}" required ${extra}></label>`}
 function select(label,name,items){return `<label>${label}<select name="${name}">${items.map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('')}</select></label>`}
@@ -101,7 +103,7 @@ window.addEventListener('hashchange',()=>{query='';if(ready)render()});window.ad
 })();
 
 // One persistent workspace: inventory keeps its own scripts and data without reloading the shell.
-const inventoryRoutes={numbering:['settings','编号管理'],finance_ar:['accounts','应收款'],finance_ap:['accounts','应付款'],finance_advance_receipt:['accounts','预收款'],finance_advance_payment:['accounts','预付款'],finance:['accounts','往来账款'],documents:['dashboard','单据中心'],sale:['sales','销售单'],issue:['sales','销售出库'],purchase:['purchasing','采购订单'],receipt:['purchasing','采购入库'],parties:['purchasing','供应商与往来单位'],overview:['stock','进销存总览'],balances:['stock','库存查询'],products:['stock','产品档案'],warehouses:['stock','仓库管理'],operations:['stock','退换货与调拨'],counting:['stock','库存盘点'],lots:['stock','批次与分区'],serials:['stock','SN 与标签'],templates:['stock','打印模板'],ledger:['stock','库存流水'],events:['stock','操作日志']};
+const inventoryRoutes={numbering:['settings','编号管理'],finance_ar:['accounts','应收款'],finance_ap:['accounts','应付款'],finance_advance_receipt:['accounts','预收款'],finance_advance_payment:['accounts','预付款'],finance:['accounts','往来账款'],documents:['dashboard','单据中心'],sale:['sales','销售单'],issue:['sales','销售出库'],purchase:['purchasing','采购订单'],receipt:['purchasing','采购入库'],parties:['customers','客户与往来单位'],overview:['stock','进销存总览'],balances:['stock','库存查询'],products:['stock','产品档案'],warehouses:['stock','仓库管理'],operations:['stock','退换货与调拨'],counting:['stock','库存盘点'],lots:['stock','批次与分区'],serials:['stock','SN 与标签'],templates:['stock','打印模板'],ledger:['stock','库存流水'],events:['stock','操作日志']};
 window.deaoeInventoryRoutes=inventoryRoutes;
 function inventoryRoute(){const h=location.hash.slice(1);const route=h.replace(/\/new$/,'').slice(10);return h.startsWith('inventory/')&&inventoryRoutes[route]?route:null;}
 (()=>{
@@ -109,6 +111,7 @@ function inventoryRoute(){const h=location.hash.slice(1);const route=h.replace(/
  const routeMessage=route=>({type:'deaoe-inventory-route',route,create:location.hash.endsWith('/new'),requestId});
  const previousRender=render;
  render=function(){
+  if(location.hash==='#customers')history.replaceState(null,'','#inventory/parties');
   if(location.hash==='#stock')history.replaceState(null,'','#inventory/balances');
   previousRender();
   const route=inventoryRoute();
@@ -120,7 +123,7 @@ function inventoryRoute(){const h=location.hash.slice(1);const route=h.replace(/
   const [section,label]=inventoryRoutes[route];
   $('#nav a.active')?.classList.remove('active');
   $(`#nav a[data-section="${section}"]`)?.classList.add('active');
-  $('#crumb').textContent='工作空间 / '+({accounts:'账款管理',sales:'销售管理',purchasing:'采购管理',stock:'库存管理'}[section])+' / '+label;
+  $('#crumb').textContent='工作空间 / '+({customers:'客户管理',accounts:'账款管理',sales:'销售管理',purchasing:'采购管理',stock:'库存管理'}[section])+' / '+label;
   ensureFrame(route);
   frame.hidden=false;
   frame.contentWindow.postMessage(routeMessage(route),location.origin);
@@ -357,7 +360,7 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
    ['客户与设备',[item('客户管理','customers','user'),item('电子保修卡','cards','card'),item('经销商管理','dealers','user')]]],
    lanes:[['工单处理',[item('工单受理','orders/new','service'),item('待派工','orders','service','待派工'),item('待处理','orders','service','待处理'),item('处理中','orders','service','处理中')]],['完工归档',[item('处理中','orders','service','处理中'),item('已完工','orders','check','已完工'),item('已关闭','orders','check','已关闭')]],['服务资料',[item('客户管理','customers','user'),item('电子保修卡','cards','card'),item('全部工单','orders','document')]]]},
   customers:{label:'客户管理',title:'客户导航',icon:'user',groups:[
-   ['客户资料',[item('客户管理','customers','user'),item('供应商与往来单位','inventory/parties','user'),item('经销商管理','dealers','user')]],
+   ['客户资料',[item('客户与往来单位','inventory/parties','user'),item('经销商管理','dealers','user')]],
    ['客户业务',[item('销售开单','inventory/sale/new','sale'),item('电子保修卡','cards','card'),item('全部服务工单','orders','service')]]],
    lanes:[['客户业务',[item('客户管理','customers','user'),item('销售开单','inventory/sale/new','sale'),item('应收款 / 收款','inventory/finance_ar','money')]],['设备服务',[item('电子保修卡','cards','card'),item('工单受理','orders/new','service'),item('全部服务工单','orders','document')]]]},
   settings:{label:'基础数据',title:'基础导航',icon:'settings',groups:[
