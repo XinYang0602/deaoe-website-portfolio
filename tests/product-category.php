@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__.'/../src/service/inventory.php';
 $d=new PDO('sqlite::memory:',null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);invSchema($d);invSchema($d);
+$d->exec('DROP TABLE inv_product_categories');invCategorySchema($d);invCategorySchema($d);
 $d->exec("INSERT INTO inv_products VALUES('P','P','示例产品','整机','示例品牌','','台',1,NULL,NULL,1,'',1)");
 function verify($v){if(!$v)throw new RuntimeException('Category assertion failed');}
 $a=['type'=>'products','id'=>'P','version'=>1,'name'=>'示例产品','code'=>'P','unit'=>'台','sn_enabled'=>true,'category_path'=>' 厨电 >> 热水器 / 示例品牌 '];

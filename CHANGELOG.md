@@ -1,3 +1,8 @@
+## 2026-11-12 — Existing-database category upgrade fix
+
+- Ensure the additive category table exists before authenticated inventory API reads/writes, without repeating inventory migration.
+- Added regression coverage for an existing database missing the new table; verified category editing, desktop/mobile browsing and business checks.
+
 ## 2026-11-12 — Hierarchical product categories
 
 - Added a collapsible desktop category tree, descendant filtering and full product paths.

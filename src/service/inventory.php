@@ -23,8 +23,12 @@ function invSchema(PDO $d):void{
  CREATE INDEX IF NOT EXISTS inv_lines_doc ON inv_lines(doc_id);");
  $d->exec("CREATE TABLE IF NOT EXISTS inv_delivery(doc_id TEXT PRIMARY KEY REFERENCES inv_docs(id) ON DELETE CASCADE,phone TEXT NOT NULL,contact TEXT NOT NULL,address TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS inv_sale_line_settings(line_id TEXT PRIMARY KEY REFERENCES inv_lines(id) ON DELETE CASCADE,warehouse_id TEXT NOT NULL REFERENCES inv_warehouses(id));");
- $d->exec("CREATE TABLE IF NOT EXISTS inv_product_categories(product_id TEXT PRIMARY KEY REFERENCES inv_products(id) ON DELETE CASCADE,path TEXT NOT NULL);");
+ invCategorySchema($d);
  finSchema($d);
+}
+// Run for existing installations too; the initial inventory migration is not repeated on API reads.
+function invCategorySchema(PDO $d):void{
+ $d->exec("CREATE TABLE IF NOT EXISTS inv_product_categories(product_id TEXT PRIMARY KEY REFERENCES inv_products(id) ON DELETE CASCADE,path TEXT NOT NULL);");
 }
 function iq(PDO $d,string $sql,array $a=[]):PDOStatement{$q=$d->prepare($sql);$q->execute($a);return $q;}
 function iv(string $message):never{throw new InvalidArgumentException($message);}
@@ -192,7 +196,7 @@ function invSnapshot(PDO $d):array{$out=[];foreach(['products','warehouses','par
 function handleInventory():never{
  $d=null;$transaction=false;
  try{
- if(($_SESSION['user']??'')!=='admin')jsonReply(403,['error'=>'没有库存管理权限']);$d=database();finSchema($d);if(!iq($d,"SELECT v FROM inv_meta WHERE k='version'")->fetchColumn())throw new RuntimeException('未完成库存迁移');
+ if(($_SESSION['user']??'')!=='admin')jsonReply(403,['error'=>'没有库存管理权限']);$d=database();finSchema($d);invCategorySchema($d);if(!iq($d,"SELECT v FROM inv_meta WHERE k='version'")->fetchColumn())throw new RuntimeException('未完成库存迁移');
  if($_SERVER['REQUEST_METHOD']==='GET')jsonReply(200,invSnapshot($d));if($_SERVER['REQUEST_METHOD']!=='POST')jsonReply(405,['error'=>'不支持的方法']);if(!hash_equals($_SESSION['csrf'],$_SERVER['HTTP_X_CSRF_TOKEN']??''))jsonReply(403,['error'=>'页面已过期，请刷新']);$raw=file_get_contents('php://input',false,null,0,2000001);if(strlen($raw)>2000000)jsonReply(413,['error'=>'请求超过 2MB']);$a=json_decode($raw,true,64,JSON_THROW_ON_ERROR);if(!is_array($a))iv('请求格式错误');$d->exec('BEGIN IMMEDIATE');$transaction=true;
  $r=match($a['action']??''){'adjust_stock'=>invAdjustStock($d,$a),'finance'=>finAction($d,$a),'lot_reconcile'=>p2ReconcileLot($d,$a),'p2_create'=>p2Create($d,$a),'p2_step'=>p2Step($d,$a),'label_save'=>p2SaveLabel($d,$a),'label_print'=>p2Print($d,$a),'set_default_warehouse'=>invSetDefaultWarehouse($d,$a),'master'=>invMaster($d,$a),'save_doc'=>invSaveDoc($d,$a),'transition'=>invTransition($d,$a),'opening'=>invOpening($d,$a),'print'=>invPrint($d,$a),'archive'=>invArchive($d,$a),'save_product_names'=>invSaveProductNames($d,$a),'delete_products'=>invDeleteProducts($d,$a),'test_cleanup_preview','test_cleanup_execute'=>invTestCleanup($d,$a),default=>throw new InvalidArgumentException('未知操作')};$d->exec('COMMIT');$transaction=false;jsonReply(200,$r);
  }catch(Throwable $e){if($transaction)$d->exec('ROLLBACK');if($e instanceof InvalidArgumentException||$e instanceof JsonException)jsonReply(422,['error'=>$e->getMessage()]);if($e instanceof PDOException&&str_contains($e->getMessage(),'UNIQUE'))jsonReply(409,['error'=>'编码、名称或 SN 重复，本次没有保存']);error_log('Inventory: '.$e->getMessage());jsonReply(503,['error'=>'库存操作未确认成功，请刷新重试']);}

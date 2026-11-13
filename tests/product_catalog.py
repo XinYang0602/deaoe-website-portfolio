@@ -58,6 +58,8 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     time.sleep(.1)
             with sqlite3.connect(db_path) as db:
                 db.execute("UPDATE inv_products SET purchase_cents=750")
+                # Simulate upgrading an existing installation, not a fresh database.
+                db.execute("DROP TABLE inv_product_categories")
             with sync_playwright() as pw:
                 browser=pw.chromium.launch(channel='chrome',headless=True)
                 for width,height in [(1440,900),(1024,600),(720,700),(390,844)]:
