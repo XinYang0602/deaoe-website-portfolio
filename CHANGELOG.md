@@ -1,3 +1,9 @@
+## 2026-11-12 — Module navigation and workflow maps
+
+- Grouped module panels, an application directory and local module favorites.
+- Seven responsive workflow maps linked to existing operations; service nodes apply real status filters. No new accounting or approval rules.
+- Synthetic browser checks cover three viewport sizes, menu dismissal, favorites, filters and sales form navigation.
+
 ## 2026-11-12 — Compact ERP workspace
 
 - Added horizontal desktop modules, memory-only recent route shortcuts and business workflow links. Tabs do not retain unsaved drafts.

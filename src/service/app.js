@@ -37,7 +37,7 @@ function render(){page=pages[location.hash.slice(1)]?location.hash.slice(1):'das
  ['dashboard','工作台','⌂','#dashboard'],['sales','销售管理','↑','/service/inventory#sale'],
  ['accounts','账款管理','¥','#inventory/finance'],['purchasing','采购管理','↓','/service/inventory#purchase'],['stock','库存管理','▦','/service/inventory#balances'],
  ['customers','客户档案','♧','#customers'],['orders','售后服务','▤','#orders'],['settings','基础设置','⚙','#settings']
-].map(([k,n,i,url])=>`<a href="${url}" data-section="${k}" class="${(page===k||(k==='customers'&&['cards','dealers'].includes(page)))?'active':''}"><i>${i}</i><span>${n}</span></a>`).join('');$('#crumb').textContent='工作空间 / '+(['cards','dealers'].includes(page)?'客户档案 / ':'')+pages[page][0];$('.workspace b').textContent=db.settings.name;$('#today').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});$('#main').innerHTML=page==='dashboard'?dashboard():page==='orders'?title('业务管理','安装、维修与派工，在同一处跟进。',btn('导出工单','export')+btn('新增工单','new-order',true))+`<section class="panel">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索工单、客户、电话或机器编号')}${table(['工单编号 / 日期','类型','客户信息','产品 / 机身编号','销售渠道','状态','服务人员','操作'],orderRows(db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter)))}<div class="table-foot"><span>共 ${db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter).length} 条符合条件的记录</span><span>安装与维修统一受理</span></div></section>`:({cards,stock,dealers,customers,settings}[page])();}
+].map(([k,n,i,url])=>`<a href="${url}" data-section="${k}" class="${(page===k||(k==='customers'&&['cards','dealers'].includes(page)))?'active':''}"><i>${i}</i><span>${n}</span></a>`).join('');$('#crumb').textContent='工作空间 / '+(['cards','dealers'].includes(page)?'客户档案 / ':'')+pages[page][0];$('.workspace b').textContent=db.settings.name;$('#today').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});$('#main').innerHTML=page.startsWith('workflow-')?window.renderWorkflow(page):page==='dashboard'?dashboard():page==='orders'?title('业务管理','安装、维修与派工，在同一处跟进。',btn('导出工单','export')+btn('新增工单','new-order',true))+`<section class="panel">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索工单、客户、电话或机器编号')}${table(['工单编号 / 日期','类型','客户信息','产品 / 机身编号','销售渠道','状态','服务人员','操作'],orderRows(db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter)))}<div class="table-foot"><span>共 ${db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter).length} 条符合条件的记录</span><span>安装与维修统一受理</span></div></section>`:({cards,stock,dealers,customers,settings}[page])();}
 function openModal(h,content){$('#modalBody').innerHTML=`<div class="modal-head"><h2>${h}</h2><button type="button" data-action="close" aria-label="关闭">×</button></div>${content}`;if(!$('#modal').open)$('#modal').showModal()}
 function field(label,name,type='text',value='',extra=''){return `<label>${label}<input name="${name}" type="${type}" value="${esc(value)}" required ${extra}></label>`}
 function select(label,name,items){return `<label>${label}<select name="${name}">${items.map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('')}</select></label>`}
@@ -50,29 +50,6 @@ document.addEventListener('click',async e=>{if(e.target.closest('#logout-form'))
 document.addEventListener('input',e=>{if(e.target.id==='search'){let pos=e.target.selectionStart;query=e.target.value;render();$('#search').focus();$('#search').setSelectionRange(pos,pos)}});document.addEventListener('change',e=>{if(busy||!ready)return;if(e.target.id==='stock-all'){selectedStock=new Set(e.target.checked?visibleStock().map(s=>s.id):[]);render();return}if(e.target.dataset.stockSelect){if(e.target.checked)selectedStock.add(e.target.dataset.stockSelect);else selectedStock.delete(e.target.dataset.stockSelect);render();return}if(e.target.id==='filter'){filter=e.target.value;render()}});
 document.addEventListener('submit',async e=>{if(e.target.id==='logout-form')return;e.preventDefault();if(busy||!ready)return;let f=e.target,d=Object.fromEntries(new FormData(f));if(f.id==='settings-form'){db.settings={name:d.name.trim(),months:Number(d.months)};if(!await persist())return;render();toast('设置已保存到服务器');return}let type=f.dataset.form;if(!type)return;for(let k in d)d[k]=d[k].trim();if(Object.entries(d).some(([k,v])=>k!=='order'&&!v)){toast('请完整填写表单');return}const uid=p=>p+crypto.randomUUID().replaceAll('-','');if(type==='new-order'){db.orders.unshift({...d,id:uid('GD'),channel:d.dealer==='总部直营'?'直营':'经销商',status:'待派工',staff:'未指派',history:['工单已登记，等待派工']})}if(type==='new-card'){if(db.cards.some(c=>c.sn.toLowerCase()===d.sn.toLowerCase())){toast('该机身编号已有保修卡，请勿重复登记');return}let start=new Date(d.start+'T00:00:00'),day=start.getDate();start.setDate(1);start.setMonth(start.getMonth()+db.settings.months);let last=new Date(start.getFullYear(),start.getMonth()+1,0).getDate();start.setDate(Math.min(day,last));let end=[start.getFullYear(),String(start.getMonth()+1).padStart(2,'0'),String(start.getDate()).padStart(2,'0')].join('-');db.cards.unshift({...d,id:uid('BK'),end})}if(type==='bind-card'){const c=db.cards.find(c=>c.id===f.dataset.id);if(!c){toast('保修卡不存在');return}c.miniCustomerId=d.miniCustomerId.toUpperCase()}if(type==='edit-stock'){const item=db.stock.find(s=>s.id===f.dataset.id&&!s.deleted);if(!item){toast('该物料已不存在，请刷新');return}if(item.qty!==0&&d.unit!==item.unit){toast('有库存时不能更改计量单位');return}Object.assign(item,{name:d.name,model:d.model,kind:d.kind,unit:d.unit,min:Number(d.min)})}if(type==='new-stock'){db.stock.push({...d,id:uid('P'),qty:0,min:Number(d.min)})}if(type==='new-dealer'){if(db.dealers.some(x=>x.name===d.name)){toast('经销商名称已存在');return}db.dealers.push({...d,id:uid('D'),status:'合作中'})}if(type==='in'||type==='out'){let s=activeStock().find(s=>s.id===d.item.split(' · ')[0]),qty=Number(d.qty);if(!s){toast('物料已删除或不存在，请重新选择');return}if(!Number.isSafeInteger(qty)||qty<1){toast('请输入有效正整数');return}if(type==='out'&&qty>s.qty){toast('可用库存不足，无法出库');return}if(d.type==='维修耗用'&&!d.order){toast('维修耗用必须关联工单');return}let delta=type==='in'?qty:-qty;s.qty+=delta;db.moves.unshift({...d,id:uid('KC'),name:s.name,stockId:s.id,unit:s.unit,date:new Date().toLocaleString('zh-CN'),delta});if(d.order){let o=db.orders.find(o=>o.id===d.order);o.history.push(`${d.type}：${s.name} ${qty}${s.unit}，${d.target}`)}}if(type==='update-order'){let o=db.orders.find(o=>o.id===f.dataset.id);o.staff=d.staff;o.status=d.status;o.history.push(`${d.staff} · ${d.status}：${d.record}`)}if(!await persist())return;$('#modal').close();render();toast('已保存到服务器，相关记录已更新')});
 window.addEventListener('hashchange',()=>{query='';if(ready)render()});window.addEventListener('pageshow',e=>{if(e.persisted)location.reload()});$('#main').innerHTML='<p class="notice">正在读取服务器数据…</p>';loadData().catch(e=>{$('#main').textContent=e.message});
-
-// Inventory flyout lives outside the sidebar so short screens never clip it.
-(()=>{
- const groups={
- sales:['销售管理',[['#inventory/sale/new','销售开单'],['/service/inventory#sale','销售单']]],
- purchasing:['采购管理',[['/service/inventory#purchase','采购订单'],['/service/inventory#receipt','采购入库'],['/service/inventory#parties','供应商与往来单位']]],
- stock:['库存管理',[['/service/inventory#balances','库存查询 / 期初归属'],['/service/inventory#products','商品档案'],['/service/inventory#warehouses','仓库管理'],['/service/inventory#operations','退换货与调拨'],['/service/inventory#counting','库存盘点'],['/service/inventory#lots','批次与分区'],['/service/inventory#serials','SN 与标签'],['/service/inventory#templates','打印模板'],['/service/inventory#ledger','库存流水'],['/service/inventory#events','操作日志']]],
- customers:['客户档案',[['#customers','客户资料'],['#cards','电子保修卡'],['#dealers','经销商管理'],['/service/inventory#parties','交易往来单位']]]
- };
- const menu=document.createElement('section');menu.id='inventory-flyout';menu.className='inventory-flyout';menu.hidden=true;document.body.append(menu);
- let trigger=null,timer;
- const find=el=>{const a=el?.closest?.('#nav a[data-section]');return a&&groups[a.dataset.section]?a:null;};
- function close(){clearTimeout(timer);menu.hidden=true;if(trigger)trigger.setAttribute('aria-expanded','false');}
- function place(){if(!trigger||menu.hidden)return;const r=trigger.getBoundingClientRect(),side=document.querySelector('aside').getBoundingClientRect();const width=Math.min(560,window.innerWidth-24);menu.style.width=width+'px';menu.style.left=Math.max(12,Math.min(r.left,window.innerWidth-width-12))+'px';menu.style.top=Math.max(12,Math.min(side.bottom,window.innerHeight-menu.offsetHeight-12))+'px';}
- function open(a){clearTimeout(timer);if(trigger&&trigger!==a)trigger.setAttribute('aria-expanded','false');trigger=a;const [title,items]=groups[a.dataset.section];menu.setAttribute('aria-label',title+'二级功能');menu.innerHTML='<div class="inventory-flyout-title">'+title+'</div><div class="business-subitems">'+items.map(([url,label])=>`<a href="${url}" ${url==='/service/inventory#'+inventoryRoute()?'aria-current="page"':''}>${label}<span>›</span></a>`).join('')+'</div>';a.setAttribute('aria-controls',menu.id);a.setAttribute('aria-expanded','true');menu.hidden=false;place();}
- function later(){clearTimeout(timer);timer=setTimeout(()=>{if(!menu.matches(':hover')&&!trigger?.matches(':hover')&&!menu.contains(document.activeElement)&&document.activeElement!==trigger)close();},220);}
- document.addEventListener('pointerover',e=>{const a=find(e.target);if(a)open(a);else if(menu.contains(e.target))clearTimeout(timer);});
- document.addEventListener('pointerout',e=>{if(find(e.target)||menu.contains(e.target))later();});
- document.addEventListener('focusin',e=>{const a=find(e.target);if(a)open(a);else if(!menu.contains(e.target))close();});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){e.preventDefault();trigger?.focus();close();}else if(e.key==='ArrowRight'&&find(e.target)){e.preventDefault();open(e.target);menu.querySelector('a').focus();}});
- document.addEventListener('pointerdown',e=>{if(!find(e.target)&&!menu.contains(e.target))close();});
- window.addEventListener('resize',place);document.querySelector('aside').addEventListener('scroll',place);window.addEventListener('hashchange',close);
-})();
 
 // Readable phone navigation and record labels; desktop DOM and actions stay intact.
 (()=>{
@@ -97,7 +74,7 @@ window.addEventListener('hashchange',()=>{query='';if(ready)render()});window.ad
   const link=(href,label)=>`<a href="${esc(href)}" ${current===href.slice(1)?'aria-current="page"':''}><span class="mobile-app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="${paths[iconFor(href)]}"/></svg></span><span>${esc(label)}</span></a>`;
   const group=(id,title,items)=>`<section class="mobile-app-group" data-group="${id}"><h2>${title}</h2><div>${items.map(([href,label])=>link(href,label)).join('')}</div></section>`;
   menu.querySelector('nav').innerHTML=
-   group('common','常用功能',[['#dashboard','工作台'],['#inventory/documents','单据中心']])+
+   group('common','常用功能',[['#dashboard','工作台'],['#workflow-sales','业务导航'],['#inventory/documents','单据中心']])+
    group('sales','销售管理',[['#inventory/sale/new','销售开单'],['#inventory/sale','销售单']])+
    group('accounts','账款管理',[['#inventory/finance_ar','应收款'],['#inventory/finance_advance_receipt','预收款'],['#inventory/finance_ap','应付款'],['#inventory/finance_advance_payment','预付款']])+
    group('stock','仓库管理',[['#inventory/balances','库存查询'],['#inventory/counting','库存盘点'],['#inventory/operations','退换与调拨'],['#inventory/serials','SN 与标签'],['#inventory/lots','批次与分区'],['#inventory/ledger','库存流水']])+
@@ -341,4 +318,85 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
  window.addEventListener('hashchange',paint);
  const before=render;render=function(){before();paint();};
  paint();
+})();
+
+/* Shared business navigation. Only route preferences are stored locally. */
+(() => {
+ const item=(label,route,icon='document',status='')=>({label,route,icon,status});
+ const modules={
+  sales:{label:'销售管理',title:'销售导航',icon:'sale',groups:[
+   ['销售业务',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale'),item('销售出库','inventory/issue')]],
+   ['销售往来',[item('应收款 / 收款','inventory/finance_ar','money'),item('预收款','inventory/finance_advance_receipt','money'),item('退换货与补发','inventory/operations','return')]]],
+   lanes:[['销售出货',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale','check'),item('库存查询','inventory/balances','stock')]],['收款与交付',[item('销售出库记录','inventory/issue','stock'),item('应收款 / 收款','inventory/finance_ar','money'),item('电子保修卡','cards','card')]],['退换处理',[item('退换货与补发','inventory/operations','return'),item('库存流水','inventory/ledger','stock'),item('往来账款','inventory/finance','money')]]]},
+  purchasing:{label:'采购管理',title:'采购导航',icon:'purchase',groups:[
+   ['采购业务',[item('采购开单','inventory/purchase/new'),item('采购订单 / 审核','inventory/purchase'),item('采购入库','inventory/receipt')]],
+   ['供应往来',[item('供应商与往来单位','inventory/parties','user'),item('应付款 / 付款','inventory/finance_ap','money'),item('预付款','inventory/finance_advance_payment','money')]]],
+   lanes:[['到货入库',[item('采购开单','inventory/purchase/new'),item('采购订单 / 审核','inventory/purchase','check'),item('采购入库','inventory/receipt','stock'),item('库存查询','inventory/balances','stock')]],['供应往来',[item('供应商档案','inventory/parties','user'),item('应付款 / 付款','inventory/finance_ap','money'),item('预付款','inventory/finance_advance_payment','money')]]]},
+  stock:{label:'仓库管理',title:'仓库导航',icon:'stock',groups:[
+   ['库存业务',[item('库存查询','inventory/balances','stock'),item('采购入库','inventory/receipt'),item('销售出库','inventory/issue'),item('退换货与调拨','inventory/operations','return'),item('库存盘点','inventory/counting','check')]],
+   ['库存资料',[item('商品档案','inventory/products','stock'),item('仓库管理','inventory/warehouses','stock'),item('批次与分区','inventory/lots'),item('SN 与标签','inventory/serials'),item('库存流水','inventory/ledger'),item('打印模板','inventory/templates')]]],
+   lanes:[['货物流转',[item('采购入库','inventory/receipt','purchase'),item('库存查询','inventory/balances','stock'),item('销售出库','inventory/issue','sale')]],['仓库作业',[item('库存盘点','inventory/counting','check'),item('库存流水','inventory/ledger','stock'),item('退换货与调拨','inventory/operations','return')]],['库存追溯',[item('商品档案','inventory/products','stock'),item('批次与分区','inventory/lots'),item('SN 与标签','inventory/serials'),item('操作日志','inventory/events')]]]},
+  accounts:{label:'账款管理',title:'账款导航',icon:'money',groups:[
+   ['收款业务',[item('应收款','inventory/finance_ar','money'),item('预收款','inventory/finance_advance_receipt','money')]],
+   ['付款业务',[item('应付款','inventory/finance_ap','money'),item('预付款','inventory/finance_advance_payment','money')]],
+   ['往来管理',[item('往来余额与流水','inventory/finance','money'),item('往来单位','inventory/parties','user')]]],
+   lanes:[['销售收款',[item('销售单','inventory/sale','sale'),item('应收款 / 登记收款','inventory/finance_ar','money'),item('往来余额与流水','inventory/finance','document')]],['采购付款',[item('采购入库','inventory/receipt','purchase'),item('应付款 / 登记付款','inventory/finance_ap','money'),item('往来余额与流水','inventory/finance','document')]],['预收与预付',[item('预收款','inventory/finance_advance_receipt','money'),item('往来账款','inventory/finance','money'),item('预付款','inventory/finance_advance_payment','money')]]]},
+  orders:{label:'服务管理',title:'服务导航',icon:'service',groups:[
+   ['服务工单',[item('工单受理','orders/new','service'),item('待派工','orders','service','待派工'),item('待处理','orders','service','待处理'),item('处理中','orders','service','处理中'),item('已完工','orders','check','已完工'),item('已关闭','orders','check','已关闭'),item('全部工单','orders','document')]],
+   ['客户与设备',[item('客户档案','customers','user'),item('电子保修卡','cards','card'),item('经销商管理','dealers','user')]]],
+   lanes:[['工单处理',[item('工单受理','orders/new','service'),item('待派工','orders','service','待派工'),item('待处理','orders','service','待处理'),item('处理中','orders','service','处理中')]],['完工归档',[item('处理中','orders','service','处理中'),item('已完工','orders','check','已完工'),item('已关闭','orders','check','已关闭')]],['服务资料',[item('客户档案','customers','user'),item('电子保修卡','cards','card'),item('全部工单','orders','document')]]]},
+  customers:{label:'客户关系',title:'客户导航',icon:'user',groups:[
+   ['客户资料',[item('客户档案','customers','user'),item('供应商与往来单位','inventory/parties','user'),item('经销商管理','dealers','user')]],
+   ['客户业务',[item('销售开单','inventory/sale/new','sale'),item('电子保修卡','cards','card'),item('全部服务工单','orders','service')]]],
+   lanes:[['客户业务',[item('客户档案','customers','user'),item('销售开单','inventory/sale/new','sale'),item('应收款 / 收款','inventory/finance_ar','money')]],['设备服务',[item('电子保修卡','cards','card'),item('工单受理','orders/new','service'),item('全部服务工单','orders','document')]]]},
+  settings:{label:'基础数据',title:'基础导航',icon:'settings',groups:[
+   ['业务资料',[item('商品档案','inventory/products','stock'),item('仓库管理','inventory/warehouses','stock'),item('往来单位','inventory/parties','user')]],
+   ['系统维护',[item('基础设置','settings','settings'),item('打印模板','inventory/templates','document'),item('操作日志','inventory/events','document')]]],
+   lanes:[['基础建档',[item('商品档案','inventory/products','stock'),item('仓库管理','inventory/warehouses','stock'),item('往来单位','inventory/parties','user')]],['业务应用',[item('采购订单','inventory/purchase','purchase'),item('销售单','inventory/sale','sale'),item('库存查询','inventory/balances','stock')]],['系统维护',[item('基础设置','settings','settings'),item('打印模板','inventory/templates','document'),item('操作日志','inventory/events','document')]]]}
+ };
+ const paths={document:'M6 3h12v18H6zM9 8h6M9 12h6M9 16h4',sale:'M4 5h11v14H4zM10 12h11m-4-4 4 4-4 4',purchase:'M9 5h11v14H9M3 12h12m-4-4 4 4-4 4',stock:'m3 7 9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10',money:'M3 5h18v14H3zM7 9h1m8 6h1M14 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0',user:'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M4 21v-3a8 8 0 0 1 16 0v3',service:'m4 20 7-7M13 3a6 6 0 0 0-2 10 6 6 0 0 0 10-2l-5 2-3-3 2-5z',settings:'M12 3v3m0 12v3M3 12h3m12 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0',card:'M3 5h18v14H3zM3 10h18M7 15h4',check:'M4 12l5 5L20 6',return:'M8 5 3 10l5 5M3 10h12a6 6 0 0 1 0 12'};
+ const icon=name=>`<span class="workflow-icon icon-${esc(name)}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="${paths[name]||paths.document}"/></svg></span>`;
+ function action(x,cls=''){
+  const inner=icon(x.icon)+`<span>${esc(x.label)}</span>`;
+  return x.status?`<button type="button" class="${cls}" data-go="orders" data-filter="${esc(x.status)}">${inner}</button>`:`<a class="${cls}" href="#${esc(x.route)}">${inner}</a>`;
+ }
+ Object.entries(modules).forEach(([key,m])=>{pages['workflow-'+key]=[m.title,m.icon];});
+ window.deaoeWorkflowModules=modules;
+ window.renderWorkflow=route=>{
+  const key=route.replace('workflow-',''),m=modules[key];if(!m)return '';
+  const related=m.groups.flatMap(g=>g[1]).filter(x=>!x.status);
+  return `<section class="workflow-page" aria-label="${m.title}"><nav class="workflow-switcher" aria-label="业务流程导航">${Object.entries(modules).map(([k,v])=>`<a href="#workflow-${k}" ${key===k?'aria-current="page"':''}>${icon(v.icon)}${v.label}</a>`).join('')}</nav><div class="workflow-canvas"><header class="workflow-canvas-head"><h1>${m.title}</h1><span>点击节点进入业务</span></header><div class="workflow-lanes">${m.lanes.map(([label,nodes])=>`<section class="workflow-lane"><h2>${label}</h2><div class="workflow-path">${nodes.map((n,i)=>(i?'<span class="workflow-arrow" aria-hidden="true">→</span>':'')+action(n,'workflow-node')).join('')}</div></section>`).join('')}</div></div><section class="workflow-related"><h2>相关记录与资料</h2>${related.map(x=>action(x,'workflow-related-link')).join('')}</section></section>`;
+ };
+ const menu=document.createElement('section');menu.id='workflow-menu';menu.hidden=true;menu.setAttribute('aria-label','业务功能面板');
+ const shade=document.createElement('div');shade.id='workflow-shade';shade.hidden=true;shade.setAttribute('aria-hidden','true');document.body.append(shade,menu);
+ let trigger=null,active='',timer=0;
+ let favorites=new Set(['sales','purchasing','stock','orders']);
+ try{const saved=JSON.parse(localStorage.getItem('deaoe-workflow-favorites'));if(Array.isArray(saved))favorites=new Set(saved.filter(k=>Object.hasOwn(modules,k)));}catch{}
+ function close(){clearTimeout(timer);menu.hidden=true;shade.hidden=true;trigger?.setAttribute('aria-expanded','false');active='';}
+ function position(){if(menu.hidden||!trigger)return;const r=trigger.getBoundingClientRect(),mobile=innerWidth<=700;menu.style.top=(mobile?Math.max(0,r.bottom):document.querySelector('aside').getBoundingClientRect().bottom)+'px';menu.style.left=mobile?'12px':Math.max(12,Math.min(r.left,innerWidth-menu.offsetWidth-12))+'px';menu.style.maxHeight=Math.max(160,innerHeight-parseFloat(menu.style.top)-12)+'px';}
+ function moduleTile(key){const m=modules[key];return `<div class="workflow-app">${action(item(m.label,'workflow-'+key,m.icon),'workflow-app-link')}<button type="button" data-workflow-favorite="${key}" aria-label="${favorites.has(key)?'取消收藏':'收藏'}${m.label}" aria-pressed="${favorites.has(key)}">${favorites.has(key)?'★':'☆'}</button></div>`;}
+ function paint(){
+  menu.classList.toggle('workflow-menu-all',active==='all');
+  if(active==='all')menu.innerHTML=`<div class="workflow-menu-heading"><h2>全部应用</h2><button type="button" data-workflow-close aria-label="关闭业务面板">×</button></div><section class="workflow-app-section"><h3>业务管理</h3><div class="workflow-app-grid">${Object.keys(modules).filter(k=>k!=='settings').map(moduleTile).join('')}</div></section><section class="workflow-app-section"><h3>系统维护</h3><div class="workflow-app-grid">${moduleTile('settings')}</div></section><section class="workflow-app-section"><h3>我的常用</h3><div class="workflow-app-grid">${[...favorites].map(k=>action(item(modules[k].label,'workflow-'+k,modules[k].icon),'workflow-app-link')).join('')||'<p class="workflow-empty">点击星标添加常用模块</p>'}</div></section>`;
+  else {const m=modules[active];menu.innerHTML=`<div class="workflow-menu-heading"><a href="#workflow-${active}">${icon(m.icon)}<strong>${m.title}</strong></a><button type="button" data-workflow-close aria-label="关闭业务面板">×</button></div><div class="workflow-menu-columns">${m.groups.map(([title,items])=>`<section><h3>${title}</h3>${items.map(x=>action(x,'workflow-menu-link')).join('')}</section>`).join('')}</div>`;}
+ }
+ function open(a){const key=a.dataset.section;if(key!=='all'&&!modules[key])return;clearTimeout(timer);if(trigger!==a)trigger?.setAttribute('aria-expanded','false');trigger=a;active=key;paint();a.setAttribute('aria-expanded','true');a.setAttribute('aria-controls',menu.id);menu.hidden=false;shade.hidden=false;position();}
+ const find=target=>target?.closest?.('#nav [data-section]');
+ function refresh(){
+  const nav=document.querySelector('#nav');if(!nav)return;
+  if(!nav.querySelector('[data-section=all]'))nav.insertAdjacentHTML('afterbegin','<button type="button" class="workflow-all-trigger" data-section="all">▦ <span>全部</span></button>');
+  nav.querySelectorAll('[data-section]').forEach(a=>{if(a.dataset.section==='all'||modules[a.dataset.section]){a.setAttribute('aria-controls',menu.id);a.setAttribute('aria-expanded','false');}});
+  const key=location.hash.replace('#workflow-','');if(modules[key]){nav.querySelectorAll('.active').forEach(a=>a.classList.remove('active'));nav.querySelector(`[data-section="${key}"]`)?.classList.add('active');}
+ }
+ const previous=render;render=function(){previous();refresh();};refresh();
+ document.addEventListener('pointerover',e=>{const a=find(e.target);if(a&&matchMedia('(min-width:701px)').matches)open(a);else if(menu.contains(e.target))clearTimeout(timer);});
+ document.addEventListener('pointerout',e=>{if(find(e.target)||menu.contains(e.target)){clearTimeout(timer);timer=setTimeout(()=>{if(!menu.matches(':hover')&&!trigger?.matches(':hover')&&!menu.contains(document.activeElement))close();},240);}});
+ document.addEventListener('click',e=>{
+  const a=find(e.target);if(a&&(a.dataset.section==='all'||modules[a.dataset.section])){e.preventDefault();e.stopImmediatePropagation();open(a);return;}
+  const star=e.target.closest('[data-workflow-favorite]');if(star){const key=star.dataset.workflowFavorite;favorites.has(key)?favorites.delete(key):favorites.add(key);try{localStorage.setItem('deaoe-workflow-favorites',JSON.stringify([...favorites]));}catch{}paint();position();menu.querySelector(`[data-workflow-favorite="${key}"]`)?.focus();return;}
+  if(e.target===shade||e.target.closest('[data-workflow-close]')){close();return;}
+  if(menu.contains(e.target)&&e.target.closest('a,button[data-go]'))close();
+ },true);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){e.preventDefault();const a=trigger;close();a?.focus();}else if(e.key==='ArrowDown'&&find(e.target)){e.preventDefault();open(find(e.target));menu.querySelector('a,button')?.focus();}});
+ window.addEventListener('resize',position);window.addEventListener('hashchange',close);
 })();
