@@ -263,3 +263,5 @@ Existing records remain unchanged. Local business and browser regression checks;
 Existing records remain unchanged. Local business and browser regression checks; no production deployment.
 
 ## 2026-11-12 — Product number previews no longer consume codes on cancel; aligned image upload controls.
+
+## 2026-11-12 — Settings center with clear configuration cards, aligned business fields and a separate export section.

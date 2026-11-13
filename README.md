@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-12 — Settings center with clear configuration cards, aligned business fields and a separate export section.
+
 - 2026-11-12 — Product number previews no longer consume codes on cancel; aligned image upload controls.
 
 - 2026-11-12 — Single-window product editor with compact category/media layout and editable-number hint.

@@ -76,6 +76,15 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     expect(page.locator('#nav')).to_contain_text('客户管理')
                     assert '数据存储于服务器' not in page.locator('body').inner_text()
                     assert '服务器数据' not in page.locator('body').inner_text()
+                    page.goto(base+'/service/#settings')
+                    expect(page.locator('.settings-entry')).to_have_count(3)
+                    expect(page.locator('#settings-form')).to_be_visible()
+                    entry=page.get_by_role('link',name='编号管理',exact=False)
+                    expect(entry).to_be_visible()
+                    assert entry.bounding_box()['height']>=44
+                    page.screenshot(path=str(REPORT/f'settings-{width}.png'),full_page=True)
+                    entry.click()
+                    expect(page.frame_locator('#inventory-workspace-frame').locator('#main h1')).to_have_text('编号管理')
                     page.goto(base+'/service/#inventory/products')
                     frame=page.frame_locator('#inventory-workspace-frame')
                     if width==390:
