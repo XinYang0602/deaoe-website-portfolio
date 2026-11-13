@@ -576,3 +576,12 @@ main.compact-register{max-width:none;padding:16px 20px}
  .single-product-form .category-level label{grid-template-columns:48px minmax(110px,1fr)}
  .single-product-form .category-editor>label{grid-template-columns:72px minmax(0,1fr)}
 }
+
+@media(min-width:701px){
+ .single-product-form .product-image-editor{display:grid;grid-template-columns:auto minmax(80px,1fr) minmax(220px,2fr) auto;align-items:center;gap:6px 10px}
+ .single-product-form .product-image-editor h3{margin:0;align-self:center}
+ .single-product-form .product-image-editor label{display:flex;flex-direction:row;align-items:center;gap:8px;margin:0;min-width:0;font-size:12px}
+ .single-product-form .product-image-editor label input{min-width:0;flex:1;margin:0}
+ .single-product-form .product-image-editor [data-upload-product-image]{align-self:center;margin:0;min-height:30px;padding:4px 10px}
+ .single-product-form .product-image-editor small,.single-product-form .product-image-editor [data-image-status]{grid-column:1/-1}
+}

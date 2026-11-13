@@ -55,6 +55,7 @@ function invReserveNumber(PDO $d,array $a):array{
  $key=it($a['request_key']??'',80);if(!preg_match('/^[a-zA-Z0-9_-]{16,80}$/D',$key))iv('请求编号无效');
  $date=it($a['date']??(new DateTimeImmutable('now',new DateTimeZone('Asia/Shanghai')))->format('Y-m-d'));
  $day=DateTimeImmutable::createFromFormat('!Y-m-d',$date);if(!$day||$day->format('Y-m-d')!==$date)iv('日期无效');
+ if($type==='product')return ['number'=>invNextProductCode($d,true),'date'=>$date];
  $storage='number_reservation:'.hash('sha256',($_SESSION['user']??'').':'.$type.':'.$key.':'.$date);
  $existing=iq($d,'SELECT v FROM inv_meta WHERE k=?',[$storage])->fetchColumn();if($existing)return ['number'=>$existing,'date'=>$date];
  $number=$type==='product'?invNextProductCode($d):invDocumentNumber($d,$type,$date);
@@ -129,10 +130,11 @@ function invSaveCodeRule(PDO $d,array $a):array {
  $v=['prefix'=>$prefix,'digits'=>$digits,'next'=>$next,'version'=>$old['version']+1];
  iq($d,"INSERT INTO inv_meta VALUES('product_code_rule',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",[json_encode($v)]);ilog($d,'product.code_rule','rule',$v);return $v;
 }
-function invNextProductCode(PDO $d):string {
+function invNextProductCode(PDO $d,bool $preview=false):string {
  $r=invCodeRule($d);
  foreach(iq($d,'SELECT code FROM inv_products')->fetchAll(PDO::FETCH_COLUMN) as $existing){if(preg_match('/^'.preg_quote($r['prefix'],'/').'([0-9]{'.$r['digits'].'})$/D',$existing,$m))$r['next']=max($r['next'],(int)$m[1]+1);}
  do {if($r['next']>=10**$r['digits'])iv('产品编号已用尽，请调整编号规则');$code=$r['prefix'].str_pad((string)$r['next']++,$r['digits'],'0',STR_PAD_LEFT);}while(iq($d,'SELECT 1 FROM inv_products WHERE code=?',[$code])->fetchColumn()||iq($d,'SELECT 1 FROM inv_meta WHERE k=?',['issued_product:'.$code])->fetchColumn());
+ if($preview)return $code;
  iq($d,'INSERT INTO inv_meta(k,v) VALUES(?,?)',['issued_product:'.$code,'1']);
  $r['version']++;iq($d,"INSERT INTO inv_meta VALUES('product_code_rule',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",[json_encode($r)]);return $code;
 }
@@ -177,6 +179,7 @@ function invMaster(PDO $d,array $a):array{
  // Normalize known bilingual aliases on new/explicitly changed brand assignments only.
  $brand=it($a['brand']??'德澳');
  if(!$old||$brand!==$old['brand'])foreach(invBrands($d)['entries'] as $entry)if($brand===$entry['name']||strtoupper($brand)===$entry['english']){$a['brand']=$entry['name'];break;}
+ if(iq($d,'SELECT 1 FROM inv_products WHERE code=? AND id<>?',[$code,$id])->fetchColumn())iv('产品编号已被使用，请修改编号后再保存');
  $fields=['code'=>$code,'name'=>$name,'category'=>it($a['category']??'整机'),'brand'=>it($a['brand']??'德澳'),'model'=>it($a['model']??''),'unit'=>$unit,'sn_enabled'=>$sn,'purchase_cents'=>money($a['purchase_price']??null),'sale_cents'=>money($a['sale_price']??null),'active'=>$active,'models'=>it($a['models']??'',3000)];
  }elseif($type==='warehouses'){
  if(!$active&&p2Ready($d)){p2Unlocked($d,$id);if(iq($d,"SELECT 1 FROM inv_ops WHERE state IN ('draft','submitted','rejected','transit') AND (json_extract(body,'$.warehouse_id')=? OR json_extract(body,'$.to_warehouse')=?)",[$id,$id])->fetchColumn())iv('仓库有未完成第二期业务');}

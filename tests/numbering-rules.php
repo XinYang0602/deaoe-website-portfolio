@@ -25,11 +25,16 @@ try{invReservedDocument($d,$request+['reserved_number'=>$first],'DB','2026-11-12
 $_SESSION['user']='admin';$product=['type'=>'product','request_key'=>str_repeat('p',24),'date'=>'2026-11-12'];checkNumber(invReserveNumber($d,$product)['number']==='P00001');checkNumber(invReserveNumber($d,$product)['number']==='P00001');
 echo "PASS editable rules, protected sales, reservations, idempotence, ownership, collision and date guards\n";
 
-$r=invCodeRule($d);invSaveCodeRule($d,['version'=>$r['version'],'prefix'=>'P','digits'=>5,'next'=>1]);checkNumber(invNextProductCode($d)==='P00002');
-echo "PASS product rule reset cannot reuse a reserved code\n";
+$r=invCodeRule($d);invSaveCodeRule($d,['version'=>$r['version'],'prefix'=>'P','digits'=>5,'next'=>1]);checkNumber(invNextProductCode($d)==='P00001');
+echo "PASS product preview does not consume a code\n";
 
 iq($d,"INSERT INTO inv_meta(k,v) VALUES(?,?)",["document_sequence:RK:2026-11-12","12"]);checkNumber(invDocumentNumber($d,"RK","2026-11-12")==="RK-261112-013");
 echo "PASS legacy counters retained\n";
 
 checkNumber(invReservedDocument($d,$request+["reserved_number"=>$first,"reserved_date"=>"2026-11-12"],"DB")===$first);
 echo "PASS reserved date retained across timezone or midnight boundary\n";
+
+$before=invCodeRule($d);$count=$d->query('SELECT COUNT(*) FROM inv_meta')->fetchColumn();
+for($i=0;$i<5;$i++)checkNumber(invReserveNumber($d,['type'=>'product','request_key'=>str_repeat((string)$i,24)])['number']==='P00002');
+checkNumber(invCodeRule($d)===$before);checkNumber($d->query('SELECT COUNT(*) FROM inv_meta')->fetchColumn()===$count);
+echo "PASS repeated canceled previews leave sequence and metadata unchanged\n";

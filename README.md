@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-12 — Product number previews no longer consume codes on cancel; aligned image upload controls.
+
 - 2026-11-12 — Single-window product editor with compact category/media layout and editable-number hint.
 
 - 2026-11-12 — Bilingual brand configuration, copy-as-new products, compact editor tabs and image-cell upload.

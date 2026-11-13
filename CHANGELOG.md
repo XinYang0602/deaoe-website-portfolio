@@ -261,3 +261,5 @@ Existing records remain unchanged. Local business and browser regression checks;
 ## 2026-11-12 — Single-window product editor with compact category/media layout and editable-number hint.
 
 Existing records remain unchanged. Local business and browser regression checks; no production deployment.
+
+## 2026-11-12 — Product number previews no longer consume codes on cancel; aligned image upload controls.
