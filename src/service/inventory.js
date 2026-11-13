@@ -67,6 +67,10 @@ function head(desc,actions=''){return `<div class="head"><div><h1>${names[page]}
 // 商品筛选：同组多选取并集，不同组取交集；分类以商品保存的资料为准。
 let productFilters = {kind: [], family: [], name: []};
 let productPage = 1, productPageSize = 20;
+// Explicit directory paths do not change the existing product-name defaults.
+function categoryParts(p){return String(p.category_path||p.category||'未分类').split(/\/|>+|›/).map(x=>x.trim()).filter(Boolean);}
+function categoryPath(p){return categoryParts(p).join(' / ');}
+function categoryEditor(p){return `<label class="wide">产品分类路径<input name="category_path" maxlength="600" list="category-path-options" value="${E(p.category_path||'')}" placeholder="例如：厨电 / 热水器 / 燃气热水器 / 德澳"><datalist id="category-path-options">${[...new Set(data.products.map(categoryPath))].map(c=>`<option value="${E(c)}"></option>`).join('')}</datalist><small>用 / 分隔层级，最多 8 级；可选择已有路径。留空沿用名称分类。</small><output class="category-path-preview">${E(categoryPath(p).replaceAll(' / ',' › '))}</output></label>`;}
 function productFacets(p) {
  const parts = String(p.category || '').split('/').map(s => s.trim());
  const kind = parts[parts.length - 1] || '未分类';
@@ -141,7 +145,7 @@ function productNameSelect(current){
  const values=current&&!names.includes(current)?[current,...names]:names;
  return `<label>名称 *<select name="name" required><option value="">请选择名称</option>${values.map(n=>`<option value="${E(n)}" ${n===current?'selected':''}>${E(n)}${!names.includes(n)?'（原名称）':''}</option>`).join('')}</select></label>`;
 }
-function master(type,id=''){const collection=data[type],p=collection.find(x=>x.id===id)||{};let fields=input('名称 *','name',p.name||'','text','required maxlength="200"');if(type==='products')fields=input('商品编码 *','code',p.code||'','text','required maxlength="200"')+productNameSelect(p.name||'')+input('分类（自动带出）','category',p.category||'请选择名称','text','readonly')+input('品牌','brand',p.brand||'德澳')+input('型号','model',p.model||'')+`<label>计量单位<select name="unit">${[...new Set(['台','个','件','套','米',p.unit||'台'])].map(u=>`<option ${u===(p.unit||'台')?'selected':''}>${E(u)}</option>`).join('')}</select></label>`+input('参考采购价（元）','purchase_price',p.purchase_cents==null?'':money(p.purchase_cents),'number','step="0.01" min="0"')+input('参考销售价（元）','sale_price',p.sale_cents==null?'':money(p.sale_cents),'number','step="0.01" min="0"')+input('适用型号（逗号分隔）','models',p.models||'')+`<label class="check"><input name="sn_enabled" type="checkbox" ${p.sn_enabled===0?'':'checked'}>逐台 SN 追踪（整机默认开启）</label>`;
+function master(type,id=''){const collection=data[type],p=collection.find(x=>x.id===id)||{};let fields=input('名称 *','name',p.name||'','text','required maxlength="200"');if(type==='products')fields=input('商品编码 *','code',p.code||'','text','required maxlength="200"')+productNameSelect(p.name||'')+input('分类（自动带出）','category',p.category||'请选择名称','text','readonly')+categoryEditor(p)+input('品牌','brand',p.brand||'德澳')+input('型号','model',p.model||'')+`<label>计量单位<select name="unit">${[...new Set(['台','个','件','套','米',p.unit||'台'])].map(u=>`<option ${u===(p.unit||'台')?'selected':''}>${E(u)}</option>`).join('')}</select></label>`+input('参考采购价（元）','purchase_price',p.purchase_cents==null?'':money(p.purchase_cents),'number','step="0.01" min="0"')+input('参考销售价（元）','sale_price',p.sale_cents==null?'':money(p.sale_cents),'number','step="0.01" min="0"')+input('适用型号（逗号分隔）','models',p.models||'')+`<label class="check"><input name="sn_enabled" type="checkbox" ${p.sn_enabled===0?'':'checked'}>逐台 SN 追踪（整机默认开启）</label>`;
 if(type==='parties')fields=`<label>类型<select name="kind"><option value="supplier" ${p.kind==='supplier'?'selected':''}>供应商</option><option value="customer" ${p.kind==='customer'?'selected':''}>客户</option></select></label>`+fields+input('联系人','contact',p.contact||'')+input('电话','phone',p.phone||'')+input('地址','address',p.address||'');
 show(`<h2>${id?'编辑':'新增'}${type==='products'?'商品':type==='warehouses'?'仓库':'往来单位'}</h2><form id="master-form" data-type="${type}" data-id="${E(id)}" data-version="${p.version||0}"><div class="grid">${fields}<label class="check"><input type="checkbox" name="active" ${p.active===0?'':'checked'}>启用</label></div>${type==='products'?'<p class="muted">选择名称会带出分类、单位和 SN 默认值；已有库存历史时不可更改单位或 SN 模式。</p><button type="button" data-action="apply-name-defaults">重新带出名称默认设置</button>':''}${foot('保存档案')}</form>`);}
 function serialParse(text){return text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map(s=>{let v=s.split(/[,，\t]/).map(x=>x.trim());if(v.length>2)throw Error('每行只能填写系统 SN、厂家 SN 两列');return {sn:v[0],manufacturer_sn:v[1]||''};});}
@@ -402,3 +406,5 @@ document.addEventListener('click',event=>{
  const error=form.querySelector('.form-error');if(error){error.hidden=false;error.textContent='请选择客户';}
  alert('请选择客户');form.querySelector('.sales-customer-trigger').focus();
 },true);
+
+document.addEventListener('input',e=>{if(e.target.matches('[name=category_path]')){const f=e.target.form;f.querySelector('.category-path-preview').textContent=categoryParts({category_path:e.target.value,category:f.elements.category.value}).join(' › ');}});

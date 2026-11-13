@@ -1,3 +1,9 @@
+## 2026-11-12 — Hierarchical product categories
+
+- Added a collapsible desktop category tree, descendant filtering and full product paths.
+- Editable paths support up to eight levels with existing-path suggestions; legacy product defaults remain unchanged.
+- An additive category table preserves existing records. Validated path constraints, stale writes, desktop editing/filtering and mobile regression.
+
 ## 2026-11-12 — Consistent business icons
 
 - Added original 24px outline SVG artwork for navigation, application menus, workflows and favorite controls.
