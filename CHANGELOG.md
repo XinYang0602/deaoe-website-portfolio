@@ -1,3 +1,8 @@
+## 2026-11-12 — Narrower product editor
+
+- Reduced desktop product editor width from 1100px to 860px while retaining all fields in one window. Simplified price labels.
+- Preserved business behavior and the mobile breakpoint. JavaScript syntax, existing synthetic browser regressions and screenshots reviewed.
+
 ## 2026-11-12 — Editable document sequences
 
 - Added configurable purchasing, receipt, transfer and related document numbering while preserving sales rules and historical IDs.

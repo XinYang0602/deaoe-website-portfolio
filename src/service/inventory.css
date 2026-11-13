@@ -535,7 +535,7 @@ main.compact-register{max-width:none;padding:16px 20px}
 }
 
 @media(min-width:701px){
- #modal:has(.single-product-form){width:min(1100px,96vw);padding:12px 16px}
+ #modal:has(.single-product-form){width:min(860px,94vw);padding:12px 16px}
  #master-form.single-product-form .grid{gap:6px 12px}
  .single-product-form .code-edit-hint{font-size:11px;color:#66758a;display:inline;font-weight:normal}
  .single-product-form .category-editor{border-top:1px solid #dde3eb;margin-top:8px;padding:6px 0!important;grid-template-columns:1fr 2fr;gap:5px 12px}
