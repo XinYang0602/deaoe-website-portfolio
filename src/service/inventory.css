@@ -684,3 +684,7 @@ main.compact-register{max-width:none;padding:16px 20px}
 .production-tabs a{display:inline-block;padding:4px 6px;margin:0;line-height:1.4;font-size:13px}
 .production-table-scroll{overflow-x:auto;max-width:100%}
 .production-workspace .head>div{display:flex;gap:6px;flex-wrap:wrap}
+
+/* Custom brand names remain readable at saved column widths. */
+.product-catalog td.product-brand-full{white-space:normal;overflow-wrap:anywhere;overflow:visible;text-overflow:clip}
+#brands-form td input{width:100%}

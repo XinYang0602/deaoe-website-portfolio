@@ -47,3 +47,16 @@ checkNumber(invNextProductCode($d,true)==='P00001');
 $d->exec("INSERT INTO inv_products VALUES('LOW','P00001','示例','','','','台',0,NULL,NULL,1,'',1)");
 checkNumber(invNextProductCode($d,true)==='P00002');
 echo "PASS configured next wins over maximum, skips occupied codes, ignores canceled legacy preview\n";
+
+// Sales previews may race; only saving consumes a number, inside the caller transaction.
+$req=['type'=>'XS','request_key'=>str_repeat('s',24),'date'=>'2026-11-13'];
+$before=$d->query('SELECT k,v FROM inv_meta ORDER BY k')->fetchAll();
+for($i=0;$i<5;$i++)checkNumber(invReserveNumber($d,array_merge($req,['request_key'=>str_repeat((string)$i,24)]))['number']==='XS-261113-001');
+checkNumber($d->query('SELECT k,v FROM inv_meta ORDER BY k')->fetchAll()===$before);
+$save=$req+['reserved_number'=>'XS-261113-001'];
+checkNumber(invReservedDocument($d,$save,'XS','2026-11-13')==='XS-261113-001');
+checkNumber(invReservedDocument($d,$save,'XS','2026-11-13')==='XS-261113-002');
+$d->beginTransaction();invReservedDocument($d,$save,'XS','2026-11-13');$d->rollBack();
+checkNumber(invReserveNumber($d,$req)['number']==='XS-261113-003');
+checkNumber(invReserveNumber($d,array_merge($req,['date'=>'2026-11-14']))['number']==='XS-261114-001');
+echo "PASS canceled sales leave metadata unchanged, simultaneous previews allocate distinct save numbers, rollback and date reset\n";

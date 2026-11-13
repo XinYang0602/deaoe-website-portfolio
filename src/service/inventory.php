@@ -75,6 +75,7 @@ function invReserveNumber(PDO $d,array $a):array{
  $date=it($a['date']??(new DateTimeImmutable('now',new DateTimeZone('Asia/Shanghai')))->format('Y-m-d'));
  $day=DateTimeImmutable::createFromFormat('!Y-m-d',$date);if(!$day||$day->format('Y-m-d')!==$date)iv('日期无效');
  if($type==='product')return ['number'=>invNextProductCode($d,true),'date'=>$date];
+ if($type==='XS')return ['number'=>invDocumentNumber($d,$type,$date,true),'date'=>$date];
  $storage='number_reservation:'.hash('sha256',($_SESSION['user']??'').':'.$type.':'.$key.':'.$date);
  $existing=iq($d,'SELECT v FROM inv_meta WHERE k=?',[$storage])->fetchColumn();if($existing)return ['number'=>$existing,'date'=>$date];
  $number=$type==='product'?invNextProductCode($d):invDocumentNumber($d,$type,$date);
@@ -82,11 +83,12 @@ function invReserveNumber(PDO $d,array $a):array{
 }
 function invReservedDocument(PDO $d,array $a,string $type,?string $date=null):string{
  $date=$date??($a['reserved_date']??null)??(new DateTimeImmutable('now',new DateTimeZone('Asia/Shanghai')))->format('Y-m-d');
+ if($type==='XS')return invDocumentNumber($d,$type,$date); // Sales previews never reserve a number.
  $provided=it($a['reserved_number']??'');if(!$provided)return invDocumentNumber($d,$type,$date); // legacy clients
  $storage='number_reservation:'.hash('sha256',($_SESSION['user']??'').':'.$type.':'.($a['request_key']??'').':'.$date);
  if(iq($d,'SELECT v FROM inv_meta WHERE k=?',[$storage])->fetchColumn()!==$provided)iv('编号与当前日期不匹配，请重新获取编号');return $provided;
 }
-function invDocumentNumber(PDO $d,string $prefix,?string $date=null):string{
+function invDocumentNumber(PDO $d,string $prefix,?string $date=null,bool $preview=false):string{
  $date=$date??(new DateTimeImmutable('now',new DateTimeZone('Asia/Shanghai')))->format('Y-m-d');
  $day=DateTimeImmutable::createFromFormat('!Y-m-d',$date);
  if(!$day||$day->format('Y-m-d')!==$date||!preg_match('/^[A-Z]{2,6}$/D',$prefix))iv('单号日期或类型无效');
@@ -102,6 +104,7 @@ function invDocumentNumber(PDO $d,string $prefix,?string $date=null):string{
   $n=max($r['start']-1,(int)iq($d,'SELECT v FROM inv_meta WHERE k=?',[$key])->fetchColumn());
   do{$n++;$number=$stem.str_pad((string)$n,$r['digits'],'0',STR_PAD_LEFT);
   }while(iq($d,'SELECT 1 FROM inv_docs WHERE id=?',[$number])->fetchColumn()||(p2Ready($d)&&iq($d,'SELECT 1 FROM inv_ops WHERE id=?',[$number])->fetchColumn())||iq($d,'SELECT 1 FROM inv_meta WHERE k=?',['issued_number:'.$number])->fetchColumn());
+  if($preview){$d->exec('ROLLBACK TO SAVEPOINT document_number');$d->exec('RELEASE SAVEPOINT document_number');return $number;}
   iq($d,'INSERT INTO inv_meta(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v',[$key,(string)$n]);
   iq($d,'INSERT INTO inv_meta(k,v) VALUES(?,?)',['issued_number:'.$number,$prefix]);
   $d->exec('RELEASE SAVEPOINT document_number');return $number;
@@ -174,7 +177,7 @@ function invSaveBrands(PDO $d,array $a):array{
  if(($_SESSION['user']??'')!=='admin')iv('仅管理员可以管理品牌');
  $old=invBrands($d);if(($a['version']??null)!==$old['version'])iv('品牌配置已更新，请刷新');
  $rows=$a['entries']??[];if(!is_array($rows)||count($rows)>200)iv('品牌数量无效');$clean=[];$seen=[];
- foreach($rows as $r){$name=it($r['name']??'',60);$en=strtoupper(it($r['english']??'',60));if(!$name&&!$en)continue;if(!$name||!$en)iv('请填写品牌中英文名称');foreach([$name,$en] as $alias){$k=strtoupper($alias);if(isset($seen[$k]))iv('品牌名称重复');$seen[$k]=true;}$clean[]=['name'=>$name,'english'=>$en];}
+ foreach($rows as $r){$name=it($r['name']??'',60);$en=strtoupper(it($r['english']??'',60));if(!$name&&!$en)continue;if(!$name)iv('请填写品牌名称');foreach(array_unique(array_map('strtoupper',array_filter([$name,$en]))) as $alias){$k=strtoupper($alias);if(isset($seen[$k]))iv('品牌名称重复');$seen[$k]=true;}$clean[]=['name'=>$name,'english'=>$en];}
  if(!$clean)iv('请至少保留一个品牌');$out=['version'=>$old['version']+1,'entries'=>$clean];
  iq($d,"INSERT INTO inv_meta(k,v) VALUES('product_brands',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",[json_encode($out)]);ilog($d,'brands.update','product_brands',$out);return $out;
 }

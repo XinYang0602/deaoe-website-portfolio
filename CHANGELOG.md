@@ -1,3 +1,11 @@
+## 2026-11-13 — Product entry and sales numbering
+
+- Accept one custom brand name per entry and wrap long names in the product list; preserve existing aliases.
+- Upload multiple images while creating a product; preserve the saved product and failed files for retry without duplicate creation.
+- Preview gallery thumbnails on hover or keyboard focus, including inside the product dialog.
+- Preview sales numbers without consuming them; allocate the final unique number within the save transaction. Previously issued numbers remain untouched.
+- Validation: source and business regressions, custom brand validation, canceled/concurrent sales previews and transaction rollback; desktop/mobile product browser checks, image failure/retry, and gallery previews using synthetic local fixtures.
+
 ## 2026-11-13 — Multiple product images and remembered table columns
 
 Remove the per-product image-count cap and support multi-file uploads with per-file progress and partial-failure feedback. Retain individual file validation. Desktop tables gain a left-aligned column chooser, persisted per account and list, alongside existing column widths. Include reset, retry, keyboard access and a last-visible-column guard. Synthetic upload and responsive table regressions cover persistence and account isolation.

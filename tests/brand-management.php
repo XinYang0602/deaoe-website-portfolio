@@ -8,3 +8,8 @@ try{invSaveBrands($d,$a);throw new RuntimeException('stale accepted');}catch(Inv
 try{invSaveBrands($d,['version'=>1,'entries'=>[['name'=>'A','english'=>'TEST'],['name'=>'B','english'=>'TEST']]]);throw new RuntimeException('duplicate accepted');}catch(InvalidArgumentException $e){}
 $_SESSION['user']='other';try{invSaveBrands($d,['version'=>1,'entries'=>$r['entries']]);throw new RuntimeException('permission');}catch(InvalidArgumentException $e){}
 echo "PASS brand aliases, persistence, concurrency and permission\n";
+$_SESSION['user']='admin';
+$r=invSaveBrands($d,['version'=>1,'entries'=>[['name'=>'自定义 English 组合品牌'],['name'=>'English only']]]);
+if($r['entries'][0]['name']!=='自定义 English 组合品牌'||$r['entries'][0]['english']!=='')throw new RuntimeException('custom name');
+try{invSaveBrands($d,['version'=>2,'entries'=>[['name'=>'Brand'],['name'=>'brand']]]);throw new RuntimeException('duplicate accepted');}catch(InvalidArgumentException $e){}
+echo "PASS single custom brand names and case-insensitive uniqueness\n";

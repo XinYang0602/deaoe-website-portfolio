@@ -291,6 +291,12 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         expect(frame.locator('.product-catalog')).to_be_visible()
                         print('PASS catalog category/search/select/edit/images/delete guard/export/resize',width,height)
                     if width==1440:
+                        frame.locator('[data-brand-manage]').click()
+                        expect(frame.locator('#brands-form tbody tr').first.locator('input')).to_have_count(1)
+                        custom_brand='自定义 Custom 完整品牌名称不截断'
+                        frame.locator('#brands-form tbody input').last.fill(custom_brand)
+                        frame.locator('#brands-form [type=submit]').click()
+                        expect(frame.locator('#brands-form')).to_be_hidden()
                         frame.locator('[data-action=master][data-id=products]').click()
                         form=frame.locator('#master-form')
                         expect(form.locator('[name=active]')).to_be_checked()
@@ -298,10 +304,31 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         expect(form).to_have_attribute('data-number-ready','true')
                         assert form.locator('[name=code]').input_value().startswith('P')
                         form.locator('[name=code]').fill('NEW-TEST')
+                        form.locator('[name=brand]').select_option(label=custom_brand)
+                        form.locator('[data-product-image-file]').set_input_files([
+                            {'name':'new-one.png','mimeType':'image/png','buffer':png},
+                            {'name':'new-two.png','mimeType':'image/png','buffer':png},
+                            {'name':'bad.png','mimeType':'image/png','buffer':b'invalid'}])
                         with page.expect_response(lambda r:'/api/inventory' in r.url and r.request.method=='POST') as created:
                             form.locator('[type=submit]').click()
                         assert created.value.status==200,created.value.text()
                         created_id=created.value.json()['id']
+                        expect(form.locator('.form-error')).to_contain_text('产品档案已保存',timeout=30000)
+                        expect(form).to_have_attribute('data-id',created_id)
+                        expect(form.locator('.product-edit-gallery img')).to_have_count(2)
+                        form.locator('.product-edit-gallery img').first.hover()
+                        expect(frame.locator('#modal > div[aria-hidden=true]')).to_be_visible()
+                        form.locator('[data-product-image-file]').set_input_files([{'name':'retry.png','mimeType':'image/png','buffer':png}])
+                        form.locator('[type=submit]').click()
+                        expect(form).to_be_hidden()
+                        with sqlite3.connect(db_path) as db:
+                            assert db.execute('SELECT COUNT(*) FROM inv_products WHERE code=?',('NEW-TEST',)).fetchone()[0]==1
+                            assert db.execute('SELECT COUNT(*) FROM inv_images WHERE product_id=?',(created_id,)).fetchone()[0]==3
+                        expect(frame.locator('.product-brand-full').filter(has_text=custom_brand)).to_be_visible()
+                        frame.locator('.catalog-image-list img').first.hover()
+                        expect(frame.locator('body > div[aria-hidden=true]')).to_be_visible()
+                        page.screenshot(path=str(REPORT/'catalog-custom-brand-preview.png'))
+                        print('PASS custom brand, create multi-images, partial failure retry without duplicate product, modal and bottom hover')
                         with sqlite3.connect(db_path) as db:
                             assert db.execute('SELECT active,name FROM inv_products WHERE id=?',(created_id,)).fetchone()==(1,'DEAOE 自定义完整产品名称 CZBJ4Z【816】不锈钢四层直网'),created.value.request.post_data
                         expect(frame.locator('[data-catalog-row="'+created_id+'"]')).to_be_visible()
