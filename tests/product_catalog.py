@@ -163,6 +163,21 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         assert saved.value.status==200
                         state=page.request.get(base+'/service/api/column-widths').json()
                         assert state['views']
+                        chooser=frame.locator('.catalog-scroll .column-menu').first
+                        chooser.locator('summary').click()
+                        with page.expect_response(lambda r:'/api/column-widths' in r.url and r.request.method=='POST') as chosen:
+                            chooser.get_by_label('品牌',exact=True).uncheck()
+                        assert chosen.value.status==200
+                        expect(table.locator('th').filter(has_text='品牌')).to_be_hidden()
+                        # A list rerender restores the saved preference, rather than resetting it.
+                        frame.locator('[data-catalog-reset]').click()
+                        expect(table.locator('th').filter(has_text='品牌')).to_be_hidden()
+                        chooser=frame.locator('.catalog-scroll .column-menu').first
+                        chooser.locator('summary').click()
+                        with page.expect_response(lambda r:'/api/column-widths' in r.url and r.request.method=='POST'):
+                            chooser.get_by_role('button',name='恢复默认',exact=True).click()
+                        expect(table.locator('th').filter(has_text='品牌')).to_be_visible()
+                        chooser.locator('summary').click()
                         expect(frame.locator('.category-tree small')).to_have_count(0)
                         frame.locator('.catalog-more summary').click()
                         frame.locator('[data-code-rule]').click()
@@ -237,11 +252,14 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         def chunk(kind,payload):
                             return struct.pack('!I',len(payload))+kind+payload+struct.pack('!I',zlib.crc32(kind+payload))
                         png=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('!2I5B',1,1,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(b'\x00\xff\x00\x00'))+chunk(b'IEND',b'')
-                        frame.locator('[data-product-image-file]').set_input_files({'name':'synthetic.png','mimeType':'image/png','buffer':png})
+                        frame.locator('[data-product-image-file]').set_input_files([{'name':f'synthetic-{n}.png','mimeType':'image/png','buffer':png} for n in range(13)]+[{'name':'invalid.png','mimeType':'image/png','buffer':b'not an image'}])
                         with page.expect_response(lambda r:'/api/images' in r.url and r.request.method=='POST') as uploaded:
                             frame.locator('[data-upload-product-image]').click()
                         assert uploaded.value.status==200,uploaded.value.text()
-                        expect(frame.locator('[data-image-status]')).to_have_text('图片已保存')
+                        expect(frame.locator('[data-image-status]')).to_contain_text('已上传 13 张；1 张未确认成功',timeout=30000)
+                        expect(frame.locator('[data-image-status]')).to_contain_text('invalid.png')
+                        with sqlite3.connect(db_path) as check_db:
+                            assert check_db.execute("SELECT COUNT(*) FROM inv_images WHERE product_id='TEST-PART'").fetchone()[0]>=13
                         expect(frame.locator('#master-form [name=model]')).to_have_value('unsaved-model')
                         expect(frame.locator('.product-edit-gallery img')).not_to_have_count(0)
                         page.screenshot(path=str(REPORT/f'product-edit-images-{width}.png'),full_page=True)

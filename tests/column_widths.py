@@ -14,4 +14,10 @@ with tempfile.TemporaryDirectory() as d:
     assert call('account-b','POST',payload,'wrong')==''
     assert 'error' in json.loads(call('account-a','POST',json.dumps({'key':'products','widths':[-1]})))
     assert json.loads(call('account-a'))['views']['products']==[100,220]
+    visibility=json.dumps({'key':'visibility:products','widths':[False,True]})
+    assert json.loads(call('account-a','POST',visibility))['ok']
+    assert json.loads(call('account-a'))['views']['visibility:products']==[False,True]
+    assert not json.loads(call('account-b'))['views']
+    for values in [[True,True],[0,1],[]]:
+        assert 'error' in json.loads(call('account-a','POST',json.dumps({'key':'visibility:products','widths':values})))
     print('PASS account isolation, persistence, CSRF and width validation')

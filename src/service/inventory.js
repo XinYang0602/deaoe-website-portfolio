@@ -198,27 +198,35 @@ show(`<h2>${id?'编辑':'新建'}${kinds[kind]}</h2><form id="doc-form" data-kin
 function detail(id){const d=data.docs.find(x=>x.id===id);if(!d)return;const ls=data.lines.filter(l=>l.doc_id===id);let actions='';if(['draft','rejected'].includes(d.status))actions=button('编辑','edit-doc',id)+button('提交审核','submit',id,true)+button('作废','void',id);if(d.status==='submitted')actions=button('审核通过并生效','approve',id,true)+button('驳回','reject',id);if(d.status==='approved'&&d.kind==='purchase')actions=button('关联入库','from-source',id,true);if(d.status==='approved'&&d.kind==='sale'&&saleRemaining(id))actions=button('历史销售补发','from-source',id,true);if(d.status==='approved'&&d.kind==='receipt')actions+=button('打印本单 SN 标签','doc-labels',id);show(`<div id="doc-print"><h2>${kinds[d.kind]} · ${states[d.status]}</h2><p class="mono">${E(id)} · ${E(d.date)}</p><p>仓库：${E([...new Set(data.lines.filter(l=>l.doc_id===d.id).map(l=>warehouse(l.warehouse_id||d.warehouse_id)))].join('、')||warehouse(d.warehouse_id))}　往来：${E(party(d.party_id))}</p>${['sale','issue'].includes(d.kind)?`<div class="delivery-print"><p>电话：${E(d.delivery_phone||'未记录')}　联系人：${E(d.delivery_contact||'未记录')}</p><p><strong>送货地址：${E(d.delivery_address||'未记录')}</strong></p></div>`:''}<p>来源：${E(d.source_id||'—')}　备注：${E(d.note||'—')}</p>${d.reason?`<p class="warning">${E(d.reason)}</p>`:''}${table(['产品 / 型号','数量','单价（元）','金额（元）',...(d.kind==='sale'?[]:['SN / 厂家 SN'])],ls.map(l=>[`${E(product(l.product_id).name)} / ${E(product(l.product_id).model)}<br>仓库：${E(warehouse(l.warehouse_id||d.warehouse_id))}<br><small class="mono">${E(l.id)}</small>`,l.qty+' '+E(product(l.product_id).unit),money(l.price_cents),money(l.qty*l.price_cents),...(d.kind==='sale'?[]:[`<div style="white-space:normal;max-width:380px">${JSON.parse(l.serials).map(s=>E(s.sn)+(s.manufacturer_sn?' / '+E(s.manufacturer_sn):'')).join('<br>')||'—'}</div>`])]))}<p>金额合计：¥ ${money(ls.reduce((n,l)=>n+l.qty*l.price_cents,0))}</p></div><div class="foot">${button('导出单据 Excel','export-doc')}${button('打印单据','print-doc')}${button('关闭','close')}${actions}</div>`);}
 function opening(id){const p=product(id),b=data.balances.find(b=>b.product_id===id&&b.warehouse_id==='LEGACY');show(`<h2>期初实物核对 · ${E(p.name)}</h2><p class="warning">待归属 ${b.qty} ${E(p.unit)}。此操作将核对数量归属实际仓库，不增加总库存。历史价格仍为“未记录”。</p><form id="opening-form" data-id="${E(id)}" data-key="${key()}"><div class="grid">${select('实际仓库','warehouse_id',data.warehouses.filter(w=>w.active&&w.id!=='LEGACY'))}${input('本次核实数量','qty',1,'number',`min="1" max="${Math.min(b.qty,2000)}" required`)}<label class="wide">核对依据<textarea name="note" required placeholder="实物清点日期、责任人、来源凭据"></textarea></label>${p.sn_enabled?'<label class="wide">逐台实物 SN（每行 系统SN,厂家SN；不得随意编造）<textarea name="serials" required></textarea></label>':''}</div>${foot('确认归属并记录')}</form>`);}
 function productImageEditor(id){
- return `<section class="wide product-image-editor" data-image-product="${E(id)}"><h3>产品图片</h3><div class="product-edit-gallery">${productImageGallery(id)}</div>${id?'<label>选择图片<input data-product-image-file type="file" accept="image/jpeg,image/png,image/webp"></label><button type="button" data-upload-product-image>上传图片</button><small>JPG / PNG / WebP，单张不超过 8MB；第一张为主图。图片单独保存，不影响尚未保存的产品资料。</small>':'<small>请先保存产品档案，再在修改窗口添加图片。</small>'}<p data-image-status role="status"></p></section>`;
+ return `<section class="wide product-image-editor" data-image-product="${E(id)}"><h3>产品图片</h3><div class="product-edit-gallery">${productImageGallery(id)}</div>${id?'<label>选择图片<input data-product-image-file type="file" multiple accept="image/jpeg,image/png,image/webp"></label><button type="button" data-upload-product-image>上传图片</button><small>JPG / PNG / WebP，单张不超过 8MB，可多选，张数不限；第一张为主图。图片单独保存，不影响尚未保存的产品资料。</small>':'<small>请先保存产品档案，再在修改窗口添加图片。</small>'}<p data-image-status role="status"></p></section>`;
 }
 function productImageGallery(id){return data.images.filter(i=>i.product_id===id).map(i=>`<a href="/service/api/images?id=${E(i.id)}" target="_blank" rel="noopener"><img src="/service/api/images?id=${E(i.id)}&thumb=1" alt="${E(i.name)}"></a>`).join('')||'<span class="muted">暂无图片</span>';}
 document.addEventListener('click',async event=>{
  const trigger=event.target.closest('[data-upload-product-image]');if(!trigger)return;
- const section=trigger.closest('[data-image-product]'),field=section.querySelector('[data-product-image-file]'),status=section.querySelector('[data-image-status]'),file=field.files[0];
- if(!file){status.textContent='请先选择图片';field.focus();return;}
- if(file.size>8*1024*1024){status.textContent='图片超过 8MB，请选择较小的图片';return;}
- trigger.disabled=true;field.disabled=true;status.textContent='正在上传…';
+ const section=trigger.closest('[data-image-product]'),field=section.querySelector('[data-product-image-file]'),status=section.querySelector('[data-image-status]'),files=[...field.files];
+ if(!files.length){status.textContent='请先选择图片';field.focus();return;}
+ trigger.disabled=true;field.disabled=true;
+ let saved=0,failed=[];
  try{
-  const body=new FormData();body.append('product_id',section.dataset.imageProduct);body.append('image',file);
-  const response=await fetch('/service/api/images',{method:'POST',headers:{'X-CSRF-Token':data.csrf},body});
-  let result;try{result=await response.json();}catch{throw Error('上传未完成，请检查文件大小或重新登录');}
-  if(!response.ok)throw Error(result.error||'上传失败');
-  field.value='';status.textContent='图片已上传，正在更新预览…';
-  await load();
-  if(section.isConnected){section.querySelector('.product-edit-gallery').innerHTML=productImageGallery(section.dataset.imageProduct);status.textContent='图片已保存';}
- }catch(error){status.textContent=error.message;}
- finally{trigger.disabled=false;field.disabled=false;}
+  for(const [index,file] of files.entries()){
+   status.textContent=`正在上传 ${index+1} / ${files.length}：${file.name}`;
+   try{
+    if(file.size>8*1024*1024)throw Error('超过 8MB');
+    const body=new FormData();body.append('product_id',section.dataset.imageProduct);body.append('image',file);
+    const response=await fetch('/service/api/images',{method:'POST',headers:{'X-CSRF-Token':data.csrf},body});
+    let result;try{result=await response.json();}catch{throw Error('未收到有效响应，请刷新确认后重试');}
+    if(!response.ok)throw Error(result.error||'上传失败');
+    saved++;
+   }catch(error){failed.push(file.name+'：'+error.message);}
+  }
+  field.value='';
+  status.textContent=`已上传 ${saved} 张`+(failed.length?`；${failed.length} 张未确认成功：`+failed.join('；'):'，全部保存成功');
+  try{await load();if(section.isConnected)section.querySelector('.product-edit-gallery').innerHTML=productImageGallery(section.dataset.imageProduct);}
+  catch{status.textContent+='；预览更新失败，请刷新查看已保存图片';}
+ }finally{trigger.disabled=false;field.disabled=false;}
 });
-function images(id){const p=product(id);show(`<h2>${E(p.name)} · 产品图片</h2><p class="muted">第一张为主图，其余为附图。JPG / PNG / WebP，单张不超过 8MB、1600 万像素；自动压缩，保留透明背景。</p><div class="gallery">${data.images.filter(i=>i.product_id===id).map(i=>`<a href="/service/api/images?id=${E(i.id)}" target="_blank"><img src="/service/api/images?id=${E(i.id)}" alt="${E(i.name)}"></a>`).join('')}</div><form id="image-form" data-id="${E(id)}"><p><input name="image" type="file" accept="image/jpeg,image/png,image/webp" required></p>${foot('上传图片')}</form>`);}
+function images(id){const p=product(id);show(`<h2>${E(p.name)} · 产品图片</h2>${productImageEditor(id)}<div class="foot">${button('关闭','close')}</div>`);}
+
 function exportTable(el){const rows=[...el.querySelectorAll('tr')].map(r=>[...r.children].map(c=>{let v=c.innerText;if(/^[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}).join(','));const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'}));a.download=names[page]+'-'+today()+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 async function labels(serials,size='50×30',format='qr'){if(!serials.length)throw Error('请先选择 SN');if(serials.length>500)throw Error('每次最多 500 张标签');if(format==='code128'&&serials.some(s=>s.length>28))throw Error('长 SN 请使用二维码标签，避免条码过密');const win=window.open('','_blank');if(!win)throw Error('请允许此页面弹出打印窗口');try{await call({action:'print',serials,template:size+'/'+format});const [w,h]=size.split('×').map(Number);win.document.write(labelDocument(serials.map(sn=>({...data.sn.find(s=>s.sn===sn),product:product(data.sn.find(s=>s.sn===sn).product_id)})),w,h,format));win.document.close();}catch(e){win.close();throw e;}}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-action]');if(!b||busy)return;const a=b.dataset.action,id=b.dataset.id;try{

@@ -1,3 +1,7 @@
+## 2026-11-13 — Multiple product images and remembered table columns
+
+Remove the per-product image-count cap and support multi-file uploads with per-file progress and partial-failure feedback. Retain individual file validation. Desktop tables gain a left-aligned column chooser, persisted per account and list, alongside existing column widths. Include reset, retry, keyboard access and a last-visible-column guard. Synthetic upload and responsive table regressions cover persistence and account isolation.
+
 ## 2026-11-13 — Product price presets, customer price recall and simpler warehouse locations
 
 Split unit/SN and purchase/sale price columns. Add ten optional price presets and explicit customer price recall from approved sales, with reference-price fallback and manual overrides. Combine legacy shelf/floor notes into one location input per warehouse. Align product code fields. Local business and synthetic browser checks, patch install/rollback passed. No deployment.

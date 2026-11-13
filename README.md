@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Multiple product images and per-account, per-list column visibility preferences.
+
 - 2026-11-13 — Product price presets, customer price recall and simpler warehouse locations
 
 - 2026-11-13 — Per-warehouse shelf/floor notes and BOM-based assembly/disassembly with atomic inventory approval.
