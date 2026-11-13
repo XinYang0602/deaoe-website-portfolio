@@ -36,20 +36,58 @@ function it(mixed $s,int $max=200):string{if(!is_string($s)||mb_strlen($s)>$max)
 function ii(mixed $n,int $max=1000000):int{if(!is_int($n)||$n<1||$n>$max)iv('数量须为 1–'.$max.' 的整数');return $n;}
 function money(mixed $s):?int{if($s===null||$s==='')return null;if(!is_string($s)||!preg_match('/^\d{1,8}(\.\d{1,2})?$/D',$s))iv('价格须为非负金额，最多两位小数');$p=explode('.',$s);return (int)$p[0]*100+(int)str_pad($p[1]??'',2,'0');}
 // Daily counters are part of the same write transaction as their documents.
+function invNumberTypes():array{return ['XS'=>'销售单','CG'=>'采购单','RK'=>'入库单','CK'=>'出库单','DB'=>'调拨单','PD'=>'盘点单','CGTH'=>'采购退货','XSTH'=>'销售退货','ZJ'=>'质检单','CGHH'=>'采购换货','XSHH'=>'销售换货'];}
+function invNumberRule(PDO $d,string $type):array{
+ if(!isset(invNumberTypes()[$type]))iv('编号类型无效');
+ $r=['prefix'=>$type,'date_format'=>'ymd','separator'=>'-','digits'=>3,'start'=>1,'version'=>0];
+ if($type!=='XS'){$saved=iq($d,'SELECT v FROM inv_meta WHERE k=?',['number_rule:'.$type])->fetchColumn();if($saved)$r=array_merge($r,json_decode($saved,true));}return $r;
+}
+function invSaveNumberRule(PDO $d,array $a):array{
+ if(($_SESSION['user']??'')!=='admin')iv('仅管理员可修改编号规则');
+ $type=it($a['type']??'');if($type==='XS')iv('销售单规则保持不变');$old=invNumberRule($d,$type);
+ if(($a['version']??null)!==$old['version'])iv('规则已更新，请刷新');
+ $r=['prefix'=>strtoupper(it($a['prefix']??'')),'date_format'=>$a['date_format']??'','separator'=>$a['separator']??'','digits'=>$a['digits']??0,'start'=>$a['start']??0,'version'=>$old['version']+1];
+ if(!preg_match('/^[A-Z]{1,6}$/D',$r['prefix'])||!in_array($r['date_format'],['ymd','Ymd','ym','none'],true)||!in_array($r['separator'],['-','_',''],true)||!is_int($r['digits'])||$r['digits']<1||$r['digits']>7||!is_int($r['start'])||$r['start']<1||$r['start']>=10**$r['digits'])iv('编号规则无效');
+ iq($d,'INSERT INTO inv_meta(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v',['number_rule:'.$type,json_encode($r)]);ilog($d,'number.rule',$type,$r);return $r;
+}
+function invReserveNumber(PDO $d,array $a):array{
+ $type=it($a['type']??'');if($type!=='product'&&!isset(invNumberTypes()[$type]))iv('编号类型无效');
+ $key=it($a['request_key']??'',80);if(!preg_match('/^[a-zA-Z0-9_-]{16,80}$/D',$key))iv('请求编号无效');
+ $date=it($a['date']??(new DateTimeImmutable('now',new DateTimeZone('Asia/Shanghai')))->format('Y-m-d'));
+ $day=DateTimeImmutable::createFromFormat('!Y-m-d',$date);if(!$day||$day->format('Y-m-d')!==$date)iv('日期无效');
+ $storage='number_reservation:'.hash('sha256',($_SESSION['user']??'').':'.$type.':'.$key.':'.$date);
+ $existing=iq($d,'SELECT v FROM inv_meta WHERE k=?',[$storage])->fetchColumn();if($existing)return ['number'=>$existing,'date'=>$date];
+ $number=$type==='product'?invNextProductCode($d):invDocumentNumber($d,$type,$date);
+ iq($d,'INSERT INTO inv_meta(k,v) VALUES(?,?)',[$storage,$number]);return ['number'=>$number,'date'=>$date];
+}
+function invReservedDocument(PDO $d,array $a,string $type,?string $date=null):string{
+ $date=$date??($a['reserved_date']??null)??(new DateTimeImmutable('now',new DateTimeZone('Asia/Shanghai')))->format('Y-m-d');
+ $provided=it($a['reserved_number']??'');if(!$provided)return invDocumentNumber($d,$type,$date); // legacy clients
+ $storage='number_reservation:'.hash('sha256',($_SESSION['user']??'').':'.$type.':'.($a['request_key']??'').':'.$date);
+ if(iq($d,'SELECT v FROM inv_meta WHERE k=?',[$storage])->fetchColumn()!==$provided)iv('编号与当前日期不匹配，请重新获取编号');return $provided;
+}
 function invDocumentNumber(PDO $d,string $prefix,?string $date=null):string{
  $date=$date??(new DateTimeImmutable('now',new DateTimeZone('Asia/Shanghai')))->format('Y-m-d');
  $day=DateTimeImmutable::createFromFormat('!Y-m-d',$date);
  if(!$day||$day->format('Y-m-d')!==$date||!preg_match('/^[A-Z]{2,6}$/D',$prefix))iv('单号日期或类型无效');
- $key='document_sequence:'.$prefix.':'.$date;
+ $r=isset(invNumberTypes()[$prefix])?invNumberRule($d,$prefix):['prefix'=>$prefix,'date_format'=>'ymd','separator'=>'-','digits'=>3,'start'=>1];
+ $part=$r['date_format']==='none'?'':$day->format($r['date_format']);
+ $stem=$r['prefix'].$r['separator'].($part!==''?$part.$r['separator']:'');
+ $key='document_sequence:'.$prefix.':'.($r['date_format']==='ymd'?$date:$part).':'.hash('sha256',json_encode([$r['prefix'],$r['separator'],$r['digits']]));
+ // Preserve existing counters for every unchanged default rule, including sales.
+ if($r['prefix']===$prefix&&$r['date_format']==='ymd'&&$r['separator']==='-'&&$r['digits']===3)$key='document_sequence:'.$prefix.':'.$date;
  $d->exec('SAVEPOINT document_number');
  try{
   iq($d,'INSERT OR IGNORE INTO inv_meta(k,v) VALUES(?,?)',[$key,'0']);
-  iq($d,'UPDATE inv_meta SET v=CAST(v AS INTEGER)+1 WHERE k=?',[$key]);
-  $n=(int)iq($d,'SELECT v FROM inv_meta WHERE k=?',[$key])->fetchColumn();
-  $d->exec('RELEASE SAVEPOINT document_number');
-  return $prefix.'-'.$day->format('ymd').'-'.str_pad((string)$n,3,'0',STR_PAD_LEFT);
+  $n=max($r['start']-1,(int)iq($d,'SELECT v FROM inv_meta WHERE k=?',[$key])->fetchColumn());
+  do{$n++;$number=$stem.str_pad((string)$n,$r['digits'],'0',STR_PAD_LEFT);
+  }while(iq($d,'SELECT 1 FROM inv_docs WHERE id=?',[$number])->fetchColumn()||(p2Ready($d)&&iq($d,'SELECT 1 FROM inv_ops WHERE id=?',[$number])->fetchColumn())||iq($d,'SELECT 1 FROM inv_meta WHERE k=?',['issued_number:'.$number])->fetchColumn());
+  iq($d,'INSERT INTO inv_meta(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v',[$key,(string)$n]);
+  iq($d,'INSERT INTO inv_meta(k,v) VALUES(?,?)',['issued_number:'.$number,$prefix]);
+  $d->exec('RELEASE SAVEPOINT document_number');return $number;
  }catch(Throwable $e){$d->exec('ROLLBACK TO SAVEPOINT document_number');$d->exec('RELEASE SAVEPOINT document_number');throw $e;}
 }
+
 function iid(string $prefix):string{return $prefix.gmdate('Ymd').strtoupper(bin2hex(random_bytes(6)));}
 function ilog(PDO $d,string $action,string $target,array $detail=[]):void{iq($d,'INSERT INTO inv_events(actor,action,target,detail,created_at) VALUES(?,?,?,?,?)',[$_SESSION['user']??'migration',$action,$target,json_encode($detail,JSON_UNESCAPED_UNICODE),gmdate('c')]);}
 function invMigrate(PDO $d):array{
@@ -94,7 +132,8 @@ function invSaveCodeRule(PDO $d,array $a):array {
 function invNextProductCode(PDO $d):string {
  $r=invCodeRule($d);
  foreach(iq($d,'SELECT code FROM inv_products')->fetchAll(PDO::FETCH_COLUMN) as $existing){if(preg_match('/^'.preg_quote($r['prefix'],'/').'([0-9]{'.$r['digits'].'})$/D',$existing,$m))$r['next']=max($r['next'],(int)$m[1]+1);}
- do {if($r['next']>=10**$r['digits'])iv('产品编号已用尽，请调整编号规则');$code=$r['prefix'].str_pad((string)$r['next']++,$r['digits'],'0',STR_PAD_LEFT);}while(iq($d,'SELECT 1 FROM inv_products WHERE code=?',[$code])->fetchColumn());
+ do {if($r['next']>=10**$r['digits'])iv('产品编号已用尽，请调整编号规则');$code=$r['prefix'].str_pad((string)$r['next']++,$r['digits'],'0',STR_PAD_LEFT);}while(iq($d,'SELECT 1 FROM inv_products WHERE code=?',[$code])->fetchColumn()||iq($d,'SELECT 1 FROM inv_meta WHERE k=?',['issued_product:'.$code])->fetchColumn());
+ iq($d,'INSERT INTO inv_meta(k,v) VALUES(?,?)',['issued_product:'.$code,'1']);
  $r['version']++;iq($d,"INSERT INTO inv_meta VALUES('product_code_rule',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",[json_encode($r)]);return $code;
 }
 function invMoveCategory(PDO $d,array $a):array {
@@ -143,7 +182,7 @@ function invSaveDoc(PDO $d,array $a):array{
  $wh=it($a['warehouse_id']??'');if($wh==='LEGACY'||!iq($d,'SELECT id FROM inv_warehouses WHERE id=? AND active=1',[$wh])->fetchColumn())iv('请选择实际启用的仓库');$party=it($a['party_id']??'');$pk=in_array($kind,['purchase','receipt'])?'supplier':'customer';if(!iq($d,'SELECT id FROM inv_parties WHERE id=? AND kind=? AND active=1',[$party,$pk])->fetchColumn())iv('请选择有效的供应商或客户');
  $source=it($a['source_id']??'');$source=$source?:null;if(in_array($kind,['receipt','issue'])){if(!$source)iv('请关联已审核采购订单或销售单');$s=iq($d,'SELECT * FROM inv_docs WHERE id=?',[$source])->fetch(PDO::FETCH_ASSOC);if(!$s||$s['kind']!==($kind==='receipt'?'purchase':'sale')||$s['status']!=='approved'||$s['party_id']!==$party||($kind==='receipt'&&$s['warehouse_id']!==$wh))iv('来源单类型、状态、仓库或往来不一致');}elseif($source)iv('订单不能设置来源单');
  $date=it($a['date']??'');$dt=DateTimeImmutable::createFromFormat('!Y-m-d',$date);if(!$dt||$dt->format('Y-m-d')!==$date)iv('日期不正确');$note=it($a['note']??'',2000);$lines=$a['lines']??null;if(!is_array($lines)||!array_is_list($lines)||!count($lines)||count($lines)>200)iv('单据需要 1–200 条明细');
- $id=$id?:invDocumentNumber($d,['sale'=>'XS','purchase'=>'CG','receipt'=>'RK','issue'=>'CK'][$kind],$date);if($old){iq($d,"UPDATE inv_docs SET warehouse_id=?,party_id=?,source_id=?,date=?,note=?,status='draft',reason='',version=version+1 WHERE id=?",[$wh,$party,$source,$date,$note,$id]);if(p2Ready($d))iq($d,'DELETE FROM inv_allocations WHERE line_id IN (SELECT id FROM inv_lines WHERE doc_id=?)',[$id]);iq($d,'DELETE FROM inv_lines WHERE doc_id=?',[$id]);}else iq($d,"INSERT INTO inv_docs(id,kind,status,warehouse_id,party_id,source_id,date,note,created_at,request_key) VALUES(?,?,'draft',?,?,?,?,?,?,?)",[$id,$kind,$wh,$party,$source,$date,$note,gmdate('c'),$key]);
+ $id=$id?:invReservedDocument($d,$a,['sale'=>'XS','purchase'=>'CG','receipt'=>'RK','issue'=>'CK'][$kind],$date);if($old){iq($d,"UPDATE inv_docs SET warehouse_id=?,party_id=?,source_id=?,date=?,note=?,status='draft',reason='',version=version+1 WHERE id=?",[$wh,$party,$source,$date,$note,$id]);if(p2Ready($d))iq($d,'DELETE FROM inv_allocations WHERE line_id IN (SELECT id FROM inv_lines WHERE doc_id=?)',[$id]);iq($d,'DELETE FROM inv_lines WHERE doc_id=?',[$id]);}else iq($d,"INSERT INTO inv_docs(id,kind,status,warehouse_id,party_id,source_id,date,note,created_at,request_key) VALUES(?,?,'draft',?,?,?,?,?,?,?)",[$id,$kind,$wh,$party,$source,$date,$note,gmdate('c'),$key]);
  $total=0;$seen=[];foreach($lines as $l){$pid=it($l['product_id']??'');$lineWh=$kind==='sale'?it($l['warehouse_id']??$wh):$wh;
  if($lineWh==='LEGACY'||!iq($d,'SELECT 1 FROM inv_warehouses WHERE id=? AND active=1',[$lineWh])->fetchColumn())iv('请选择商品实际出货仓库');
  $unique=$pid.'|'.$lineWh;if(isset($seen[$unique]))iv('同一商品同一仓库请合并到一行');$seen[$unique]=true;$p=iq($d,'SELECT * FROM inv_products WHERE id=? AND active=1',[$pid])->fetch(PDO::FETCH_ASSOC);if(!$p)iv('商品不存在或已停用');$qty=ii($l['qty']??null);if($p['sn_enabled']&&$qty>2000)iv('SN 商品每行最多 2000 台，请分单');$price=money($l['price']??null);if($price===null)iv('请填写本单价格（可填 0）');$total+=$price*$qty;if($total>9000000000000)iv('单据金额过大，请分单');$sl=it($l['source_line']??'')?:null;if($source){$parent=iq($d,'SELECT * FROM inv_lines WHERE id=? AND doc_id=? AND product_id=?',[$sl,$source,$pid])->fetch(PDO::FETCH_ASSOC);if(!$parent||$qty>(int)$parent['qty'])iv('来源明细或数量不正确');
@@ -221,13 +260,13 @@ function invOpening(PDO $d,array $a):array{
  iq($d,"UPDATE inv_balances SET qty=qty-?,unidentified=unidentified-? WHERE product_id=? AND warehouse_id='LEGACY'",[$qty,$p['sn_enabled']?$qty:0,$pid]);iq($d,'INSERT OR IGNORE INTO inv_balances VALUES(?,?,0,0)',[$pid,$wh]);iq($d,'UPDATE inv_balances SET qty=qty+? WHERE product_id=? AND warehouse_id=?',[$qty,$pid,$wh]);foreach(['LEGACY'=>-$qty,$wh=>$qty] as $w=>$delta)iq($d,'INSERT INTO inv_ledger(doc_id,line_id,product_id,warehouse_id,delta,created_at) VALUES(?,?,?,?,?,?)',[$id,$pid,$pid,$w,$delta,gmdate('c')]);if(p2Ready($d)&&!$p['sn_enabled']){foreach(p2LotsTake($d,$pid,'LEGACY','available',$qty,[],$id) as $lot)p2LotAdd($d,$pid,$wh,'available',$lot['qty'],$lot['origin'],$lot['price_cents'],$id);}
  ilog($d,'opening.assign',$id,['product_id'=>$pid,'qty'=>$qty,'warehouse_id'=>$wh,'note'=>$note,'request_key'=>$key]);return ['id'=>$id];
 }
-function invSnapshot(PDO $d):array{$out=[];foreach(['products','warehouses','parties','docs','lines','balances','sn','ledger','images','card_links'] as $t)$out[$t]=$d->query('SELECT * FROM inv_'.$t)->fetchAll(PDO::FETCH_ASSOC);$categoryPaths=$d->query('SELECT product_id,path FROM inv_product_categories')->fetchAll(PDO::FETCH_KEY_PAIR);foreach($out['products'] as &$product)$product['category_path']=$categoryPaths[$product['id']]??'';unset($product);$deliveries=[];foreach($d->query('SELECT * FROM inv_delivery') as $row)$deliveries[$row['doc_id']]=$row;foreach($out['docs'] as &$doc){if(isset($deliveries[$doc['id']]))foreach(['phone','contact','address'] as $f)$doc['delivery_'.$f]=$deliveries[$doc['id']][$f];}unset($doc);$lineWarehouses=$d->query('SELECT line_id,warehouse_id FROM inv_sale_line_settings')->fetchAll(PDO::FETCH_KEY_PAIR);foreach($out['lines'] as &$line){if(isset($lineWarehouses[$line['id']]))$line['warehouse_id']=$lineWarehouses[$line['id']];}unset($line);$out['events']=$d->query('SELECT * FROM inv_events ORDER BY id DESC LIMIT 300')->fetchAll(PDO::FETCH_ASSOC);$out['sn_events']=$d->query('SELECT * FROM inv_sn_events ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);foreach(['ops','lots','holds','freezes','label_profiles','exchange_links','allocations'] as $t)$out[$t]=$d->query('SELECT * FROM inv_'.$t)->fetchAll(PDO::FETCH_ASSOC);$out['sale_default_warehouse']=invDefaultWarehouse($d);$out['product_names']=invProductNames($d);$out['product_code_rule']=invCodeRule($d);$out['category_fingerprint']=hash('sha256',json_encode($d->query("SELECT p.id,p.version,p.category,COALESCE(c.path,'') AS path FROM inv_products p LEFT JOIN inv_product_categories c ON c.product_id=p.id ORDER BY p.id")->fetchAll(PDO::FETCH_ASSOC)));$out['finance']=finSnapshot($d);$out['can_adjust_stock']=($_SESSION['user']??'')==='admin';$out['csrf']=$_SESSION['csrf'];return $out;}
+function invSnapshot(PDO $d):array{$out=[];foreach(['products','warehouses','parties','docs','lines','balances','sn','ledger','images','card_links'] as $t)$out[$t]=$d->query('SELECT * FROM inv_'.$t)->fetchAll(PDO::FETCH_ASSOC);$categoryPaths=$d->query('SELECT product_id,path FROM inv_product_categories')->fetchAll(PDO::FETCH_KEY_PAIR);foreach($out['products'] as &$product)$product['category_path']=$categoryPaths[$product['id']]??'';unset($product);$deliveries=[];foreach($d->query('SELECT * FROM inv_delivery') as $row)$deliveries[$row['doc_id']]=$row;foreach($out['docs'] as &$doc){if(isset($deliveries[$doc['id']]))foreach(['phone','contact','address'] as $f)$doc['delivery_'.$f]=$deliveries[$doc['id']][$f];}unset($doc);$lineWarehouses=$d->query('SELECT line_id,warehouse_id FROM inv_sale_line_settings')->fetchAll(PDO::FETCH_KEY_PAIR);foreach($out['lines'] as &$line){if(isset($lineWarehouses[$line['id']]))$line['warehouse_id']=$lineWarehouses[$line['id']];}unset($line);$out['events']=$d->query('SELECT * FROM inv_events ORDER BY id DESC LIMIT 300')->fetchAll(PDO::FETCH_ASSOC);$out['sn_events']=$d->query('SELECT * FROM inv_sn_events ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);foreach(['ops','lots','holds','freezes','label_profiles','exchange_links','allocations'] as $t)$out[$t]=$d->query('SELECT * FROM inv_'.$t)->fetchAll(PDO::FETCH_ASSOC);$out['sale_default_warehouse']=invDefaultWarehouse($d);$out['product_names']=invProductNames($d);$out['product_code_rule']=invCodeRule($d);$out['number_rules']=[];foreach(invNumberTypes() as $type=>$label)$out['number_rules'][$type]=invNumberRule($d,$type)+['label'=>$label];$out['category_fingerprint']=hash('sha256',json_encode($d->query("SELECT p.id,p.version,p.category,COALESCE(c.path,'') AS path FROM inv_products p LEFT JOIN inv_product_categories c ON c.product_id=p.id ORDER BY p.id")->fetchAll(PDO::FETCH_ASSOC)));$out['finance']=finSnapshot($d);$out['can_adjust_stock']=($_SESSION['user']??'')==='admin';$out['csrf']=$_SESSION['csrf'];return $out;}
 function handleInventory():never{
  $d=null;$transaction=false;
  try{
  if(($_SESSION['user']??'')!=='admin')jsonReply(403,['error'=>'没有库存管理权限']);$d=database();finSchema($d);invCategorySchema($d);if(!iq($d,"SELECT v FROM inv_meta WHERE k='version'")->fetchColumn())throw new RuntimeException('未完成库存迁移');
  if($_SERVER['REQUEST_METHOD']==='GET')jsonReply(200,invSnapshot($d));if($_SERVER['REQUEST_METHOD']!=='POST')jsonReply(405,['error'=>'不支持的方法']);if(!hash_equals($_SESSION['csrf'],$_SERVER['HTTP_X_CSRF_TOKEN']??''))jsonReply(403,['error'=>'页面已过期，请刷新']);$raw=file_get_contents('php://input',false,null,0,2000001);if(strlen($raw)>2000000)jsonReply(413,['error'=>'请求超过 2MB']);$a=json_decode($raw,true,64,JSON_THROW_ON_ERROR);if(!is_array($a))iv('请求格式错误');$d->exec('BEGIN IMMEDIATE');$transaction=true;
- $r=match($a['action']??''){'product_code_rule'=>invSaveCodeRule($d,$a),'move_category'=>invMoveCategory($d,$a),'adjust_stock'=>invAdjustStock($d,$a),'finance'=>finAction($d,$a),'lot_reconcile'=>p2ReconcileLot($d,$a),'p2_create'=>p2Create($d,$a),'p2_step'=>p2Step($d,$a),'label_save'=>p2SaveLabel($d,$a),'label_print'=>p2Print($d,$a),'set_default_warehouse'=>invSetDefaultWarehouse($d,$a),'master'=>invMaster($d,$a),'save_doc'=>invSaveDoc($d,$a),'transition'=>invTransition($d,$a),'opening'=>invOpening($d,$a),'print'=>invPrint($d,$a),'archive'=>invArchive($d,$a),'save_product_names'=>invSaveProductNames($d,$a),'delete_products'=>invDeleteProducts($d,$a),'test_cleanup_preview','test_cleanup_execute'=>invTestCleanup($d,$a),default=>throw new InvalidArgumentException('未知操作')};$d->exec('COMMIT');$transaction=false;jsonReply(200,$r);
+ $r=match($a['action']??''){'number_rule'=>invSaveNumberRule($d,$a),'reserve_number'=>invReserveNumber($d,$a),'product_code_rule'=>invSaveCodeRule($d,$a),'move_category'=>invMoveCategory($d,$a),'adjust_stock'=>invAdjustStock($d,$a),'finance'=>finAction($d,$a),'lot_reconcile'=>p2ReconcileLot($d,$a),'p2_create'=>p2Create($d,$a),'p2_step'=>p2Step($d,$a),'label_save'=>p2SaveLabel($d,$a),'label_print'=>p2Print($d,$a),'set_default_warehouse'=>invSetDefaultWarehouse($d,$a),'master'=>invMaster($d,$a),'save_doc'=>invSaveDoc($d,$a),'transition'=>invTransition($d,$a),'opening'=>invOpening($d,$a),'print'=>invPrint($d,$a),'archive'=>invArchive($d,$a),'save_product_names'=>invSaveProductNames($d,$a),'delete_products'=>invDeleteProducts($d,$a),'test_cleanup_preview','test_cleanup_execute'=>invTestCleanup($d,$a),default=>throw new InvalidArgumentException('未知操作')};$d->exec('COMMIT');$transaction=false;jsonReply(200,$r);
  }catch(Throwable $e){if($transaction)$d->exec('ROLLBACK');if($e instanceof InvalidArgumentException||$e instanceof JsonException)jsonReply(422,['error'=>$e->getMessage()]);if($e instanceof PDOException&&str_contains($e->getMessage(),'UNIQUE'))jsonReply(409,['error'=>'编码、名称或 SN 重复，本次没有保存']);error_log('Inventory: '.$e->getMessage());jsonReply(503,['error'=>'库存操作未确认成功，请刷新重试']);}
 }
 function invPrint(PDO $d,array $a):array{$sn=$a['serials']??[];if(!is_array($sn)||!array_is_list($sn)||count($sn)<1||count($sn)>500)iv('每次打印 1–500 个标签');foreach($sn as $s)if(!iq($d,'SELECT 1 FROM inv_sn WHERE sn=?',[invSN($s)])->fetchColumn())iv('标签 SN 不存在');ilog($d,'labels.print_requested',iid('PRINT'),['serials'=>$sn,'template'=>it($a['template']??'')]);return ['requested'=>true];}

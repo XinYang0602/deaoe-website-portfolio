@@ -71,6 +71,9 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     frame=page.frame_locator('#inventory-workspace-frame')
                     form=frame.locator('#doc-form')
                     expect(form).to_be_visible()
+                    expect(form).to_have_attribute('data-number-ready','true')
+                    purchase_number=form.locator('[name=reserved_number]').input_value()
+                    assert purchase_number.startswith('CG-')
                     if width==390:
                         expect(form.locator('[name=party_id]')).to_be_visible()
                         expect(form.locator('[name=warehouse_id]')).to_be_visible()
@@ -99,7 +102,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     products=frame.get_by_role('dialog',name='选择采购产品',exact=True)
                     products.get_by_role('searchbox').fill('TEST-P')
                     products.locator('[data-proc-product="TEST-P"]').click()
-                    item=frame.get_by_role('dialog',name='编辑采购商品',exact=True)
+                    item=frame.get_by_role('dialog',name='编辑采购产品',exact=True)
                     item.locator('[name=qty]').fill('2')
                     expect(item.locator('[name=price]')).to_have_value('7.50')
                     item.get_by_role('button',name='加入已选').click()
@@ -124,6 +127,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     expect(frame.locator('#doc-print h2')).to_contain_text('已审核')
                     with sqlite3.connect(db_path) as db:
                         purchase_id=db.execute("SELECT id FROM inv_docs WHERE kind='purchase' ORDER BY rowid DESC LIMIT 1").fetchone()[0]
+                    assert purchase_id==purchase_number
                     frame.locator('[data-action=close]').click()
                     page.goto(base+'/service/#inventory/receipt/new')
                     orders=frame.get_by_role('dialog',name='选择采购订单',exact=True)
@@ -131,6 +135,8 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     orders.locator('[data-proc-id]').click()
                     orders.locator('.proc-confirm').click()
                     expect(form).to_have_attribute('data-kind','receipt')
+                    expect(form).to_have_attribute('data-number-ready','true')
+                    receipt_number=form.locator('[name=reserved_number]').input_value()
                     expect(form.locator('[name=party_id]')).to_be_disabled()
                     expect(form.locator('[name=warehouse_id]')).to_be_disabled()
                     form.locator('.proc-warehouse').click()
@@ -160,6 +166,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     with sqlite3.connect(db_path) as db:
                         assert db.execute("SELECT warehouse_id FROM inv_sn WHERE sn=?",('PROC-SN-'+str(width),)).fetchone()[0]=='TEST-W2'
                         rid=db.execute("SELECT id FROM inv_docs WHERE kind='receipt' ORDER BY rowid DESC LIMIT 1").fetchone()[0]
+                        assert rid==receipt_number
                         assert db.execute("SELECT source_id FROM inv_docs WHERE id=?",(rid,)).fetchone()[0]==purchase_id
                     assert not errors,errors
                     print('PASS purchase + partial receipt save/approve/source/SN',width,height)

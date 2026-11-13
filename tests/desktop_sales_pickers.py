@@ -73,6 +73,8 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         assert dialog.evaluate('(el)=>{const r=el.getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1&&el.scrollWidth<=el.clientWidth+1}'), 'dialog viewport overflow'
                         expect(dialog.locator('footer button').last).to_be_in_viewport()
                     form=frame.locator('#doc-form')
+                    expect(form).to_have_attribute('data-number-ready','true')
+                    assert form.locator('[name=reserved_number]').input_value().startswith('XS-')
                     expect(form).to_be_visible()
                     form.locator('.sales-customer-trigger').click()
                     customers=frame.locator('.sales-customer-picker')
@@ -89,7 +91,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     expect(form.locator('[name=party_id]')).to_have_value('TEST-C')
                     form.locator('.product-choose').click()
                     products=frame.locator('.desktop-product-picker' if width>700 else '.sales-product-picker')
-                    products.get_by_role('searchbox',name='搜索商品').fill('TEST-P')
+                    products.get_by_role('searchbox',name='搜索产品').fill('TEST-P')
                     products.locator('[data-filter=category]').select_option('整机')
                     if width>700:
                         check_bounds(products)
@@ -117,7 +119,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     item.locator('[name=unit]').fill('25')
                     item.locator('[name=discount]').fill('0.5')
                     expect(item.locator('[name=amount]')).to_have_value('12.50')
-                    item.get_by_role('button',name='确认商品').click()
+                    item.get_by_role('button',name='确认产品').click()
                     if width>700:
                         products.locator('[data-add-product="TEST-P"]').click()
                         item.locator('.warehouse-choose').click()
@@ -126,7 +128,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     else:
                         products.locator('[data-product-id="TEST-P"]').click()
                         item.locator('[name=store]').select_option('TEST-W2')
-                    item.get_by_role('button',name='确认商品').click()
+                    item.get_by_role('button',name='确认产品').click()
                     page.screenshot(path=str(REPORT/f'product-{width}.png'),full_page=True)
                     products.locator('.picker-done').click()
                     expect(form.locator('.line')).to_have_count(2)

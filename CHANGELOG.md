@@ -1,3 +1,10 @@
+## 2026-11-12 — Editable document sequences
+
+- Added configurable purchasing, receipt, transfer and related document numbering while preserving sales rules and historical IDs.
+- Reserve numbers when opening forms with idempotent retries and ownership/date validation; canceled forms may leave sequence gaps. Preserve legacy counters and prevent reuse after rule changes.
+- Added destination-category search and handled server/browser date boundaries.
+- Validated business/syntax regressions, concurrent numbering, rule permissions, catalog/settings UI, purchase/receipt workflows, transfer reservation persistence and sales selectors with synthetic data.
+
 ## 2026-11-12 — Product numbering and compact editing
 
 - Added a settings numbering overview and editable product sequence rules, preserving document numbering.
