@@ -5,8 +5,12 @@ declare(strict_types=1);
 // backup and deletion. Master data for indirectly affected products is retained.
 function cleanupValues(mixed $value, string $key = ''): array {
     $references = ['id','product_id','doc_id','source_id','source_line','line_id',
-        'receipt_line','issue_line','sn','lot_id','op_id','return_id','card_id',
+        'sale_id','reference','request_key','receipt_line','issue_line','sn','lot_id','op_id','return_id','card_id',
         'inventorySN','manufacturer_sn','stockId','order','cardId','exchange','serials','old_serials','old_sn','new_sn'];
+    if (is_string($value) && $key==='source') {
+        if(preg_match('/^(sale|history|return|purchase|receipt|purchase-return|purchase-history|purchase_return|payment|offset):(.+)$/',$value,$m))return [$m[2],$value];
+        return [];
+    }
     if (is_string($value)) {
         $json = json_decode($value, true);
         if (is_array($json)) return cleanupValues($json, $key);
@@ -28,6 +32,7 @@ function cleanupPlan(PDO $d, array $a): array {
     $products = $d->query('SELECT * FROM inv_products ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
     foreach ($ids as $id) if (!in_array($id, array_column($products, 'id'), true)) iv('商品已变化，请刷新');
     $tables = ['inv_docs','inv_lines','inv_balances','inv_sn','inv_ledger','inv_sn_events','inv_card_links','inv_ops','inv_lots','inv_lot_moves','inv_allocations','inv_holds','inv_return_lines','inv_exchange_links','inv_freezes'];
+    foreach(['inv_fin_sales','inv_fin_entries','inv_fin_purchases','inv_fin_aux','inv_fin_links','inv_fin_requests','inv_fin_payment_accounts'] as $t)if(iq($d,"SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",[$t])->fetchColumn())$tables[]=$t;
     $rows = [];
     foreach ($tables as $t) $rows[$t] = $d->query('SELECT rowid AS cleanup_rowid,* FROM '.$t.' ORDER BY rowid')->fetchAll(PDO::FETCH_ASSOC);
     $state = $d->query('SELECT * FROM state WHERE id=1')->fetch(PDO::FETCH_ASSOC);
@@ -48,15 +53,8 @@ function cleanupPlan(PDO $d, array $a): array {
             foreach (cleanupValues($row) as $reference) $tokens[$reference] = true;
         }
     } while ($changed);
-    // Posted accounts must remain reconcilable; do not orphan financial history.
-    if ($d->query("SELECT 1 FROM sqlite_master WHERE name='inv_fin_sales'")->fetchColumn()) {
-        foreach ($picked['inv_docs'] ?? [] as $doc) {
-            if (iq($d,'SELECT 1 FROM inv_fin_sales WHERE sale_id=?',[$doc['id']])->fetchColumn()) iv('关联销售已进入账款管理，不能测试清理；请使用独立测试数据');
-        }
-        foreach ($picked['inv_ops'] ?? [] as $op) {
-            if (iq($d,'SELECT 1 FROM inv_fin_entries WHERE source=?',['return:'.$op['id']])->fetchColumn()) iv('关联退货已记账，不能测试清理');
-        }
-    }
+    // Only explicit document/request links propagate. Never delete every entry
+    // for a party: unrelated payments and unallocated advances remain intact.
     // Print jobs are snapshots, not inventory dependencies.
     foreach ($d->query('SELECT rowid AS cleanup_rowid,* FROM inv_print_jobs ORDER BY rowid')->fetchAll(PDO::FETCH_ASSOC) as $i => $row) {
         if (array_intersect_key(array_fill_keys(cleanupValues($row), true), $tokens)) $picked['inv_print_jobs'][$i] = $row;

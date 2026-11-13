@@ -110,6 +110,12 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         assert saved.value.status==200
                         state=page.request.get(base+'/service/api/column-widths').json()
                         assert state['views']
+                        expect(frame.locator('.category-tree small')).to_have_count(0)
+                        frame.locator('.catalog-more summary').click()
+                        frame.locator('[data-code-rule]').click()
+                        expect(frame.locator('#code-rule-form')).to_be_visible()
+                        frame.locator('#code-rule-form [type=submit]').click()
+                        expect(frame.locator('#code-rule-form')).to_be_hidden()
                         frame.locator('#search').fill('TEST-PART')
                         expect(table.locator('[data-catalog-row]')).to_have_count(1)
                         frame.locator('[data-catalog-edit]').click()

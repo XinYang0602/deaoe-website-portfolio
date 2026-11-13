@@ -64,6 +64,7 @@ Short feature summaries, newest first. Details and validation notes are in the [
 
 | Date | Update |
 | --- | --- |
+| 2026-11-12 | Added configurable product numbering, category moves and linked test-ledger cleanup. |
 | 2026-11-12 | Added draggable table columns with server-side, per-account layout preferences. |
 | 2026-11-12 | Added stepwise category selection and creation, inherited new-product folders and clearer tree controls. |
 | 2026-11-12 | Fixed category-schema upgrades for existing inventory databases. |

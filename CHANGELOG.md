@@ -1,3 +1,9 @@
+## 2026-11-12 — Catalog administration
+
+- Compact configurable product codes with transactional collision avoidance; category subtree moves and cleaner tree labels.
+- Test cleanup includes explicitly linked financial records while retaining unrelated and unallocated entries.
+- Validated numbering, hierarchy safeguards, financial closure and desktop/mobile catalog regression.
+
 ## 2026-11-12 — Account-specific table widths
 
 - Shared desktop resizing with keyboard controls and authenticated per-user preferences.
