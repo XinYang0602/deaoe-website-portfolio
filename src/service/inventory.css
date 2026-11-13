@@ -605,3 +605,16 @@ main.compact-register{max-width:none;padding:16px 20px}
 @media(max-width:700px){.party-directory .catalog-layout{grid-template-columns:1fr}.party-directory .catalog-categories{display:flex;gap:6px;padding:8px}.party-directory .catalog-categories h2{display:none}.party-directory .catalog-scroll table{min-width:650px}}
 
 .party-directory .catalog-disabled{flex-direction:row!important;align-items:center}
+
+.party-category-heading{margin-top:20px!important}
+.party-category-tree{padding-left:14px;margin:4px 0;list-style:none}
+.party-category-tree summary{display:flex;align-items:center;gap:4px;cursor:pointer}
+.party-category-tree summary::before{content:'▸';font-size:20px}
+.party-category-tree details[open]>summary::before{content:'▾'}
+.party-category-tree button{min-width:0;overflow-wrap:anywhere}
+.party-category-field{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.party-category-field>label{flex:1;min-width:220px}
+[data-party-category-create]{width:100%;display:flex;gap:8px;align-items:end;padding:12px;background:#f6f8fa}
+[data-party-category-create][hidden]{display:none}
+[data-party-category-create]>label{flex:1;min-width:0}
+@media(max-width:700px){.party-directory .catalog-categories{display:block}.party-directory .catalog-categories h2{display:block}[data-party-category-create]{flex-wrap:wrap}}

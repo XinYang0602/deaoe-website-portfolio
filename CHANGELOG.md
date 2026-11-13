@@ -269,3 +269,7 @@ Existing records remain unchanged. Local business and browser regression checks;
 ## 2026-11-12 — Unified customer/supplier directory and corrected configurable product numbering previews.
 
 Preserves existing entity IDs and document links. Tested with synthetic records; historical sales numbering remains unchanged.
+
+## 2026-11-12 — Custom nested customer categories with inline creation, editing and subtree filtering.
+
+Stable category IDs preserve assignments through rename/reparent. Existing parties remain unclassified until assigned; accounting roles and document references are unchanged. Synthetic tests cover duplicates, cycles, stale writes, depth limits, additive schema upgrade and browser workflows.
