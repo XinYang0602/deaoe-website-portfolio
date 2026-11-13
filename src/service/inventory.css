@@ -618,3 +618,27 @@ main.compact-register{max-width:none;padding:16px 20px}
 [data-party-category-create][hidden]{display:none}
 [data-party-category-create]>label{flex:1;min-width:0}
 @media(max-width:700px){.party-directory .catalog-categories{display:block}.party-directory .catalog-categories h2{display:block}[data-party-category-create]{flex-wrap:wrap}}
+
+/* Desktop counterparty editor shares the compact single-window form rhythm. */
+@media(min-width:701px){
+ #modal:has(#master-form[data-type=parties]),#modal:has(#party-category-form){width:min(720px,94vw);padding:16px}
+ #modal:has(#master-form[data-type=parties])>h2,#modal:has(#party-category-form)>h2{font-size:20px;margin:0 0 14px}
+ #master-form[data-type=parties]>.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px}
+ #master-form[data-type=parties] .grid>label:not(.check){display:grid;grid-template-columns:70px minmax(0,1fr);align-items:center;gap:6px;font-size:13px}
+ #master-form[data-type=parties] .grid>label:has([name=address]){grid-column:1/-1}
+ #master-form[data-type=parties] input:not([type=checkbox]),#master-form[data-type=parties] select,#party-category-form input,#party-category-form select{height:32px;min-height:32px;padding:5px 8px;min-width:0}
+ #master-form[data-type=parties] .party-category-field{align-items:center;gap:8px}
+ #master-form[data-type=parties] .party-category-field>label{display:grid;grid-template-columns:70px minmax(0,1fr);align-items:center;gap:6px;font-size:13px;min-width:0}
+ #master-form[data-type=parties] [data-party-category-create]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto;gap:8px;padding:10px}
+ #master-form[data-type=parties] [data-party-category-create]>label{font-size:12px;gap:4px}
+ #master-form[data-type=parties] .check{grid-column:1/-1;font-size:13px;margin:0}
+ #master-form[data-type=parties] button,#party-category-form button{padding:6px 10px;min-height:32px;white-space:nowrap}
+ #master-form[data-type=parties] .foot,#party-category-form .foot{margin-top:14px;padding-top:10px}
+}
+@media(min-width:701px){
+ #master-form[data-type=parties] [data-party-category-create][hidden]{display:none}
+ .party-scope{margin:8px 0}.party-scope>button{width:100%;text-align:left;font-weight:600}
+ .party-scope-children{margin-left:12px;padding-left:8px;border-left:1px solid #dce3ec}
+ .party-scope-children>.party-category-tree{padding-left:0}
+ .party-scope-children>button{margin:4px 0}
+}

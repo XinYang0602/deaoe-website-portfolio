@@ -1,3 +1,10 @@
+## 2026-11-12 — Counterparty forms and category scopes
+
+- Compact desktop create/edit forms with inline category creation.
+- Unified tree with independent customer and supplier branches; creation inherits the selected type/category and prevents cross-scope assignments.
+- Additive migration preserves entity identities and historical business links, including legacy shared categories.
+- Verified scope isolation, same-name roots, migration idempotence, business regressions and synthetic browser workflows/screenshots.
+
 ## 2026-11-12 — Narrower product editor
 
 - Reduced desktop product editor width from 1100px to 860px while retaining all fields in one window. Simplified price labels.

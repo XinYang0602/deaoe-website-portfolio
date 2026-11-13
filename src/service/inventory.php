@@ -28,8 +28,24 @@ function invSchema(PDO $d):void{
 }
 // Run for existing installations too; the initial inventory migration is not repeated on API reads.
 function invCategorySchema(PDO $d):void{
- $d->exec("CREATE TABLE IF NOT EXISTS inv_party_categories(id TEXT PRIMARY KEY,name TEXT NOT NULL,parent_id TEXT NOT NULL DEFAULT '',version INTEGER NOT NULL DEFAULT 1,UNIQUE(parent_id,name));
- CREATE TABLE IF NOT EXISTS inv_party_category_links(party_id TEXT PRIMARY KEY REFERENCES inv_parties(id),category_id TEXT NOT NULL REFERENCES inv_party_categories(id));");
+ $d->exec("CREATE TABLE IF NOT EXISTS inv_party_category_tree(id TEXT PRIMARY KEY,name TEXT NOT NULL,kind TEXT NOT NULL DEFAULT 'customer',parent_id TEXT NOT NULL DEFAULT '',version INTEGER NOT NULL DEFAULT 1,UNIQUE(kind,parent_id,name));
+ CREATE TABLE IF NOT EXISTS inv_party_category_assignments(party_id TEXT PRIMARY KEY REFERENCES inv_parties(id),category_id TEXT NOT NULL REFERENCES inv_party_category_tree(id));");
+ if(!iq($d,"SELECT 1 FROM inv_meta WHERE k='party_category_scopes'")->fetchColumn()){
+  $own=!$d->inTransaction();if($own)$d->beginTransaction();
+  try{
+   if(iq($d,"SELECT 1 FROM sqlite_master WHERE type='table' AND name='inv_party_categories'")->fetchColumn()){
+    $d->exec("INSERT OR IGNORE INTO inv_party_category_tree(id,name,kind,parent_id,version) SELECT id,name,'customer',parent_id,version FROM inv_party_categories;
+     INSERT OR IGNORE INTO inv_party_category_assignments SELECT l.party_id,l.category_id FROM inv_party_category_links l JOIN inv_parties p ON p.id=l.party_id WHERE p.kind='customer';");
+    // Copy only supplier-used branches and their ancestors; keep all party IDs intact.
+    $old=array_column(iq($d,'SELECT * FROM inv_party_categories')->fetchAll(PDO::FETCH_ASSOC),null,'id');
+    foreach(iq($d,"SELECT l.* FROM inv_party_category_links l JOIN inv_parties p ON p.id=l.party_id WHERE p.kind='supplier'")->fetchAll(PDO::FETCH_ASSOC) as $link){
+     $cursor=$link['category_id'];$seen=[];while(isset($old[$cursor])&&!isset($seen[$cursor])){$seen[$cursor]=true;$c=$old[$cursor];iq($d,'INSERT OR IGNORE INTO inv_party_category_tree(id,name,kind,parent_id,version) VALUES(?,?,?,?,?)',['SUP-'.$c['id'],$c['name'],'supplier',$c['parent_id']?'SUP-'.$c['parent_id']:'',$c['version']]);$cursor=$c['parent_id'];}
+     iq($d,'INSERT OR IGNORE INTO inv_party_category_assignments VALUES(?,?)',[$link['party_id'],'SUP-'.$link['category_id']]);
+    }
+   }
+   iq($d,"INSERT OR IGNORE INTO inv_meta(k,v) VALUES('party_category_scopes','1')");if($own)$d->commit();
+  }catch(Throwable $e){if($own&&$d->inTransaction())$d->rollBack();throw $e;}
+ }
  $d->exec("CREATE TABLE IF NOT EXISTS inv_product_categories(product_id TEXT PRIMARY KEY REFERENCES inv_products(id) ON DELETE CASCADE,path TEXT NOT NULL);");
 }
 function iq(PDO $d,string $sql,array $a=[]):PDOStatement{$q=$d->prepare($sql);$q->execute($a);return $q;}
@@ -163,16 +179,16 @@ function invSaveBrands(PDO $d,array $a):array{
 }
 // Stable category IDs preserve assignments across renames and moves.
 function invSavePartyCategory(PDO $d,array $a):array {
- $id=it($a['id']??'');$name=it($a['name']??'',80);$parent=it($a['parent_id']??'');
+ $id=it($a['id']??'');$name=it($a['name']??'',80);$parent=it($a['parent_id']??'');$kind=it($a['kind']??'customer');if(!in_array($kind,['customer','supplier']))iv('分类类型错误');
  if($name==='')iv('请填写分类名称');
- $rows=iq($d,'SELECT * FROM inv_party_categories')->fetchAll(PDO::FETCH_ASSOC);$nodes=array_column($rows,null,'id');
+ $rows=iq($d,'SELECT * FROM inv_party_category_tree')->fetchAll(PDO::FETCH_ASSOC);$nodes=array_column($rows,null,'id');
  if($id&&(!isset($nodes[$id])||(int)$nodes[$id]['version']!==($a['version']??null)))iv('分类已变化，请刷新后重试');
- if($parent&&!isset($nodes[$parent]))iv('上级分类不存在');
- if(iq($d,'SELECT 1 FROM inv_party_categories WHERE parent_id=? AND name=? AND id<>?',[$parent,$name,$id])->fetchColumn())iv('同一上级下已有这个分类');
+ if($id&&$nodes[$id]['kind']!==$kind)iv('不能改变分类业务类型');if($parent&&(!isset($nodes[$parent])||$nodes[$parent]['kind']!==$kind))iv('请选择同一业务类型的上级分类');
+ if(iq($d,'SELECT 1 FROM inv_party_category_tree WHERE kind=? AND parent_id=? AND name=? AND id<>?',[$kind,$parent,$name,$id])->fetchColumn())iv('同一上级下已有这个分类');
  $newId=$id?:iid('CAT');$nodes[$newId]=['id'=>$newId,'parent_id'=>$parent];
  foreach($nodes as $node){$seen=[];$cursor=$node['id'];while($cursor!==''){if(isset($seen[$cursor]))iv('不能移动到自身或下级分类');$seen[$cursor]=true;if(count($seen)>8)iv('分类最多支持8级');$cursor=$nodes[$cursor]['parent_id'];}}
- if($id)iq($d,'UPDATE inv_party_categories SET name=?,parent_id=?,version=version+1 WHERE id=?',[$name,$parent,$id]);
- else iq($d,'INSERT INTO inv_party_categories(id,name,parent_id) VALUES(?,?,?)',[$newId,$name,$parent]);
+ if($id)iq($d,'UPDATE inv_party_category_tree SET name=?,parent_id=?,version=version+1 WHERE id=?',[$name,$parent,$id]);
+ else iq($d,'INSERT INTO inv_party_category_tree(id,name,parent_id,kind) VALUES(?,?,?,?)',[$newId,$name,$parent,$kind]);
  ilog($d,'party.category',$newId,['name'=>$name,'parent_id'=>$parent]);return ['id'=>$newId];
 }
 function invMaster(PDO $d,array $a):array{
@@ -201,12 +217,12 @@ function invMaster(PDO $d,array $a):array{
  if(!$active&&p2Ready($d)){p2Unlocked($d,$id);if(iq($d,"SELECT 1 FROM inv_ops WHERE state IN ('draft','submitted','rejected','transit') AND (json_extract(body,'$.warehouse_id')=? OR json_extract(body,'$.to_warehouse')=?)",[$id,$id])->fetchColumn())iv('仓库有未完成第二期业务');}
  if($id==='LEGACY'&&($name!==$old['name']||!$active))iv('期初待归属仓库为历史专用，请使用期初归属功能');
  if(!$active&&(iq($d,'SELECT 1 FROM inv_balances WHERE warehouse_id=? AND qty>0',[$id])->fetchColumn()||iq($d,"SELECT 1 FROM inv_docs WHERE warehouse_id=? AND status IN ('draft','submitted','rejected')",[$id])->fetchColumn()))iv('仓库有库存或未完成单据，不能停用');$fields=['name'=>$name,'active'=>$active];
- }else{if(array_key_exists('category_id',$a)&&$a['category_id']!==''&&!iq($d,'SELECT 1 FROM inv_party_categories WHERE id=?',[it($a['category_id'])])->fetchColumn())iv('请选择有效分类');$kind=it($a['kind']??'');if(!in_array($kind,['supplier','customer']))iv('往来类型错误');if($old&&$kind!==$old['kind'])iv('不能改变往来类型');$fields=['kind'=>$kind,'name'=>$name,'contact'=>it($a['contact']??''),'phone'=>it($a['phone']??''),'address'=>it($a['address']??'',500),'active'=>$active];}
+ }else{if(array_key_exists('category_id',$a)&&$a['category_id']!==''&&!iq($d,'SELECT 1 FROM inv_party_category_tree WHERE id=? AND kind=?',[it($a['category_id']),it($a['kind']??'')])->fetchColumn())iv('请选择有效分类');$kind=it($a['kind']??'');if(!in_array($kind,['supplier','customer']))iv('往来类型错误');if($old&&$kind!==$old['kind'])iv('不能改变往来类型');$fields=['kind'=>$kind,'name'=>$name,'contact'=>it($a['contact']??''),'phone'=>it($a['phone']??''),'address'=>it($a['address']??'',500),'active'=>$active];}
  if($type==='products'&&!$active&&p2Ready($d)&&(iq($d,"SELECT 1 FROM inv_ops WHERE state IN ('draft','submitted','rejected','transit') AND json_extract(body,'$.product_id')=?",[$id])->fetchColumn()||iq($d,"SELECT 1 FROM inv_sn WHERE product_id=? AND status='transit'",[$id])->fetchColumn()))iv('商品有未完成第二期业务');
  if($type==='products'&&!$active&&(iq($d,'SELECT 1 FROM inv_balances WHERE product_id=? AND qty>0',[$id])->fetchColumn()||iq($d,"SELECT 1 FROM inv_lines l JOIN inv_docs x ON x.id=l.doc_id WHERE l.product_id=? AND x.status IN ('draft','submitted','rejected')",[$id])->fetchColumn()))iv('商品有库存或未完成单据，不能停用');
  if($old){$sets=implode(',',array_map(fn($k)=>"$k=?",array_keys($fields)));iq($d,"UPDATE $table SET $sets,version=version+1 WHERE id=?",[...array_values($fields),$id]);}else{iq($d,"INSERT INTO $table(id,".implode(',',array_keys($fields)).') VALUES('.implode(',',array_fill(0,count($fields)+1,'?')).')',[$id,...array_values($fields)]);}
  if($type==='products'&&$categoryPath!==null){iq($d,'INSERT INTO inv_product_categories(product_id,path) VALUES(?,?) ON CONFLICT(product_id) DO UPDATE SET path=excluded.path',[$id,$categoryPath]);$fields['category_path']=$categoryPath;}
- if($type==='parties'&&array_key_exists('category_id',$a)){iq($d,'DELETE FROM inv_party_category_links WHERE party_id=?',[$id]);if($a['category_id']!=='')iq($d,'INSERT INTO inv_party_category_links VALUES(?,?)',[$id,it($a['category_id'])]);}
+ if($type==='parties'&&array_key_exists('category_id',$a)){iq($d,'DELETE FROM inv_party_category_assignments WHERE party_id=?',[$id]);if($a['category_id']!=='')iq($d,'INSERT INTO inv_party_category_assignments VALUES(?,?)',[$id,it($a['category_id'])]);}
  ilog($d,$old?'master.update':'master.create',$id,$fields);return ['id'=>$id];
 }
 function invSaveDoc(PDO $d,array $a):array{
@@ -295,7 +311,7 @@ function invOpening(PDO $d,array $a):array{
  iq($d,"UPDATE inv_balances SET qty=qty-?,unidentified=unidentified-? WHERE product_id=? AND warehouse_id='LEGACY'",[$qty,$p['sn_enabled']?$qty:0,$pid]);iq($d,'INSERT OR IGNORE INTO inv_balances VALUES(?,?,0,0)',[$pid,$wh]);iq($d,'UPDATE inv_balances SET qty=qty+? WHERE product_id=? AND warehouse_id=?',[$qty,$pid,$wh]);foreach(['LEGACY'=>-$qty,$wh=>$qty] as $w=>$delta)iq($d,'INSERT INTO inv_ledger(doc_id,line_id,product_id,warehouse_id,delta,created_at) VALUES(?,?,?,?,?,?)',[$id,$pid,$pid,$w,$delta,gmdate('c')]);if(p2Ready($d)&&!$p['sn_enabled']){foreach(p2LotsTake($d,$pid,'LEGACY','available',$qty,[],$id) as $lot)p2LotAdd($d,$pid,$wh,'available',$lot['qty'],$lot['origin'],$lot['price_cents'],$id);}
  ilog($d,'opening.assign',$id,['product_id'=>$pid,'qty'=>$qty,'warehouse_id'=>$wh,'note'=>$note,'request_key'=>$key]);return ['id'=>$id];
 }
-function invSnapshot(PDO $d):array{$out=[];foreach(['products','warehouses','parties','docs','lines','balances','sn','ledger','images','card_links'] as $t)$out[$t]=$d->query('SELECT * FROM inv_'.$t)->fetchAll(PDO::FETCH_ASSOC);$categoryPaths=$d->query('SELECT product_id,path FROM inv_product_categories')->fetchAll(PDO::FETCH_KEY_PAIR);foreach($out['products'] as &$product)$product['category_path']=$categoryPaths[$product['id']]??'';unset($product);$deliveries=[];foreach($d->query('SELECT * FROM inv_delivery') as $row)$deliveries[$row['doc_id']]=$row;foreach($out['docs'] as &$doc){if(isset($deliveries[$doc['id']]))foreach(['phone','contact','address'] as $f)$doc['delivery_'.$f]=$deliveries[$doc['id']][$f];}unset($doc);$lineWarehouses=$d->query('SELECT line_id,warehouse_id FROM inv_sale_line_settings')->fetchAll(PDO::FETCH_KEY_PAIR);foreach($out['lines'] as &$line){if(isset($lineWarehouses[$line['id']]))$line['warehouse_id']=$lineWarehouses[$line['id']];}unset($line);$out['events']=$d->query('SELECT * FROM inv_events ORDER BY id DESC LIMIT 300')->fetchAll(PDO::FETCH_ASSOC);$out['sn_events']=$d->query('SELECT * FROM inv_sn_events ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);foreach(['ops','lots','holds','freezes','label_profiles','exchange_links','allocations'] as $t)$out[$t]=$d->query('SELECT * FROM inv_'.$t)->fetchAll(PDO::FETCH_ASSOC);$out['party_categories']=iq($d,'SELECT * FROM inv_party_categories ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);$partyCategories=iq($d,'SELECT party_id,category_id FROM inv_party_category_links')->fetchAll(PDO::FETCH_KEY_PAIR);foreach($out['parties'] as &$p)$p['category_id']=$partyCategories[$p['id']]??'';unset($p);$out['sale_default_warehouse']=invDefaultWarehouse($d);$out['product_brands']=invBrands($d);$out['product_names']=invProductNames($d);$out['product_code_rule']=invCodeRule($d);$out['number_rules']=[];foreach(invNumberTypes() as $type=>$label)$out['number_rules'][$type]=invNumberRule($d,$type)+['label'=>$label];$out['category_fingerprint']=hash('sha256',json_encode($d->query("SELECT p.id,p.version,p.category,COALESCE(c.path,'') AS path FROM inv_products p LEFT JOIN inv_product_categories c ON c.product_id=p.id ORDER BY p.id")->fetchAll(PDO::FETCH_ASSOC)));$out['finance']=finSnapshot($d);$out['can_adjust_stock']=($_SESSION['user']??'')==='admin';$out['csrf']=$_SESSION['csrf'];return $out;}
+function invSnapshot(PDO $d):array{$out=[];foreach(['products','warehouses','parties','docs','lines','balances','sn','ledger','images','card_links'] as $t)$out[$t]=$d->query('SELECT * FROM inv_'.$t)->fetchAll(PDO::FETCH_ASSOC);$categoryPaths=$d->query('SELECT product_id,path FROM inv_product_categories')->fetchAll(PDO::FETCH_KEY_PAIR);foreach($out['products'] as &$product)$product['category_path']=$categoryPaths[$product['id']]??'';unset($product);$deliveries=[];foreach($d->query('SELECT * FROM inv_delivery') as $row)$deliveries[$row['doc_id']]=$row;foreach($out['docs'] as &$doc){if(isset($deliveries[$doc['id']]))foreach(['phone','contact','address'] as $f)$doc['delivery_'.$f]=$deliveries[$doc['id']][$f];}unset($doc);$lineWarehouses=$d->query('SELECT line_id,warehouse_id FROM inv_sale_line_settings')->fetchAll(PDO::FETCH_KEY_PAIR);foreach($out['lines'] as &$line){if(isset($lineWarehouses[$line['id']]))$line['warehouse_id']=$lineWarehouses[$line['id']];}unset($line);$out['events']=$d->query('SELECT * FROM inv_events ORDER BY id DESC LIMIT 300')->fetchAll(PDO::FETCH_ASSOC);$out['sn_events']=$d->query('SELECT * FROM inv_sn_events ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);foreach(['ops','lots','holds','freezes','label_profiles','exchange_links','allocations'] as $t)$out[$t]=$d->query('SELECT * FROM inv_'.$t)->fetchAll(PDO::FETCH_ASSOC);$out['party_categories']=iq($d,'SELECT * FROM inv_party_category_tree ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);$partyCategories=iq($d,'SELECT party_id,category_id FROM inv_party_category_assignments')->fetchAll(PDO::FETCH_KEY_PAIR);foreach($out['parties'] as &$p)$p['category_id']=$partyCategories[$p['id']]??'';unset($p);$out['sale_default_warehouse']=invDefaultWarehouse($d);$out['product_brands']=invBrands($d);$out['product_names']=invProductNames($d);$out['product_code_rule']=invCodeRule($d);$out['number_rules']=[];foreach(invNumberTypes() as $type=>$label)$out['number_rules'][$type]=invNumberRule($d,$type)+['label'=>$label];$out['category_fingerprint']=hash('sha256',json_encode($d->query("SELECT p.id,p.version,p.category,COALESCE(c.path,'') AS path FROM inv_products p LEFT JOIN inv_product_categories c ON c.product_id=p.id ORDER BY p.id")->fetchAll(PDO::FETCH_ASSOC)));$out['finance']=finSnapshot($d);$out['can_adjust_stock']=($_SESSION['user']??'')==='admin';$out['csrf']=$_SESSION['csrf'];return $out;}
 function handleInventory():never{
  $d=null;$transaction=false;
  try{

@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-12 — Compact counterparty forms and separate customer/supplier category branches.
+
 - 2026-11-12 — Narrower single-window product editor with simpler price labels.
 
 - 2026-11-12 — Custom nested customer categories with inline creation, editing and subtree filtering.
