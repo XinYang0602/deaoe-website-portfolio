@@ -1,3 +1,9 @@
+## 2026-11-12 — Guided category selection
+
+- Replaced manual category-path entry with per-level selectors and inline category creation; changes apply on product save.
+- New products inherit the selected desktop folder; existing products retain their category paths.
+- Enlarged tree disclosure controls. Validated desktop/mobile catalog regression and local business checks.
+
 ## 2026-11-12 — Existing-database category upgrade fix
 
 - Ensure the additive category table exists before authenticated inventory API reads/writes, without repeating inventory migration.

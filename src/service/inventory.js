@@ -70,7 +70,47 @@ let productPage = 1, productPageSize = 20;
 // Explicit directory paths do not change the existing product-name defaults.
 function categoryParts(p){return String(p.category_path||p.category||'未分类').split(/\/|>+|›/).map(x=>x.trim()).filter(Boolean);}
 function categoryPath(p){return categoryParts(p).join(' / ');}
-function categoryEditor(p){return `<label class="wide">产品分类路径<input name="category_path" maxlength="600" list="category-path-options" value="${E(p.category_path||'')}" placeholder="例如：厨电 / 热水器 / 燃气热水器 / 德澳"><datalist id="category-path-options">${[...new Set(data.products.map(categoryPath))].map(c=>`<option value="${E(c)}"></option>`).join('')}</datalist><small>用 / 分隔层级，最多 8 级；可选择已有路径。留空沿用名称分类。</small><output class="category-path-preview">${E(categoryPath(p).replaceAll(' / ',' › '))}</output></label>`;}
+function categoryEditor(p){
+ const inherited=!p.id&&page==='products'?document.querySelector('[data-catalog-category][aria-current="true"]')?.dataset.catalogCategory:'';
+ const path=p.category_path||inherited||'';
+ return `<div class="wide category-editor"><div>产品分类</div><input type="hidden" name="category_path" value="${E(path)}"><div class="category-levels">${categoryLevelFields(path)}</div><div class="category-actions"><button type="button" data-category-add>＋ 添加下一级</button><button type="button" data-category-reset>沿用名称分类</button></div><output class="category-path-preview">${E(path?path.split(' / ').join(' › '):'沿用名称分类')}</output><small>逐级选择分类，或选择“新增分类”填写名称；保存产品后生效。</small></div>`;
+}
+function categoryLevelFields(path){
+ const parts=path?path.split(' / '):[];
+ return [...parts,''].slice(0,8).map((value,i)=>{
+  const siblings=[...new Set(data.products.map(categoryParts).filter(p=>parts.slice(0,i).every((x,j)=>p[j]===x)).map(p=>p[i]).filter(Boolean))];
+  if(value&&!siblings.includes(value))siblings.push(value);
+  return `<div class="category-level"><label>第 ${i+1} 级<select data-category-level="${i}"><option value="">请选择分类</option>${siblings.map(n=>`<option value="${E(n)}" ${n===value?'selected':''}>${E(n)}</option>`).join('')}<option value="__new__">＋ 新增分类…</option></select></label><button type="button" data-category-remove="${i}" aria-label="移除第 ${i+1} 级及下级" ${value?'':'hidden'}>移除</button><div class="category-new" hidden><input aria-label="新分类名称" maxlength="60" placeholder="填写本级分类名称"><button type="button" data-category-confirm="${i}">添加</button></div></div>`;
+ }).join('');
+}
+function setCategoryEditor(editor,parts){
+ const path=parts.join(' / ');editor.querySelector('[name=category_path]').value=path;
+ editor.querySelector('.category-levels').innerHTML=categoryLevelFields(path);
+ editor.querySelector('.category-path-preview').textContent=parts.join(' › ')||'沿用名称分类';
+ editor.querySelector('[data-category-add]').disabled=parts.length>=8;
+}
+function categoryDraft(editor){return editor.querySelector('[name=category_path]').value.split(' / ').filter(Boolean);}
+document.addEventListener('change',e=>{
+ if(!e.target.matches('[data-category-level]'))return;
+ const editor=e.target.closest('.category-editor'),i=Number(e.target.dataset.categoryLevel);
+ if(e.target.value==='__new__'){const box=e.target.closest('.category-level').querySelector('.category-new');box.hidden=false;box.querySelector('input').focus();return;}
+ setCategoryEditor(editor,[...categoryDraft(editor).slice(0,i),...(e.target.value?[e.target.value]:[])]);
+});
+document.addEventListener('click',e=>{
+ const b=e.target.closest('button'),editor=b?.closest('.category-editor');if(!editor)return;
+ const parts=categoryDraft(editor);
+ if(b.hasAttribute('data-category-reset'))setCategoryEditor(editor,[]);
+ if(b.hasAttribute('data-category-remove'))setCategoryEditor(editor,parts.slice(0,Number(b.dataset.categoryRemove)));
+ if(b.hasAttribute('data-category-add')){const select=editor.querySelector('.category-level:last-child select');if(parts.length<8){select.value='__new__';select.dispatchEvent(new Event('change',{bubbles:true}));}}
+ if(b.hasAttribute('data-category-confirm')){
+  const input=b.previousElementSibling,name=input.value.trim();
+  input.setCustomValidity(!name?'请输入分类名称':/[\/›>]/.test(name)?'分类名称不能包含路径分隔符':'');
+  if(!input.reportValidity())return;
+  setCategoryEditor(editor,[...parts.slice(0,Number(b.dataset.categoryConfirm)),name]);
+ }
+});
+document.addEventListener('input',e=>{if(e.target.matches('.category-new input'))e.target.setCustomValidity('');});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('.category-new input')){e.preventDefault();e.target.nextElementSibling.click();}});
 function productFacets(p) {
  const parts = String(p.category || '').split('/').map(s => s.trim());
  const kind = parts[parts.length - 1] || '未分类';
@@ -406,5 +446,3 @@ document.addEventListener('click',event=>{
  const error=form.querySelector('.form-error');if(error){error.hidden=false;error.textContent='请选择客户';}
  alert('请选择客户');form.querySelector('.sales-customer-trigger').focus();
 },true);
-
-document.addEventListener('input',e=>{if(e.target.matches('[name=category_path]')){const f=e.target.form;f.querySelector('.category-path-preview').textContent=categoryParts({category_path:e.target.value,category:f.elements.category.value}).join(' › ');}});
