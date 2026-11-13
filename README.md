@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-12: Added numbering overview, collision-safe product sequences and compact category editing.
+
 Short feature summaries, newest first. Details and validation notes are in the [changelog](CHANGELOG.md).
 
 | Date | Update |

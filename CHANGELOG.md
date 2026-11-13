@@ -1,3 +1,9 @@
+## 2026-11-12 — Product numbering and compact editing
+
+- Added a settings numbering overview and editable product sequence rules, preserving document numbering.
+- Continue product sequences above existing codes; compact identity fields and direct destination-category selection.
+- Validated syntax, business regressions and synthetic catalog browser checks.
+
 ## 2026-11-12 — Integrated product images and workspace returns
 
 - Upload and preview product images inside the product editor without losing unsaved fields.

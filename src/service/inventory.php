@@ -93,6 +93,7 @@ function invSaveCodeRule(PDO $d,array $a):array {
 }
 function invNextProductCode(PDO $d):string {
  $r=invCodeRule($d);
+ foreach(iq($d,'SELECT code FROM inv_products')->fetchAll(PDO::FETCH_COLUMN) as $existing){if(preg_match('/^'.preg_quote($r['prefix'],'/').'([0-9]{'.$r['digits'].'})$/D',$existing,$m))$r['next']=max($r['next'],(int)$m[1]+1);}
  do {if($r['next']>=10**$r['digits'])iv('产品编号已用尽，请调整编号规则');$code=$r['prefix'].str_pad((string)$r['next']++,$r['digits'],'0',STR_PAD_LEFT);}while(iq($d,'SELECT 1 FROM inv_products WHERE code=?',[$code])->fetchColumn());
  $r['version']++;iq($d,"INSERT INTO inv_meta VALUES('product_code_rule',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",[json_encode($r)]);return $code;
 }
