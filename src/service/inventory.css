@@ -509,3 +509,27 @@ main.compact-register{max-width:none;padding:16px 20px}
 [data-catalog-image]{cursor:pointer}
 
 @media(min-width:701px){#master-form[data-type=products] .grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}#master-form[data-type=products] input:not([type=checkbox]),#master-form[data-type=products] select{min-height:32px;padding:6px 8px}#master-form[data-type=products] .category-editor{padding:8px 0}#master-form[data-type=products] .category-levels{gap:8px}#master-form[data-type=products] .category-editor small{display:none}#master-form[data-type=products] .category-actions button{padding:6px 10px}}
+
+/* Compact desktop editor: separate media/category tasks without shrinking labels. */
+@media(min-width:701px){
+ #modal:has(.compact-product-form){width:min(1000px,94vw);padding:20px}
+ .compact-product-form [hidden]{display:none!important}
+ .compact-product-form .product-tabs{display:flex;gap:6px;border-bottom:1px solid #dde3eb;margin-bottom:12px}
+ .product-tabs [aria-pressed=true]{color:#bb3832;border-bottom:2px solid #bb3832}
+ #master-form.compact-product-form .grid{gap:10px 12px}
+ .compact-product-form label{font-size:13px;gap:4px}
+ .compact-product-form .category-editor{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+ .compact-product-form .category-editor>div,.compact-product-form .category-editor>output{grid-column:1/-1}
+ .compact-product-form .foot{margin-top:12px;padding-top:10px}
+ .compact-product-form>p.muted{font-size:12px;margin:8px 0}
+ .compact-product-form .product-edit-gallery{max-height:180px;overflow:auto}
+}
+
+@media(min-width:701px){
+ #modal:has(.compact-product-form){padding:12px 16px}
+ #modal:has(.compact-product-form)>h2{font-size:20px;margin:0 0 8px}
+ .compact-product-form .product-checks{grid-column:1/-1;display:flex;gap:20px;align-items:center}
+ #master-form.compact-product-form .product-checks label{margin:0;padding:0;display:flex;align-items:center;gap:6px}
+ .compact-product-form .product-tabs button{padding:6px 10px;min-height:30px}
+ .compact-product-form .foot button{padding:6px 12px;min-height:30px}
+}

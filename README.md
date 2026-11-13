@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-12 — Bilingual brand configuration, copy-as-new products, compact editor tabs and image-cell upload.
+
 - 2026-11-12: Editable document numbering rules, preallocated form numbers and searchable category destinations.
 
 - 2026-11-12: Added numbering overview, collision-safe product sequences and compact category editing.

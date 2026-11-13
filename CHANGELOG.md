@@ -253,3 +253,7 @@ The entries below summarize earlier engineering milestones. They do not correspo
 ## Validation scope
 
 The repository includes source syntax checks, isolated SQLite regressions, JavaScript interaction tests, and Playwright desktop/mobile smoke tests. Each change uses the relevant subset. Browser viewport emulation does not replace physical-device testing. Test output and screenshots remain outside Git.
+
+## 2026-11-12 — Bilingual brand configuration, copy-as-new products, compact editor tabs and image-cell upload.
+
+Existing records remain unchanged. Local business and browser regression checks; no production deployment.
