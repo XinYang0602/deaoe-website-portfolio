@@ -1,3 +1,10 @@
+## 2026-11-12 — Integrated product images and workspace returns
+
+- Upload and preview product images inside the product editor without losing unsaved fields.
+- Double-click image cells or use the empty-image action to open the relevant editor section.
+- Preserve validated return destinations from embedded workspaces and keep legacy inventory entry points in the current shell.
+- Verified synthetic uploads, catalog layouts, sales/purchase/service selectors and navigation; business processing is unchanged.
+
 ## 2026-11-12 — Product activation and canonical navigation
 
 - New products start enabled, including requests from legacy clients. Explicit editing and bulk deactivation remain available.
