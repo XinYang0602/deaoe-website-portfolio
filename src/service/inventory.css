@@ -404,3 +404,37 @@ main.compact-register{max-width:none;padding:16px 20px}
  .sales-product-picker .picker-product-row{padding:12px}
  .sales-product-picker .picker-product-row strong{font-size:14px}
 }
+
+/* Desktop selectors: shared compact search, filter and record panes. */
+@media(min-width:701px){
+ dialog.desktop-selector{box-sizing:border-box;width:min(1000px,calc(100vw - 48px));height:min(660px,calc(100dvh - 48px));max-width:none;max-height:calc(100dvh - 48px);margin:auto;padding:0;border:1px solid #d6dce3;border-radius:6px;color:#26323e;overflow:hidden;box-shadow:0 18px 65px #15202c33}
+ dialog.desktop-selector[open]{display:flex;flex-direction:column}
+ .desktop-selector::backdrop,.desktop-item-sheet::backdrop{background:#14202c55}
+ .desktop-selector>header,.desktop-selector>footer{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding:10px 14px;gap:12px;background:#fff}
+ .desktop-selector>header{border-bottom:1px solid #dce1e7}.desktop-selector>footer{border-top:1px solid #dce1e7;font-size:12px;color:#687583}
+ .desktop-selector h2{margin:0;font-size:16px}.desktop-selector h3{font-size:13px;margin:0;padding:8px 10px;border-bottom:1px solid #e1e5eb;background:#f5f7fa}
+ .desktop-selector button{min-height:30px;padding:5px 10px;font-size:12px;border-radius:3px;white-space:nowrap}
+ .desktop-selector button:disabled{opacity:.45;cursor:default}
+ .desktop-selector .selector-toolbar{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #dce1e7;background:#f6f7f9;flex-shrink:0}
+ .desktop-selector .selector-toolbar input[type=search],.desktop-selector .selector-toolbar .customer-search{width:320px;max-width:60%;min-height:32px;height:32px;margin:0;font-size:13px;border-radius:3px}
+ .desktop-selector .check{display:flex;align-items:center;gap:6px;margin:0;font-size:12px}.desktop-selector .check input{width:15px;height:15px;min-height:0;margin:0}
+ .customer-desktop-body,.desktop-product-body{display:grid;grid-template-columns:170px minmax(0,1fr);flex:1;min-height:0}
+ .desktop-selector .selector-sidebar{padding:12px 10px;background:#f6f7f9;border-right:1px solid #dce1e7;font-size:12px;overflow:auto}
+ .desktop-selector .selector-sidebar>strong,.desktop-selector .selector-sidebar>span{display:block;padding:8px 4px}.desktop-selector .selector-sidebar>span{background:#fff1ed;color:#ad392f}
+ .desktop-selector .selector-sidebar label{display:block;margin:14px 0;font-size:12px}.desktop-selector .selector-sidebar select{display:block;width:100%;height:32px;margin-top:6px;font-size:12px;border-radius:3px;padding:4px}
+ .desktop-selector .customer-results{display:block;margin:0;overflow:auto;min-width:0}.desktop-product-main{display:flex;flex-direction:column;min-height:0;min-width:0}
+ .desktop-product-results{flex:1;min-height:80px;overflow:auto}.desktop-product-bottom{display:grid;grid-template-columns:1fr 1fr;height:clamp(130px,27dvh,210px);flex-shrink:0;min-height:0;border-top:1px solid #dce1e7}
+ .desktop-product-bottom>section{min-width:0;min-height:0;overflow:auto}.desktop-product-bottom>section+section{border-left:1px solid #dce1e7}
+ .desktop-selector .selector-table{width:100%;border-collapse:collapse;table-layout:auto;margin:0;font-size:12px;white-space:normal}
+ .desktop-selector .selector-table th{position:sticky;top:0;z-index:1;background:#f2f4f7;font-weight:600;text-align:left;color:#596571}
+ .desktop-selector .selector-table th,.desktop-selector .selector-table td{padding:7px 9px;border-bottom:1px solid #e1e5eb;border-right:1px solid #edf0f3;vertical-align:middle;line-height:1.4;overflow-wrap:anywhere}
+ .desktop-selector .selector-table tr[tabindex]{cursor:pointer}.desktop-selector .selector-table tr[tabindex]:hover{background:#f5f7fa}.desktop-selector .selector-table tr[aria-selected=true]{background:#fff0eb;box-shadow:inset 3px 0 #bd4034}
+ .desktop-selector .selector-table tr:focus-visible{outline:2px solid #bd4034;outline-offset:-2px}
+ .desktop-selector .selector-table .numeric{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+ .desktop-selector .selector-table small{display:block;color:#7a8590;font-size:11px}.desktop-selector .selector-table button{padding:3px 6px;min-height:26px;margin:1px 2px}
+ .desktop-selector .empty{padding:20px 12px;font-size:12px;color:#7a8590;text-align:center}
+ .customer-desktop .customer-create:not([hidden]){position:absolute;inset:70px 100px 60px;overflow:auto;background:#fff;box-shadow:0 4px 45px #17232f44;border:1px solid #dce1e7;border-radius:5px;padding:20px;z-index:3}
+ .customer-desktop .customer-create input{min-height:32px;height:32px;margin:4px 0 10px;font-size:13px}
+ dialog.warehouse-selector{width:min(620px,calc(100vw - 60px));height:min(430px,calc(100dvh - 80px))}.warehouse-results{flex:1;min-height:0;overflow:auto}
+ dialog.desktop-item-sheet{width:520px;border:1px solid #dce1e7;border-radius:6px;padding:14px;font-size:13px}.desktop-item-sheet h3{font-size:16px}.desktop-item-sheet input,.desktop-item-sheet select{min-height:32px;height:32px;font-size:13px}.desktop-item-sheet button{min-height:32px;font-size:13px;padding:6px 12px;border-radius:3px}.desktop-item-sheet .warehouse-choose{display:block;width:100%;text-align:left;margin-top:5px}.desktop-item-sheet select[hidden]{display:none!important}.desktop-item-sheet form>strong{font-size:14px}.desktop-item-sheet .item-fields{gap:10px}.desktop-item-sheet form>small{font-size:12px}
+}

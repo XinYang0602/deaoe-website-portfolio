@@ -272,9 +272,9 @@ names.documents = '单据中心';
 
 // Sales product picker: compact lines and per-product configuration.
 (() => {
-  let panel=null, sheet=null, owner=null;
+  let panel=null, sheet=null, owner=null, warehousePanel=null;
   const modal=document.querySelector('#modal');
-  const closeSheet=()=>{if(sheet){sheet.close();sheet.remove();sheet=null;}};
+  const closeSheet=()=>{if(warehousePanel){warehousePanel.close();warehousePanel.remove();warehousePanel=null;}if(sheet){sheet.close();sheet.remove();sheet=null;}};
   function closePicker(){closeSheet();if(panel){panel.close();panel.remove();panel=null;}owner=null;}
   function lineSummary(line){
     const id=line.querySelector('[name=product]').value,p=product(id),qty=Number(line.querySelector('[name=qty]').value)||0,price=Number(line.querySelector('[name=price]').value)||0;
@@ -330,7 +330,22 @@ names.documents = '单据中心';
     closeSheet();owner=form;
     const p=product(item.id);sheet=document.createElement('dialog');sheet.className='sales-item-sheet';
     sheet.innerHTML=`<header><h3>编辑商品</h3><button type="button" class="item-cancel">关闭</button></header><form><strong>${E(p.name)}</strong><small>编号：${E(p.code)}　型号：${E(p.model||'—')}</small>${select('出货仓库 *','store',data.warehouses.filter(w=>w.active&&w.id!=='LEGACY'),item.warehouse)}<p class="item-stock muted"></p><div class="item-fields">${input('数量 *','count',item.qty,'number','required min="1" max="1000000" step="1"')}${input('单价（元）','unit',item.price,'number','required min="0" max="99999999.99" step="0.01"')}${input('折扣（1 为原价，0.9 为九折）','discount','1','number','required min="0" max="1" step="0.01"')}${input('金额（元）','amount','','number','required min="0" step="0.01"')}</div><p class="item-round muted">金额按成交单价保留两位小数后计算。</p><p class="item-error" role="alert"></p><footer><button type="button" class="item-cancel">取消</button><button type="submit" class="primary">确认商品</button></footer></form>`;
-    document.body.append(sheet);sheet.showModal();const f=sheet.querySelector('form');f.elements.store.required=true;
+    document.body.append(sheet);sheet.showModal();sheet.setAttribute('aria-label','编辑商品');const f=sheet.querySelector('form');f.elements.store.required=true;
+    if(matchMedia('(min-width:701px)').matches){
+      sheet.classList.add('desktop-item-sheet');const native=f.elements.store;native.hidden=true;
+      const trigger=document.createElement('button');trigger.type='button';trigger.className='warehouse-choose';native.after(trigger);
+      const sync=()=>trigger.textContent=(warehouse(native.value)||'请选择出货仓库')+' ›';sync();native.addEventListener('change',sync);
+      native.addEventListener('invalid',e=>{e.preventDefault();trigger.focus();if(!warehousePanel)trigger.click();});
+      trigger.onclick=()=>{
+        warehousePanel=document.createElement('dialog');warehousePanel.className='desktop-selector warehouse-selector';warehousePanel.setAttribute('aria-label','选择仓库');
+        warehousePanel.innerHTML='<header><h2>选择仓库</h2><button type="button" class="warehouse-close">关闭</button></header><div class="selector-toolbar"><input type="search" aria-label="搜索仓库" placeholder="搜索仓库名称"></div><div class="warehouse-results"></div><footer><span>选择本商品的出货仓库</span><button type="button" class="primary warehouse-confirm">确定选择</button></footer>';
+        const dialog=warehousePanel;let selected=native.value;
+        const close=()=>{dialog.close();dialog.remove();if(warehousePanel===dialog)warehousePanel=null;trigger.focus();};
+        const commit=()=>{if(!selected)return;native.value=selected;native.dispatchEvent(new Event('change',{bubbles:true}));close();};
+        function drawStores(){const term=dialog.querySelector('input').value.trim().toLowerCase(),rows=data.warehouses.filter(w=>w.active&&w.id!=='LEGACY'&&w.name.toLowerCase().includes(term));if(!rows.some(w=>w.id===selected))selected='';dialog.querySelector('.warehouse-confirm').disabled=!selected;dialog.querySelector('.warehouse-results').innerHTML='<table class="selector-table"><thead><tr><th>仓库名称</th><th class="numeric">本商品可售库存</th></tr></thead><tbody>'+rows.map(w=>`<tr tabindex="0" data-warehouse="${E(w.id)}" aria-selected="${w.id===selected}"><td>${E(w.name)}</td><td class="numeric">${available(p.id,w.id)} ${E(p.unit)}</td></tr>`).join('')+'</tbody></table>'+(rows.length?'':'<p class="empty">没有匹配仓库</p>');dialog.querySelectorAll('[data-warehouse]').forEach(r=>{r.onclick=()=>{selected=r.dataset.warehouse;dialog.querySelectorAll('[data-warehouse]').forEach(t=>t.setAttribute('aria-selected',t===r));dialog.querySelector('.warehouse-confirm').disabled=false;};r.ondblclick=()=>{selected=r.dataset.warehouse;commit();};r.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();selected=r.dataset.warehouse;commit();}};});}
+        document.body.append(dialog);dialog.showModal();dialog.querySelector('input').oninput=drawStores;dialog.querySelector('.warehouse-close').onclick=close;dialog.querySelector('.warehouse-confirm').onclick=commit;dialog.addEventListener('cancel',e=>{e.preventDefault();close();});drawStores();
+      };
+    }
     let net=Number(item.price)||0;
     function totals(changed){
       const q=Number(f.elements.count.value)||0,u=Number(f.elements.unit.value)||0,d=Number(f.elements.discount.value);
@@ -344,7 +359,35 @@ names.documents = '单据中心';
     sheet.querySelectorAll('.item-cancel').forEach(b=>b.onclick=closeSheet);sheet.addEventListener('cancel',e=>{e.preventDefault();closeSheet();});
     f.onsubmit=e=>{e.preventDefault();if(!f.reportValidity())return;const next={id:item.id,warehouse:f.elements.store.value,qty:Number(f.elements.count.value),price:net.toFixed(2)};if(save(next)!==false)closeSheet();};totals();stock();
   }
+  function available(id,store){return Math.max(0,data.balances.filter(b=>b.product_id===id&&b.warehouse_id===store).reduce((n,b)=>n+Number(b.qty)-Number(b.unidentified),0)-(data.holds||[]).filter(h=>h.product_id===id&&h.warehouse_id===store).reduce((n,h)=>n+Number(h.qty),0));}
+  function openDesktopPicker(form,target){
+    if(!form.elements.party_id.value){alert('请选择客户');form.querySelector('.sales-customer-trigger').click();return;}
+    closePicker();owner=form;const cart=new Map();let focused='',category='',store='',term='',stockOnly=false;
+    panel=document.createElement('dialog');panel.className='desktop-selector desktop-product-picker';panel.setAttribute('aria-label','选择产品');
+    panel.innerHTML=`<header><h2>选择产品</h2><button type="button" class="picker-back">关闭</button></header><div class="selector-toolbar"><input type="search" aria-label="搜索商品" placeholder="搜索名称、型号、编号、品牌"><label class="check"><input type="checkbox" data-filter="stock">隐藏零库存</label></div><div class="desktop-product-body"><div class="selector-sidebar"><strong>筛选产品</strong><label>分类<select data-filter="category"><option value="">全部分类</option>${[...new Set(data.products.filter(p=>p.active).map(p=>p.category).filter(Boolean))].map(c=>`<option>${E(c)}</option>`).join('')}</select></label><label>所在仓库<select data-filter="warehouse"><option value="">全部仓库</option>${opts(data.warehouses.filter(w=>w.active&&w.id!=='LEGACY'),'id','name','')}</select></label><button type="button" class="picker-reset">重置筛选</button></div><div class="desktop-product-main"><div class="desktop-product-results"></div><div class="desktop-product-bottom"><section><h3>分仓库存</h3><div class="desktop-stock-results"></div></section><section><h3>已选商品</h3><div class="desktop-chosen"></div></section></div></div></div><footer><span class="picker-total"></span><button type="button" class="primary picker-done">确定选择</button></footer>`;
+    document.body.append(panel);panel.showModal();
+    function draw(){
+      const stores=data.warehouses.filter(w=>w.active&&w.id!=='LEGACY'&&(!store||w.id===store));
+      const rows=data.products.filter(p=>p.active&&(!category||p.category===category)&&[p.name,p.model,p.code,p.brand].join(' ').toLowerCase().includes(term.trim().toLowerCase())&&(!stockOnly||stores.some(w=>available(p.id,w.id)>0)));
+      if(!rows.some(p=>p.id===focused))focused='';
+      panel.querySelector('.desktop-product-results').innerHTML='<table class="selector-table"><thead><tr><th>编号</th><th>品牌</th><th>型号</th><th>产品名称</th><th class="numeric">参考售价</th><th>操作</th></tr></thead><tbody>'+rows.map(p=>`<tr tabindex="0" data-focus-product="${E(p.id)}" aria-selected="${focused===p.id}"><td>${E(p.code)}</td><td>${E(p.brand||'—')}</td><td>${E(p.model||'—')}</td><td>${E(p.name)}</td><td class="numeric">¥${money(p.sale_cents)}</td><td><button type="button" data-add-product="${E(p.id)}">选择</button></td></tr>`).join('')+'</tbody></table>'+(rows.length?'':'<p class="empty">没有符合条件的商品</p>');
+      panel.querySelector('.desktop-stock-results').innerHTML=focused?'<table class="selector-table"><thead><tr><th>仓库</th><th class="numeric">可售库存</th></tr></thead><tbody>'+stores.map(w=>`<tr><td>${E(w.name)}</td><td class="numeric">${available(focused,w.id)} ${E(product(focused).unit)}</td></tr>`).join('')+'</tbody></table>':'<p class="empty">点击产品行查看分仓库存</p>';
+      const items=[...cart.values()];panel.querySelector('.desktop-chosen').innerHTML=items.length?'<table class="selector-table"><thead><tr><th>产品 / 仓库</th><th class="numeric">数量</th><th>操作</th></tr></thead><tbody>'+items.map(i=>`<tr><td>${E(product(i.id).name)}<small>${E(warehouse(i.warehouse))}</small></td><td class="numeric">${i.qty}</td><td><button type="button" data-edit-choice="${E(i.id+'|'+i.warehouse)}">修改</button><button type="button" data-remove-choice="${E(i.id+'|'+i.warehouse)}">移除</button></td></tr>`).join('')+'</tbody></table>':'<p class="empty">选择产品后设置仓库、数量与价格</p>';
+      panel.querySelector('.picker-total').textContent=`找到 ${rows.length} 个产品 · 已选 ${items.reduce((n,i)=>n+i.qty,0)} 件 · ¥${money(items.reduce((n,i)=>n+Math.round(Number(i.price)*100)*i.qty,0))}`;panel.querySelector('.picker-done').disabled=!items.length;
+    }
+    panel.querySelector('.picker-back').onclick=closePicker;panel.addEventListener('cancel',e=>{e.preventDefault();closePicker();});
+    panel.querySelector('input[type=search]').oninput=e=>{term=e.target.value;draw();};panel.onchange=e=>{if(!e.target.dataset.filter)return;if(e.target.dataset.filter==='category')category=e.target.value;if(e.target.dataset.filter==='warehouse')store=e.target.value;if(e.target.dataset.filter==='stock')stockOnly=e.target.checked;draw();};
+    panel.querySelector('.picker-reset').onclick=()=>{category='';store='';term='';stockOnly=false;panel.querySelector('input[type=search]').value='';panel.querySelectorAll('select').forEach(s=>s.value='');panel.querySelector('[data-filter=stock]').checked=false;draw();};
+    panel.onclick=e=>{const remove=e.target.closest('[data-remove-choice]');if(remove){cart.delete(remove.dataset.removeChoice);draw();return;}
+      const edit=e.target.closest('[data-edit-choice]');if(edit){const key=edit.dataset.editChoice;editItem(form,{...cart.get(key)},item=>{const next=item.id+'|'+item.warehouse;if(next!==key&&cart.has(next)){alert('该产品在此仓库已选择，请修改原条目。');return false;}cart.delete(key);cart.set(next,item);draw();});return;}
+      const add=e.target.closest('[data-add-product]');if(add){const p=product(add.dataset.addProduct);focused=p.id;draw();editItem(form,{id:p.id,warehouse:store||form.elements.warehouse_id.value,qty:1,price:p.sale_cents==null?'':money(p.sale_cents)},item=>{const key=item.id+'|'+item.warehouse,old=cart.get(key);if(old)item.qty+=old.qty;cart.set(key,item);draw();});return;}
+      const row=e.target.closest('[data-focus-product]');if(row){focused=row.dataset.focusProduct;draw();}
+    };
+    panel.onkeydown=e=>{const row=e.target.closest('[data-focus-product]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();row.querySelector('[data-add-product]').click();}};
+    panel.querySelector('.picker-done').onclick=()=>{if(cart.size&&applyItems(form,target,[...cart.values()]))closePicker();};draw();
+  }
   function openPicker(form,target){
+    if(matchMedia('(min-width:701px)').matches)return openDesktopPicker(form,target);
     closePicker();owner=form;const cart=new Map();let term='',category='',store='',stockOnly=false;
     panel=document.createElement('dialog');panel.className='sales-product-picker';
     panel.innerHTML=`<header><button type="button" class="picker-back">‹ 返回</button><h2>选择商品</h2></header><div class="picker-controls"><input type="search" aria-label="搜索商品" placeholder="搜索名称、型号、编号"><div class="picker-filters"><label>分类<select data-filter="category"><option value="">全部分类</option>${[...new Set(data.products.filter(p=>p.active).map(p=>p.category))].map(c=>`<option>${E(c)}</option>`).join('')}</select></label><label>库存范围<select data-filter="warehouse"><option value="">全部仓库</option>${opts(data.warehouses.filter(w=>w.active&&w.id!=='LEGACY'),'id','name','')}</select></label></div><label class="check"><input type="checkbox" data-filter="stock">只看有库存</label></div><div class="picker-results"></div><footer><span class="picker-total"></span><button type="button" class="primary picker-done">选好了</button></footer>`;

@@ -64,6 +64,7 @@ Short feature summaries, newest first. Details and validation notes are in the [
 
 | Date | Update |
 | --- | --- |
+| 2026-11-12 | Added compact desktop customer, product and warehouse selectors and smaller workflow maps. |
 | 2026-11-12 | Added grouped module menus, favorites and seven interactive business workflow maps. |
 | 2026-11-12 | Introduced a compact ERP workspace with module navigation, recent pages and aligned forms. |
 | 2026-11-12 | Collapsed mobile sales filters to prioritize document browsing. |

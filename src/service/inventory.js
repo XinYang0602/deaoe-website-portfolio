@@ -298,7 +298,10 @@ function saleRemaining(id){return data.lines.filter(l=>l.doc_id===id).some(l=>Nu
     dismissPicker();
     const panel = document.createElement('dialog');
     activePicker = panel;
-    panel.className = 'sales-customer-picker';
+    const desktop = matchMedia('(min-width:701px)').matches;
+    let selectedCustomer = sales.elements.party_id.value;
+    panel.className = 'sales-customer-picker' + (desktop ? ' desktop-selector customer-desktop' : '');
+    panel.setAttribute('aria-label','选择客户');
     panel.innerHTML = `<header><h2>选择客户</h2><button type="button" class="picker-back">返回销售单</button></header>
       <input class="customer-search" placeholder="搜索客户名称、联系人、电话" aria-label="搜索客户">
       <button type="button" class="customer-new">新增客户</button><div class="customer-results"></div>
@@ -309,6 +312,14 @@ function saleRemaining(id){return data.lines.filter(l=>l.doc_id===id).some(l=>Nu
       ${input('客户名称 *','name','','text','required maxlength="200"')}
       <p class="customer-error" role="alert"></p><button type="submit">保存并选择</button>
       <button type="button" class="customer-cancel">取消新建</button></form>`;
+    if (desktop) {
+      const search=panel.querySelector('.customer-search'), add=panel.querySelector('.customer-new'), results=panel.querySelector('.customer-results');
+      const toolbar=document.createElement('div');toolbar.className='selector-toolbar';search.before(toolbar);toolbar.append(search,add);
+      const body=document.createElement('div');body.className='customer-desktop-body';results.before(body);body.innerHTML='<div class="selector-sidebar"><strong>客户档案</strong><span>全部启用客户</span></div>';body.append(results);
+      panel.insertAdjacentHTML('beforeend','<footer><span class="customer-count"></span><button type="button" class="customer-confirm primary">确定选择</button></footer>');
+      panel.querySelector('.customer-confirm').onclick=()=>{if(selectedCustomer)choose(selectedCustomer);};
+      panel.querySelector('.picker-back').textContent='关闭';
+    }
     document.body.append(panel);
     const close = () => panel.close();
     panel.addEventListener('close', () => {
@@ -332,8 +343,16 @@ function saleRemaining(id){return data.lines.filter(l=>l.doc_id===id).some(l=>Nu
       const term = panel.querySelector('.customer-search').value.trim().toLowerCase();
       const customers = data.parties.filter(p => p.active && p.kind === 'customer' && [p.name,p.contact,p.phone,p.address].join(' ').toLowerCase().includes(term));
       const list = panel.querySelector('.customer-results');
-      list.innerHTML = customers.map(p => `<button type="button" class="customer-result" data-customer="${E(p.id)}"><strong>${E(p.phone||'未填电话')}　${E(p.name)}</strong><small>联系人：${E(p.contact||p.name)}</small><small>地址：${E(p.address||'未填写')}</small></button>`).join('') || '<p>暂无匹配客户，可新建客户。</p>';
-      list.querySelectorAll('[data-customer]').forEach(b => b.onclick = () => choose(b.dataset.customer));
+      if(desktop){
+        list.innerHTML='<table class="selector-table"><thead><tr><th>联系电话</th><th>客户名称</th><th>联系人</th><th>地址</th></tr></thead><tbody>'+customers.map(p=>`<tr data-customer="${E(p.id)}" tabindex="0" aria-selected="${p.id===selectedCustomer}"><td>${E(p.phone||'—')}</td><td>${E(p.name)}</td><td>${E(p.contact||'—')}</td><td>${E(p.address||'—')}</td></tr>`).join('')+'</tbody></table>'+(customers.length?'':'<p class="empty">暂无匹配客户，可新建客户。</p>');
+        if(!customers.some(p=>p.id===selectedCustomer))selectedCustomer='';
+        panel.querySelector('.customer-confirm').disabled=!selectedCustomer;
+        panel.querySelector('.customer-count').textContent=`共 ${customers.length} 位客户 · 选择后确认，或双击客户`;
+        list.querySelectorAll('[data-customer]').forEach(row=>{row.onclick=()=>{selectedCustomer=row.dataset.customer;list.querySelectorAll('[data-customer]').forEach(r=>r.setAttribute('aria-selected',r===row));panel.querySelector('.customer-confirm').disabled=false;};row.ondblclick=()=>choose(row.dataset.customer);row.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();choose(row.dataset.customer);}else if(e.key===' '){e.preventDefault();row.click();}};});
+      }else{
+        list.innerHTML = customers.map(p => `<button type="button" class="customer-result" data-customer="${E(p.id)}"><strong>${E(p.phone||'未填电话')}　${E(p.name)}</strong><small>联系人：${E(p.contact||p.name)}</small><small>地址：${E(p.address||'未填写')}</small></button>`).join('') || '<p>暂无匹配客户，可新建客户。</p>';
+        list.querySelectorAll('[data-customer]').forEach(b => b.onclick = () => choose(b.dataset.customer));
+      }
     }
     const create = panel.querySelector('.customer-create');
     panel.querySelector('.customer-search').oninput = paint;

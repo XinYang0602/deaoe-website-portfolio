@@ -1,3 +1,10 @@
+## 2026-11-12 — Desktop sales selectors and compact workflow maps
+
+- Added searchable customer tables with explicit selection confirmation, a product filter/table workspace with warehouse availability and selected items, and a per-item warehouse selector.
+- Retained multi-warehouse sales, quantity/pricing edits, cancellation behavior and the existing mobile UI.
+- Reduced desktop workflow dimensions and emphasized primary paths over related-record links.
+- Validation: local business regressions, desktop/mobile sale submission and stock deduction, selector flows with synthetic data, and seven-module navigation checks.
+
 ## 2026-11-12 — Module navigation and workflow maps
 
 - Grouped module panels, an application directory and local module favorites.

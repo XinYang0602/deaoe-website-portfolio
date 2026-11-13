@@ -72,6 +72,11 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         expect(page.locator('.workflow-page')).to_be_visible()
                         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), (width,module,'overflow')
                         assert not errors, errors
+                        if width > 700:
+                            box=page.locator('.workflow-page').bounding_box()
+                            assert box['width'] <= 1041, (width,module,'oversized workflow',box)
+                            nodes=page.locator('.workflow-node').all()
+                            assert all(n.bounding_box()['height'] <= 90 for n in nodes), (width,module,'oversized nodes')
                         if module=='sales':page.screenshot(path=str(REPORT/f'flow-{width}.png'),full_page=True)
                     page.evaluate('location.hash="workflow-orders"')
                     page.locator('.workflow-node[data-filter="处理中"]').first.click()
