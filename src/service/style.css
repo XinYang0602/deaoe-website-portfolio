@@ -263,3 +263,14 @@ aside{overflow-y:auto;overscroll-behavior:contain}aside .brand,aside .workspace,
 
 /* Desktop shortcuts reflect the saved favorites; all modules remain in All Applications. */
 @media(min-width:701px){#nav [data-section].workflow-not-favorite{display:none!important}}
+
+/* Shared outline family: module accents on light panels, monochrome on the navigation bar. */
+.workflow-icon svg{display:block;flex-shrink:0}
+.workflow-app button svg{display:block;width:20px;height:20px;fill:none}
+.workflow-app button[aria-pressed="true"] svg{fill:currentColor}
+.workflow-app button{display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.workflow-app button[aria-pressed="false"]{color:#84909d}
+.workflow-app button:hover{color:#a76b22;background:#faf3e8;border-radius:5px}
+#nav .workflow-nav-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;width:20px;height:20px;font-style:normal}
+#nav .workflow-nav-icon svg{display:block;width:20px;height:20px}
+.icon-settings{background:#eef0f5;color:#62718a}

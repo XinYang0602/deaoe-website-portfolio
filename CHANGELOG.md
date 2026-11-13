@@ -1,3 +1,9 @@
+## 2026-11-12 — Consistent business icons
+
+- Added original 24px outline SVG artwork for navigation, application menus, workflows and favorite controls.
+- Module accents and existing navigation behavior are retained, without external fonts or icon requests.
+- Validated JavaScript syntax, desktop/mobile navigation regression and desktop screenshots.
+
 ## 2026-11-12 — Favorite navigation shortcuts
 
 - Favorite stars sit beside module names; toggles immediately show or hide desktop navigation shortcuts.

@@ -64,6 +64,7 @@ Short feature summaries, newest first. Details and validation notes are in the [
 
 | Date | Update |
 | --- | --- |
+| 2026-11-12 | Unified navigation, workflow and favorite icons with a consistent local SVG family. |
 | 2026-11-12 | Made desktop navigation follow saved favorites instantly, with adjacent star controls. |
 | 2026-11-12 | Streamlined desktop service orders and record selectors; added a category-based product directory. |
 | 2026-11-12 | Added a desktop inventory workspace with filters and warehouse details; streamlined management labels. |
