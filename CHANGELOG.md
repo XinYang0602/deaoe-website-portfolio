@@ -257,3 +257,7 @@ The repository includes source syntax checks, isolated SQLite regressions, JavaS
 ## 2026-11-12 — Bilingual brand configuration, copy-as-new products, compact editor tabs and image-cell upload.
 
 Existing records remain unchanged. Local business and browser regression checks; no production deployment.
+
+## 2026-11-12 — Single-window product editor with compact category/media layout and editable-number hint.
+
+Existing records remain unchanged. Local business and browser regression checks; no production deployment.
