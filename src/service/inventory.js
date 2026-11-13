@@ -315,14 +315,74 @@ window.addEventListener('hashchange',()=>{$('#modal').close();search='';if(data)
   image.style.cssText = 'display:block;width:100%;height:100%;object-fit:contain';
   preview.append(image);
   document.body.append(preview);
-  let active = null;
+  const selector = 'img.photo, .catalog-image-list img, .product-edit-gallery img';
+  // Session-local blobs also work when the authenticated image endpoint uses no-store.
+  const cache = new Map(), pending = new Map();
+  let queue = [], running = 0, bytes = 0, timer = null, active = null, stopped = false;
+  const fullURL = target => { const url = new URL(target.src, location.href); url.searchParams.delete('thumb'); return url.href; };
+  function trim() {
+    for (const [url, entry] of cache) {
+      if (cache.size <= 60 && bytes <= 24 * 1024 * 1024) break;
+      if (active && fullURL(active) === url) continue;
+      cache.delete(url); bytes -= entry.size; URL.revokeObjectURL(entry.url);
+    }
+  }
+  function cached(url) {
+    const entry = cache.get(url);
+    if (entry) { cache.delete(url); cache.set(url, entry); }
+    return entry;
+  }
+  function pump() {
+    while (!stopped && running < 2 && queue.length) {
+      const job = queue.shift(); running++;
+      (async () => {
+        let local = '';
+        try {
+          const response = await fetch(job.url, {signal: job.controller.signal});
+          if (!response.ok) throw Error('Image unavailable');
+          const blob = await response.blob();
+          if (!blob.type.startsWith('image/')) throw Error('Invalid image response');
+          local = URL.createObjectURL(blob);
+          const decoded = new Image(); decoded.src = local; await decoded.decode();
+          if (job.controller.signal.aborted) throw Error('Canceled');
+          const entry = {url: local, size: blob.size};
+          cache.set(job.url, entry); bytes += blob.size; trim();
+          job.resolve(cache.get(job.url) || null);
+        } catch {
+          if (local) URL.revokeObjectURL(local);
+          job.resolve(null);
+        } finally { pending.delete(job.url); running--; pump(); if (job.controller.signal.aborted) scheduleWarmup(); }
+      })();
+    }
+  }
+  function preload(url, priority = false) {
+    const entry = cached(url); if (entry) return Promise.resolve(entry);
+    let job = pending.get(url);
+    if (!job) {
+      job = {url, controller: new AbortController()};
+      job.promise = new Promise(resolve => { job.resolve = resolve; });
+      pending.set(url, job); queue.push(job);
+    }
+    if (priority && queue.includes(job)) { queue = queue.filter(item => item !== job); queue.unshift(job); }
+    pump(); return job.promise;
+  }
+  function warmVisiblePage() {
+    timer = null; if (stopped) return;
+    const urls = [...new Set([...document.querySelectorAll(selector)].map(fullURL))].slice(0, 60);
+    const wanted = new Set(urls); if (active) wanted.add(fullURL(active));
+    queue = queue.filter(job => { if (wanted.has(job.url)) return true; pending.delete(job.url); job.resolve(null); return false; });
+    for (const job of pending.values()) if (!wanted.has(job.url)) job.controller.abort();
+    urls.forEach(url => preload(url));
+  }
+  function scheduleWarmup() { if (stopped) return; clearTimeout(timer); timer = setTimeout(warmVisiblePage, 80); }
+
   function hide() {
     active = null;
     preview.hidden = true;
     image.removeAttribute('src');
   }
   function show(target) {
-    if (!(target instanceof Element) || !target.matches('img.photo, .catalog-image-list img, .product-edit-gallery img')) return;
+    if (!(target instanceof Element) || !target.matches(selector)) return;
     if (active === target) return;
     active = target;
     (target.closest('dialog')||document.body).append(preview);
@@ -334,10 +394,12 @@ window.addEventListener('hashchange',()=>{$('#modal').close();search='';if(data)
     left = Math.max(12, Math.min(left, window.innerWidth - width - 12));
     const top = Math.max(12, Math.min(rect.top, window.innerHeight - height - 12));
     Object.assign(preview.style, { width: width + 'px', height: height + 'px', left: left + 'px', top: top + 'px' });
-    const url = new URL(target.src, location.href);
-    url.searchParams.delete('thumb');
-    image.src = url.href;
+    const url = fullURL(target), entry = cached(url);
+    image.src = entry ? entry.url : target.src;
     preview.hidden = false;
+    if (!entry) preload(url, true).then(ready => {
+      if (ready && active === target && target.isConnected) image.src = ready.url;
+    });
   }
   image.addEventListener('error', hide);
   document.addEventListener('mouseover', event => show(event.target));
@@ -347,9 +409,15 @@ window.addEventListener('hashchange',()=>{$('#modal').close();search='';if(data)
   document.addEventListener('keydown', event => { if (event.key === 'Escape') hide(); });
   document.addEventListener('scroll', hide, true);
   window.addEventListener('resize', hide);
-  window.addEventListener('hashchange', hide);
-  new MutationObserver(() => { if (active && !active.isConnected) hide(); })
+  window.addEventListener('hashchange', () => { hide(); scheduleWarmup(); });
+  window.addEventListener('pagehide', () => {
+    stopped = true; clearTimeout(timer); queue.forEach(job => job.resolve(null)); queue = [];
+    pending.forEach(job => job.controller.abort());
+    cache.forEach(entry => URL.revokeObjectURL(entry.url)); cache.clear(); bytes = 0; hide();
+  });
+  new MutationObserver(() => { if (active && !active.isConnected) hide(); scheduleWarmup(); })
     .observe(document.body, { childList: true, subtree: true });
+  scheduleWarmup();
 })();
 
 // Legacy approved sales retain a contextual completion action; never deduct them on migration.

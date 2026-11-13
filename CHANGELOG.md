@@ -1,3 +1,10 @@
+## 2026-11-13 — Preloaded product image previews
+
+- Preload full images for the current product page and displayed galleries, using two concurrent requests and session-local Blob URLs with image decoding.
+- Reuse cached previews on hover/focus; show the thumbnail while an uncached image loads. Update work after pagination, filters, uploads and selection changes, cancel obsolete requests, and release cached URLs on eviction/page exit.
+- Bound cached compressed images to 60 entries/24MB without changing authenticated endpoint headers or using persistent storage.
+- Validation: JavaScript syntax and local desktop/mobile product regression, including pre-hover loading of 13 images and no additional full-image requests on repeated hover.
+
 ## 2026-11-13 — Preserve product search on creation
 
 - Stop replacing the search field with the newly created product code; keep the existing user query.

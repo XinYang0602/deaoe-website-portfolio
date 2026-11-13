@@ -66,6 +66,12 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                     page=browser.new_page(viewport={'width':width,'height':height})
                     page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(base+'/') else route.abort())
                     errors=[]
+                    full_image_requests=[]
+                    full_image_finished=[]
+                    def full_image(req):
+                        return '/api/images?id=' in req.url and 'thumb=' not in req.url and req.method=='GET'
+                    page.on('request',lambda req:full_image_requests.append(req.url) if full_image(req) else None)
+                    page.on('requestfinished',lambda req:full_image_finished.append(req.url) if full_image(req) else None)
                     page.on('pageerror',lambda error:errors.append(str(error)))
                     page.on('dialog',lambda dialog:dialog.accept())
                     page.goto(base+'/service/')
@@ -262,6 +268,21 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                             assert check_db.execute("SELECT COUNT(*) FROM inv_images WHERE product_id='TEST-PART'").fetchone()[0]>=13
                         expect(frame.locator('#master-form [name=model]')).to_have_value('unsaved-model')
                         expect(frame.locator('.product-edit-gallery img')).not_to_have_count(0)
+                        # Full images must arrive before hover, despite the endpoint's no-store header.
+                        import time as clock
+                        deadline=clock.monotonic()+15
+                        while len(set(full_image_finished))<13 and clock.monotonic()<deadline:
+                            page.wait_for_timeout(100)
+                        assert len(set(full_image_finished))>=13,full_image_finished
+                        page.wait_for_timeout(200)
+                        before_hover=len(full_image_requests)
+                        frame.locator('.product-edit-gallery img').last.hover()
+                        expect(frame.locator('#modal > div[aria-hidden=true] img')).to_have_attribute('src',__import__('re').compile(r'^blob:'))
+                        frame.locator('.product-edit-gallery img').first.hover()
+                        page.wait_for_timeout(100)
+                        assert len(full_image_requests)==before_hover,'Hover unexpectedly fetched an already preloaded image'
+                        print('PASS full-image preloading before hover and blob reuse without another request')
+
                         page.screenshot(path=str(REPORT/f'product-edit-images-{width}.png'),full_page=True)
                         frame.locator('#modal [data-action=close]').click()
                         frame.locator('[data-catalog-reset]').click()
