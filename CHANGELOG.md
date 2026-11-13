@@ -1,3 +1,10 @@
+## 2026-11-13 — Account-specific interface font size
+
+- Add four font sizes (100%, 110%, 125%, 150%) in basic settings, stored server-side for the authenticated account and restored on reload.
+- Scale navigation, lists, forms, dialogs, dynamic styles, and shared financial typography while retaining the existing hierarchy and print sizing. Synchronize the shell and embedded workspace using source-checked same-origin messages.
+- Remove the redundant visible representative-filter caption while preserving its accessible name. Failed saves retain the applied size and offer retry feedback.
+- Validation covers account isolation, strict parameters, defaults/reset, desktop/mobile scaling and persistence, dynamic/inline styles and typography variables, failed saves, print behavior, and existing catalog regressions. Public configuration substitutions remain intact.
+
 ## 2026-11-13 — Sales representatives and customer ownership
 
 - Add representative management for names, contact details, notes, active status, and customer counts, with entry points in customer navigation and the directory.
