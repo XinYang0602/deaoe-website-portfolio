@@ -1,3 +1,8 @@
+## 2026-11-13 — Preserve product search on creation
+
+- Stop replacing the search field with the newly created product code; keep the existing user query.
+- Preserve category selection behavior. Validated JavaScript syntax and the desktop/mobile product browser regression, including the empty-search assertion after creation.
+
 ## 2026-11-13 — Product entry and sales numbering
 
 - Accept one custom brand name per entry and wrap long names in the product list; preserve existing aliases.

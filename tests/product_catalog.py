@@ -313,6 +313,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                             form.locator('[type=submit]').click()
                         assert created.value.status==200,created.value.text()
                         created_id=created.value.json()['id']
+                        expect(frame.locator('#search')).to_have_value('')
                         expect(form.locator('.form-error')).to_contain_text('产品档案已保存',timeout=30000)
                         expect(form).to_have_attribute('data-id',created_id)
                         expect(form.locator('.product-edit-gallery img')).to_have_count(2)

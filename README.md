@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Preserve the search field after product creation instead of inserting the new product code.
+
 - 2026-11-13 — Custom brand names, images during product creation, gallery hover previews, and sales numbering on save.
 
 - 2026-11-13 — Multiple product images and per-account, per-list column visibility preferences.
