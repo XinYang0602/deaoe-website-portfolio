@@ -649,3 +649,10 @@ main.compact-register{max-width:none;padding:16px 20px}
  .catalog-categories .category-tree ul{margin-left:16px;padding-left:15px;border-left:1px solid #cbd5e1}
  .category-tree-leaf{display:flex;align-items:center;justify-content:center;font-size:22px;color:#8795a7;min-height:34px}
 }
+
+.product-field-caption small{display:block;font-size:10px;line-height:1.5;white-space:nowrap;color:#66758a}
+@media(min-width:701px){
+ #master-form.single-product-form .grid>label:has([name=code]){padding-top:0}
+ .single-product-form .code-edit-hint{position:static;grid-column:2;grid-row:2;font-size:10px;line-height:1.5;white-space:normal;margin:0}
+ .single-product-form .product-field-caption{line-height:1.5}
+}

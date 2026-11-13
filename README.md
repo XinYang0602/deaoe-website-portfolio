@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-12 — Clearer product field labels with secondary-line helper text.
+
 - 2026-11-12 — Duplicate/create and guarded deletion for counterparties; clearer product category hierarchy.
 
 - 2026-11-12 — Compact counterparty forms and separate customer/supplier category branches.

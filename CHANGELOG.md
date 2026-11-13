@@ -1,3 +1,8 @@
+## 2026-11-12 — Product field helper text
+
+- Moved product-code guidance below its input and placed category/model explanations on dedicated secondary lines.
+- Preserved business behavior and the mobile breakpoint. JavaScript syntax, existing synthetic browser regressions and screenshots reviewed.
+
 ## 2026-11-12 — Directory actions and category hierarchy
 
 - Copy counterparty fields into a new unsaved record without business history. Guard deletion with reference and version checks.
