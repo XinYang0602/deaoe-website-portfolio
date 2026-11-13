@@ -438,3 +438,17 @@ main.compact-register{max-width:none;padding:16px 20px}
  dialog.warehouse-selector{width:min(620px,calc(100vw - 60px));height:min(430px,calc(100dvh - 80px))}.warehouse-results{flex:1;min-height:0;overflow:auto}
  dialog.desktop-item-sheet{width:520px;border:1px solid #dce1e7;border-radius:6px;padding:14px;font-size:13px}.desktop-item-sheet h3{font-size:16px}.desktop-item-sheet input,.desktop-item-sheet select{min-height:32px;height:32px;font-size:13px}.desktop-item-sheet button{min-height:32px;font-size:13px;padding:6px 12px;border-radius:3px}.desktop-item-sheet .warehouse-choose{display:block;width:100%;text-align:left;margin-top:5px}.desktop-item-sheet select[hidden]{display:none!important}.desktop-item-sheet form>strong{font-size:14px}.desktop-item-sheet .item-fields{gap:10px}.desktop-item-sheet form>small{font-size:12px}
 }
+
+@media(min-width:701px){
+ .procurement-selector .proc-records,.proc-product-results{flex:1;min-height:80px;overflow:auto}
+ .procurement-selector .selector-sidebar p{font-size:12px;line-height:1.6;color:#74808d}
+ .proc-chosen{height:clamp(100px,24vh,190px);flex-shrink:0;overflow:auto;border-top:1px solid #dce1e7}
+ dialog.proc-item-dialog{width:520px;height:auto;max-height:calc(100dvh - 48px)}
+ .proc-item-form{padding:16px;overflow:auto}.proc-item-form input{height:34px;min-height:34px;font-size:13px}.proc-item-form .grid{grid-template-columns:1fr 1fr}.proc-item-form .foot{margin-top:14px}
+ .desktop-proc-form select[hidden],.desktop-proc-form [hidden]{display:none!important}
+ .desktop-proc-form .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+ .desktop-proc-form .grid>label{font-size:12px}.desktop-proc-form .grid>label>input,.desktop-proc-form .grid>label>button{height:34px;min-height:34px;width:100%;font-size:13px;padding:6px 10px;text-align:left;box-sizing:border-box}
+ .proc-product-toolbar{display:flex;align-items:center;justify-content:space-between;margin:14px 0 8px}.proc-product-toolbar button{min-height:32px;font-size:13px;padding:6px 12px}
+ .desktop-proc-form .proc-line{grid-template-columns:minmax(150px,2fr) 100px 130px minmax(160px,2fr) auto;align-items:start;padding:10px;gap:10px}.desktop-proc-form[data-kind=purchase] .proc-line{grid-template-columns:minmax(150px,2fr) 110px 140px auto}
+ .proc-line label{font-size:12px}.proc-line input{height:34px;min-height:34px;font-size:13px}.proc-line textarea{min-height:42px;height:42px;font-size:12px}.proc-line input[type=file]{height:auto;font-size:11px;width:100%}.proc-line button{min-height:32px;font-size:12px;padding:6px 10px}.proc-line-product{display:block;width:100%;text-align:left}.proc-line-product small{display:block;margin-top:4px;color:#74808d}.proc-note{display:block;font-size:12px;margin:10px 0}.proc-note textarea{min-height:34px;height:34px}.proc-source-note{font-size:12px;margin:10px 0}
+}

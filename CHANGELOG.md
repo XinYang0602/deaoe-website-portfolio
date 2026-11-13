@@ -1,3 +1,10 @@
+## 2026-11-12 — Desktop purchasing and goods receipt selectors
+
+- Searchable supplier and warehouse tables and compact product selection follow the shared desktop selector style.
+- Receipts retain approved purchase-order linkage, source supplier/warehouse constraints and partial-receipt quantities. Mobile entry behavior is preserved.
+- Updated the workspace footer to the management-platform label.
+- Validation: synthetic purchase/partial-receipt approval and serial preservation, desktop modal bounds, unchanged mobile controls, and existing sales/business regressions.
+
 ## 2026-11-12 — Desktop sales selectors and compact workflow maps
 
 - Added searchable customer tables with explicit selection confirmation, a product filter/table workspace with warehouse availability and selected items, and a per-item warehouse selector.
