@@ -382,10 +382,14 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
  }
  function open(a){const key=a.dataset.section;if(key!=='all'&&!modules[key])return;clearTimeout(timer);if(trigger!==a)trigger?.setAttribute('aria-expanded','false');trigger=a;active=key;paint();a.setAttribute('aria-expanded','true');a.setAttribute('aria-controls',menu.id);menu.hidden=false;shade.hidden=false;position();}
  const find=target=>target?.closest?.('#nav [data-section]');
+ function syncFavorites(){
+  document.querySelectorAll('#nav [data-section]').forEach(a=>{a.classList.toggle('workflow-not-favorite',!!modules[a.dataset.section]&&!favorites.has(a.dataset.section));});
+ }
  function refresh(){
   const nav=document.querySelector('#nav');if(!nav)return;
   if(!nav.querySelector('[data-section=all]'))nav.insertAdjacentHTML('afterbegin','<button type="button" class="workflow-all-trigger" data-section="all">▦ <span>全部</span></button>');
   nav.querySelectorAll('[data-section]').forEach(a=>{if(a.dataset.section==='all'||modules[a.dataset.section]){a.setAttribute('aria-controls',menu.id);a.setAttribute('aria-expanded','false');}});
+  syncFavorites();
   const key=location.hash.replace('#workflow-','');if(modules[key]){nav.querySelectorAll('.active').forEach(a=>a.classList.remove('active'));nav.querySelector(`[data-section="${key}"]`)?.classList.add('active');}
  }
  const previous=render;render=function(){previous();refresh();};refresh();
@@ -393,7 +397,7 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
  document.addEventListener('pointerout',e=>{if(find(e.target)||menu.contains(e.target)){clearTimeout(timer);timer=setTimeout(()=>{if(!menu.matches(':hover')&&!trigger?.matches(':hover')&&!menu.contains(document.activeElement))close();},240);}});
  document.addEventListener('click',e=>{
   const a=find(e.target);if(a&&(a.dataset.section==='all'||modules[a.dataset.section])){e.preventDefault();e.stopImmediatePropagation();open(a);return;}
-  const star=e.target.closest('[data-workflow-favorite]');if(star){const key=star.dataset.workflowFavorite;favorites.has(key)?favorites.delete(key):favorites.add(key);try{localStorage.setItem('deaoe-workflow-favorites',JSON.stringify([...favorites]));}catch{}paint();position();menu.querySelector(`[data-workflow-favorite="${key}"]`)?.focus();return;}
+  const star=e.target.closest('[data-workflow-favorite]');if(star){const key=star.dataset.workflowFavorite;favorites.has(key)?favorites.delete(key):favorites.add(key);try{localStorage.setItem('deaoe-workflow-favorites',JSON.stringify([...favorites]));}catch{}syncFavorites();paint();position();menu.querySelector(`[data-workflow-favorite="${key}"]`)?.focus();return;}
   if(e.target===shade||e.target.closest('[data-workflow-close]')){close();return;}
   if(menu.contains(e.target)&&e.target.closest('a,button[data-go]'))close();
  },true);

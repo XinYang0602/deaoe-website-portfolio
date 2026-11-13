@@ -1,3 +1,9 @@
+## 2026-11-12 — Favorite navigation shortcuts
+
+- Favorite stars sit beside module names; toggles immediately show or hide desktop navigation shortcuts.
+- Preferences survive reloads; All Applications and Dashboard stay accessible even with no favorites. Mobile navigation is unchanged.
+- Validated with local business checks and browser navigation tests at desktop and mobile widths.
+
 ## 2026-11-12 — Service orders and product directory
 
 - Compact desktop service-order list and entry form, with searchable customer/product selection and existing status workflows.

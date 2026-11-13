@@ -89,6 +89,22 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         old=star.get_attribute('aria-pressed')
                         star.click()
                         expect(menu.locator('[data-workflow-favorite=sales]')).to_have_attribute('aria-pressed','false' if old=='true' else 'true')
+                        expect(page.locator('#nav [data-section=sales]')).to_be_hidden()
+                        link=menu.locator('.workflow-app:has([data-workflow-favorite=sales]) a').bounding_box()
+                        starbox=menu.locator('[data-workflow-favorite=sales]').bounding_box()
+                        assert 0 <= starbox['x']-link['x']-link['width'] <= 8
+                        # Empty favorites must retain a usable All menu and dashboard.
+                        for key in ['purchasing','stock','orders']:
+                            menu.locator(f'[data-workflow-favorite={key}]').click()
+                        expect(page.locator('#nav [data-section=all]')).to_be_visible()
+                        expect(page.locator('#nav [data-section=dashboard]')).to_be_visible()
+                        assert page.locator('#nav .workflow-not-favorite').count()==7
+                        page.reload();page.wait_for_load_state('networkidle')
+                        expect(page.locator('#nav [data-section=sales]')).to_be_hidden()
+                        page.locator('#nav [data-section=all]').click()
+                        menu.locator('[data-workflow-favorite=sales]').click()
+                        expect(page.locator('#nav [data-section=sales]')).to_be_visible()
+                        expect(menu).to_be_visible()
                         page.screenshot(path=str(REPORT/f'menu-{width}.png'),full_page=True)
                         page.keyboard.press('Escape')
                         expect(menu).to_be_hidden()
