@@ -1,3 +1,10 @@
+## 2026-11-13 — Sales representatives and customer ownership
+
+- Add representative management for names, contact details, notes, active status, and customer counts, with entry points in customer navigation and the directory.
+- Show and filter customer ownership; assign, reassign, or remove the owner of one or multiple customers. Each customer has one owner; suppliers are excluded. Inactive representatives keep existing customers but cannot receive new assignments.
+- Add separate ownership tables without changing existing customer columns. Restrict writes to administrators, validate every selected customer version before atomic updates, increment customer versions, and record ownership changes in the audit log.
+- Validate permissions, stale/duplicate batch rejection, inactive staff, supplier exclusion, reassignment/removal, and customer deletion. Local desktop/mobile browser coverage verifies creation, bulk assignment, filtering, reload persistence, and deactivation; existing customer/catalog regressions remain passing. Public demo configuration is preserved.
+
 ## 2026-11-13 — Preloaded product image previews
 
 - Preload full images for the current product page and displayed galleries, using two concurrent requests and session-local Blob URLs with image decoding.

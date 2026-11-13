@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Manage sales representatives and assign, reassign, or unassign customer ownership in batches.
+
 - 2026-11-13 — Preload current-page product images for immediate cached hover previews.
 
 - 2026-11-13 — Preserve the search field after product creation instead of inserting the new product code.

@@ -688,3 +688,13 @@ main.compact-register{max-width:none;padding:16px 20px}
 /* Custom brand names remain readable at saved column widths. */
 .product-catalog td.product-brand-full{white-space:normal;overflow-wrap:anywhere;overflow:visible;text-overflow:clip}
 #brands-form td input{width:100%}
+
+/* Customer ownership cards remain readable with the added selection and owner columns. */
+@media(max-width:700px){
+ .party-directory .catalog-scroll table{min-width:0}
+ .party-directory .catalog-scroll tr[data-party-row]{display:block}
+ .party-directory .catalog-scroll tr[data-party-row] td{display:flex;flex-wrap:wrap;min-width:0;width:auto;gap:8px;padding:9px 0}
+ .party-directory .catalog-scroll tr[data-party-row] td::before{display:block!important;content:attr(data-label);min-width:82px;color:#84909e;font-size:12px;font-weight:400}
+ .party-directory .catalog-scroll tr[data-party-row] td:first-child{min-height:44px;align-items:center}
+ .party-directory .catalog-toolbar>.check{min-height:44px;align-items:center}
+}

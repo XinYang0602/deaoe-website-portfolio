@@ -103,7 +103,7 @@ window.addEventListener('hashchange',()=>{query='';if(ready)render()});window.ad
 })();
 
 // One persistent workspace: inventory keeps its own scripts and data without reloading the shell.
-const inventoryRoutes={production:['stock','组装与拆装'],boms:['stock','生产模板'],locations:['stock','仓位记录'],numbering:['settings','编号管理'],finance_ar:['accounts','应收款'],finance_ap:['accounts','应付款'],finance_advance_receipt:['accounts','预收款'],finance_advance_payment:['accounts','预付款'],finance:['accounts','往来账款'],documents:['dashboard','单据中心'],sale:['sales','销售单'],issue:['sales','销售出库'],purchase:['purchasing','采购订单'],receipt:['purchasing','采购入库'],parties:['customers','客户与往来单位'],overview:['stock','进销存总览'],balances:['stock','库存查询'],products:['stock','产品档案'],warehouses:['stock','仓库管理'],operations:['stock','退换货与调拨'],counting:['stock','库存盘点'],lots:['stock','批次与分区'],serials:['stock','SN 与标签'],templates:['stock','打印模板'],ledger:['stock','库存流水'],events:['stock','操作日志']};
+const inventoryRoutes={salespeople:['customers','业务员管理'],production:['stock','组装与拆装'],boms:['stock','生产模板'],locations:['stock','仓位记录'],numbering:['settings','编号管理'],finance_ar:['accounts','应收款'],finance_ap:['accounts','应付款'],finance_advance_receipt:['accounts','预收款'],finance_advance_payment:['accounts','预付款'],finance:['accounts','往来账款'],documents:['dashboard','单据中心'],sale:['sales','销售单'],issue:['sales','销售出库'],purchase:['purchasing','采购订单'],receipt:['purchasing','采购入库'],parties:['customers','客户与往来单位'],overview:['stock','进销存总览'],balances:['stock','库存查询'],products:['stock','产品档案'],warehouses:['stock','仓库管理'],operations:['stock','退换货与调拨'],counting:['stock','库存盘点'],lots:['stock','批次与分区'],serials:['stock','SN 与标签'],templates:['stock','打印模板'],ledger:['stock','库存流水'],events:['stock','操作日志']};
 window.deaoeInventoryRoutes=inventoryRoutes;
 function inventoryRoute(){const h=location.hash.slice(1);const route=h.replace(/\/new$/,'').slice(10);return h.startsWith('inventory/')&&inventoryRoutes[route]?route:null;}
 (()=>{
@@ -360,7 +360,7 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
    ['客户与设备',[item('客户管理','customers','user'),item('电子保修卡','cards','card'),item('经销商管理','dealers','user')]]],
    lanes:[['工单处理',[item('工单受理','orders/new','service'),item('待派工','orders','service','待派工'),item('待处理','orders','service','待处理'),item('处理中','orders','service','处理中')]],['完工归档',[item('处理中','orders','service','处理中'),item('已完工','orders','check','已完工'),item('已关闭','orders','check','已关闭')]],['服务资料',[item('客户管理','customers','user'),item('电子保修卡','cards','card'),item('全部工单','orders','document')]]]},
   customers:{label:'客户管理',title:'客户导航',icon:'user',groups:[
-   ['客户资料',[item('客户与往来单位','inventory/parties','user'),item('经销商管理','dealers','user')]],
+   ['客户资料',[item('客户与往来单位','inventory/parties','user'),item('业务员管理','inventory/salespeople','user'),item('经销商管理','dealers','user')]],
    ['客户业务',[item('销售开单','inventory/sale/new','sale'),item('电子保修卡','cards','card'),item('全部服务工单','orders','service')]]],
    lanes:[['客户业务',[item('客户管理','customers','user'),item('销售开单','inventory/sale/new','sale'),item('应收款 / 收款','inventory/finance_ar','money')]],['设备服务',[item('电子保修卡','cards','card'),item('工单受理','orders/new','service'),item('全部服务工单','orders','document')]]]},
   settings:{label:'基础数据',title:'基础导航',icon:'settings',groups:[
