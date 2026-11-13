@@ -522,3 +522,43 @@ window.addEventListener('hashchange',()=>{
   }
   new MutationObserver(enhance).observe(document.querySelector('#body'),{childList:true,subtree:true});document.querySelector('#modal').addEventListener('close',()=>{if(activeForm)closeAll();});window.addEventListener('hashchange',()=>{if([...dialogs].some(d=>d.dataset.procRoute!==location.hash))closeAll();});window.addEventListener('inventory-navigation',closeAll);enhance();
 })();
+
+// Desktop stock workspace: product totals and the selected product's warehouse balances.
+(() => {
+ const mq=matchMedia('(min-width:701px)'),state={q:'',category:'',brand:'',warehouse:'',nonzero:false,selected:''};
+ const base=render;
+ let stockNumbers=new Map();
+ const emptyNumbers=()=>({qty:0,missing:0,held:0,available:0});
+ function indexNumbers(){
+  stockNumbers=new Map();const held=new Map();
+  for(const h of data.holds||[]){const key=JSON.stringify([h.product_id,h.warehouse_id]);held.set(key,(held.get(key)||0)+Number(h.qty));}
+  for(const b of data.balances){const qty=Number(b.qty),missing=Number(b.unidentified),hold=held.get(JSON.stringify([b.product_id,b.warehouse_id]))||0,values={qty,missing,held:hold,available:b.warehouse_id==='LEGACY'?0:Math.max(0,qty-missing-hold)};
+   for(const w of [b.warehouse_id,'']){const key=JSON.stringify([b.product_id,w]),total=stockNumbers.get(key)||emptyNumbers();for(const k of Object.keys(total))total[k]+=values[k];stockNumbers.set(key,total);}
+  }
+ }
+ function numbers(pid,w=''){return stockNumbers.get(JSON.stringify([pid,w]))||emptyNumbers();}
+ function options(values,current){return '<option value="">全部</option>'+values.map(([id,name])=>`<option value="${E(id)}" ${id===current?'selected':''}>${E(name)}</option>`).join('');}
+ function paint(){
+  indexNumbers();const root=$('#main');root.classList.add('stock-workspace');
+  const opts=key=>[...new Set(data.products.map(p=>p[key]).filter(Boolean))].sort().map(v=>[v,v]);
+  root.innerHTML=`<section class="stock-workspace-panel"><div class="stock-workspace-head"><h1>总库存</h1><div class="stock-workspace-actions">${button('刷新','refresh')}${button('导出 Excel','export')}${button('打印','print-list')}${data.can_adjust_stock?button('调整库存','adjust-stock'):''}</div><div class="stock-totals" aria-live="polite"></div></div><div class="stock-columns"><form class="stock-filters"><h2>筛选</h2><label>关键词<input name="q" type="search" placeholder="编号、名称、型号" value="${E(state.q)}"></label><label>仓库<select name="warehouse">${options(data.warehouses.map(w=>[w.id,w.name]),state.warehouse)}</select></label><label>产品分类<select name="category">${options(opts('category'),state.category)}</select></label><label>品牌<select name="brand">${options(opts('brand'),state.brand)}</select></label><label class="stock-zero"><input type="checkbox" name="nonzero" ${state.nonzero?'checked':''}>隐藏零库存</label><div class="stock-filter-actions"><button class="primary" type="submit">筛选</button><button type="reset">重置</button></div><p>账面数量包含待检、不良和待补录数量。选择商品查看分仓明细。</p></form><section class="stock-products"><div class="stock-scroll"><table class="stock-product-table"><thead><tr><th>分类</th><th>编号</th><th>产品名称 / 型号</th><th class="numeric">账面数量</th><th class="numeric">可用数量</th><th>单位</th><th>图片</th></tr></thead><tbody></tbody></table></div><p class="stock-result-count"></p></section><section class="stock-warehouse-detail" aria-label="分仓库存"><h2>分仓库存</h2><p class="stock-selected-name"></p><div class="stock-scroll stock-breakdown"></div><div class="stock-detail-links"><a href="#serials">SN 与标签</a><a href="#lots">批次与分区</a><a href="#ledger">库存流水</a></div></section></div></section>`;
+  const form=root.querySelector('form');form.onsubmit=e=>{e.preventDefault();for(const key of ['q','warehouse','category','brand'])state[key]=form.elements[key].value;state.nonzero=form.elements.nonzero.checked;draw();};form.onreset=e=>{e.preventDefault();Object.assign(state,{q:'',category:'',brand:'',warehouse:'',nonzero:false});paint();};draw();
+ }
+ function draw(){
+  const root=$('#main'),term=state.q.trim().toLowerCase();
+  const rows=data.products.map(p=>({p,n:numbers(p.id,state.warehouse)})).filter(({p,n})=>(p.active||n.qty>0)&&(!term||[p.code,p.name,p.model,p.brand].join(' ').toLowerCase().includes(term))&&(!state.category||p.category===state.category)&&(!state.brand||p.brand===state.brand)&&(!state.nonzero||n.qty>0));
+  if(!rows.some(r=>r.p.id===state.selected))state.selected=rows[0]?.p.id||'';
+  root.querySelector('.stock-product-table tbody').innerHTML=rows.map(({p,n})=>{const im=(data.images||[]).find(i=>i.product_id===p.id);return `<tr tabindex="0" data-stock-row="${E(p.id)}" aria-selected="${p.id===state.selected}"><td>${E(p.category)}</td><td class="mono">${E(p.code)}</td><td><strong>${E(p.name)}</strong><small>${E(p.model||'—')}</small></td><td class="numeric">${n.qty}</td><td class="numeric">${n.available}</td><td>${E(p.unit)}</td><td>${im?`<img class="photo" tabindex="0" alt="${E(p.name)}" src="/service/api/images?id=${E(im.id)}&thumb=1">`:'—'}</td></tr>`;}).join('')||'<tr><td colspan="7" class="stock-empty">没有匹配商品</td></tr>';
+  root.querySelector('.stock-result-count').textContent=`共 ${rows.length} 种商品`;
+  root.querySelector('.stock-totals').innerHTML=`筛选合计 <span>账面数量 <b>${rows.reduce((s,r)=>s+r.n.qty,0)}</b></span><span>可用数量 <b>${rows.reduce((s,r)=>s+r.n.available,0)}</b></span>`;
+  root.querySelectorAll('[data-stock-row]').forEach(row=>{const choose=()=>{state.selected=row.dataset.stockRow;root.querySelectorAll('[data-stock-row]').forEach(x=>x.setAttribute('aria-selected',String(x===row)));detail();};row.onclick=choose;row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}};});detail();
+ }
+ function detail(){
+  const root=$('#main'),p=data.products.find(p=>p.id===state.selected);root.querySelector('.stock-selected-name').textContent=p?`${p.code} · ${p.name}`:'请选择商品';
+  if(!p){root.querySelector('.stock-breakdown').innerHTML='<p class="stock-empty">没有可显示的分仓记录</p>';return;}
+  const ws=data.warehouses.filter(w=>(!state.warehouse||w.id===state.warehouse)&&(w.active||numbers(p.id,w.id).qty>0));
+  root.querySelector('.stock-breakdown').innerHTML=`<table><thead><tr><th>仓库</th><th class="numeric">账面</th><th class="numeric">可用</th><th>操作</th></tr></thead><tbody>${ws.map(w=>{const n=numbers(p.id,w.id);const action=w.id==='LEGACY'&&n.qty?button('归属','opening',p.id):data.can_adjust_stock&&p.active&&w.active&&w.id!=='LEGACY'?`<button type="button" data-action="adjust-stock" data-id="${E(p.id)}" data-warehouse="${E(w.id)}">调整</button>`:'—';return `<tr><td>${E(w.name)}${n.missing?`<small>待补录 ${n.missing}</small>`:''}</td><td class="numeric">${n.qty}</td><td class="numeric">${w.id==='LEGACY'?'待核对':n.available}</td><td>${action}</td></tr>`;}).join('')}</tbody></table>`;
+ }
+ render=function(){base();$('#main').classList.remove('stock-workspace');if(data&&page==='balances'&&mq.matches)paint();};
+ mq.addEventListener('change',()=>{if(data&&page==='balances')render();});
+})();

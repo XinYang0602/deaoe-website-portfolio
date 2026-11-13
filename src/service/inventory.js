@@ -315,7 +315,7 @@ function saleRemaining(id){return data.lines.filter(l=>l.doc_id===id).some(l=>Nu
     if (desktop) {
       const search=panel.querySelector('.customer-search'), add=panel.querySelector('.customer-new'), results=panel.querySelector('.customer-results');
       const toolbar=document.createElement('div');toolbar.className='selector-toolbar';search.before(toolbar);toolbar.append(search,add);
-      const body=document.createElement('div');body.className='customer-desktop-body';results.before(body);body.innerHTML='<div class="selector-sidebar"><strong>客户档案</strong><span>全部启用客户</span></div>';body.append(results);
+      const body=document.createElement('div');body.className='customer-desktop-body';results.before(body);body.innerHTML='<div class="selector-sidebar"><strong>客户管理</strong><span>全部启用客户</span></div>';body.append(results);
       panel.insertAdjacentHTML('beforeend','<footer><span class="customer-count"></span><button type="button" class="customer-confirm primary">确定选择</button></footer>');
       panel.querySelector('.customer-confirm').onclick=()=>{if(selectedCustomer)choose(selectedCustomer);};
       panel.querySelector('.picker-back').textContent='关闭';

@@ -1,3 +1,10 @@
+## 2026-11-12 — Desktop inventory workspace
+
+- Added a compact filter sidebar, product stock totals and selected-product warehouse details using existing inventory records.
+- Retained stock adjustment, legacy allocation, export and mobile inventory behavior.
+- Unified Service Management and Customer Management labels and removed data-storage status text from routine screens.
+- Validation: synthetic stock calculations, filters, warehouse selection, export and resizing at 1440/1024/720/390 widths; existing navigation and sales workflows pass.
+
 ## 2026-11-12 — Desktop purchasing and goods receipt selectors
 
 - Searchable supplier and warehouse tables and compact product selection follow the shared desktop selector style.
