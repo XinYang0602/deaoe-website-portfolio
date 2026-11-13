@@ -37,3 +37,9 @@ pcCheck(iq($d,'SELECT category_id FROM inv_party_category_assignments WHERE part
 pcCheck(iq($d,"SELECT parent_id FROM inv_party_category_tree WHERE id='SUP-old-leaf'")->fetchColumn()==='SUP-old-root');
 $sr=invSavePartyCategory($d,['name'=>'同名','kind'=>'supplier']);$cr=invSavePartyCategory($d,['name'=>'同名','kind'=>'customer']);pcCheck($sr['id']!==$cr['id']);
 echo "PASS scope isolation, same-name roots, shared legacy category migration and idempotence\n";
+$free=invMaster($d,['type'=>'parties','name'=>'可删除合成客户','kind'=>'customer']);
+pcReject(fn()=>invDeleteParty($d,['id'=>$free['id'],'version'=>0]));
+invDeleteParty($d,['id'=>$free['id'],'version'=>1]);pcCheck(!iq($d,'SELECT 1 FROM inv_parties WHERE id=?',[$free['id']])->fetchColumn());
+$d->exec('CREATE TABLE test_business_ref(party_id TEXT)');iq($d,'INSERT INTO test_business_ref VALUES(?)',[$p['id']]);
+pcReject(fn()=>invDeleteParty($d,['id'=>$p['id'],'version'=>3]));pcCheck(iq($d,'SELECT 1 FROM inv_parties WHERE id=?',[$p['id']])->fetchColumn());
+echo "PASS delete, stale guard and business reference protection\n";

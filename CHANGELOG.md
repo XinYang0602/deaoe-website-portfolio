@@ -1,3 +1,9 @@
+## 2026-11-12 — Directory actions and category hierarchy
+
+- Copy counterparty fields into a new unsaved record without business history. Guard deletion with reference and version checks.
+- Clarify desktop category levels using root separators, indentation and leaf markers.
+- Validated syntax, business deletion safeguards and existing browser workflows.
+
 ## 2026-11-12 — Counterparty forms and category scopes
 
 - Compact desktop create/edit forms with inline category creation.
