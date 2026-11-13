@@ -22,7 +22,7 @@ $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
 function e(string $s):string{return htmlspecialchars($s,ENT_QUOTES,'UTF-8');}
 function redirectHome():never{header('Location: /service/',true,303);exit;}
 $error='';
-if($_SERVER['REQUEST_METHOD']==='POST' && !in_array($path,['/service/api/state','/service/api/inventory','/service/api/images'],true)){
+if($_SERVER['REQUEST_METHOD']==='POST' && !in_array($path,['/service/api/column-widths','/service/api/state','/service/api/inventory','/service/api/images'],true)){
  if(!is_string($_POST['csrf']??null)||!hash_equals($_SESSION['csrf'],$_POST['csrf'])){http_response_code(403);exit('页面已过期，请刷新后重试。');}
  if(($_POST['action']??'')==='logout'){$_SESSION=[];session_destroy();setcookie(session_name(),'', ['expires'=>time()-3600,'path'=>'/service/','secure'=>true,'httponly'=>true,'samesite'=>'Strict']);redirectHome();}
  if(($_POST['action']??'')==='login'){
@@ -65,6 +65,7 @@ if(!isset($_SESSION['user'])){
 <?php exit; }
 $_SESSION['last']=$now;
 if(is_file('/var/lib/showcase-data/phase1-maintenance')){http_response_code(503);exit('系统正在升级，请稍后刷新');}
+if($path==='/service/api/column-widths'){require __DIR__.'/column-widths.php';handleColumnWidths();}
 if($path==='/service/api/inventory'){require __DIR__.'/inventory.php';handleInventory();}
 if($path==='/service/api/images'){require __DIR__.'/images.php';handleImages();}
 if($path==='/service/inventory'){header('Content-Type: text/html; charset=utf-8');readfile(__DIR__.'/inventory.html');exit;}
@@ -75,6 +76,6 @@ if(in_array($path,['/service/','/service/index.php','/service/index.html'],true)
  $logout='<form id="logout-form" method="post" action="/service/" style="margin:0"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="'.e($_SESSION['csrf']).'"><button type="submit">退出登录</button></form>';
  echo str_replace('<span id="today"></span>','<span id="today"></span>'.$logout,$html);exit;
 }
-$files=['/service/finance.js'=>['finance.js','application/javascript; charset=utf-8'],'/service/phase2.js'=>['phase2.js','application/javascript; charset=utf-8'],'/service/label-templates.js'=>['label-templates.js','application/javascript; charset=utf-8'],'/service/inventory.js'=>['inventory.js','application/javascript; charset=utf-8'],'/service/inventory.css'=>['inventory.css','text/css; charset=utf-8'],'/service/labels.js'=>['labels.js','application/javascript; charset=utf-8'],'/service/qrcode.js'=>['qrcode.js','application/javascript; charset=utf-8'],'/service/app.js'=>['app.js','application/javascript; charset=utf-8'],'/service/style.css'=>['style.css','text/css; charset=utf-8']];
+$files=['/service/column-widths.js'=>['column-widths.js','application/javascript; charset=utf-8'],'/service/finance.js'=>['finance.js','application/javascript; charset=utf-8'],'/service/phase2.js'=>['phase2.js','application/javascript; charset=utf-8'],'/service/label-templates.js'=>['label-templates.js','application/javascript; charset=utf-8'],'/service/inventory.js'=>['inventory.js','application/javascript; charset=utf-8'],'/service/inventory.css'=>['inventory.css','text/css; charset=utf-8'],'/service/labels.js'=>['labels.js','application/javascript; charset=utf-8'],'/service/qrcode.js'=>['qrcode.js','application/javascript; charset=utf-8'],'/service/app.js'=>['app.js','application/javascript; charset=utf-8'],'/service/style.css'=>['style.css','text/css; charset=utf-8']];
 if(isset($files[$path])){header('Content-Type: '.$files[$path][1]);readfile(__DIR__.'/'.$files[$path][0]);exit;}
 http_response_code(404);echo '页面不存在';

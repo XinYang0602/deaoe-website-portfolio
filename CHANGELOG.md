@@ -1,3 +1,8 @@
+## 2026-11-12 — Account-specific table widths
+
+- Shared desktop resizing with keyboard controls and authenticated per-user preferences.
+- Validated CSRF, width bounds, account isolation and desktop/mobile regression.
+
 ## 2026-11-12 — Guided category selection
 
 - Replaced manual category-path entry with per-level selectors and inline category creation; changes apply on product save.

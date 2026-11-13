@@ -102,6 +102,14 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         expect(frame.locator('[data-product]:checked')).to_have_count(1)
                         frame.locator('[data-catalog-reset]').click()
                         expect(frame.locator('[data-product]:checked')).to_have_count(0)
+                        grip=frame.locator('.catalog-scroll .column-grip').nth(1)
+                        expect(grip).to_be_visible()
+                        grip.focus()
+                        with page.expect_response(lambda r:'/api/column-widths' in r.url and r.request.method=='POST') as saved:
+                            page.keyboard.press('ArrowRight')
+                        assert saved.value.status==200
+                        state=page.request.get(base+'/service/api/column-widths').json()
+                        assert state['views']
                         frame.locator('#search').fill('TEST-PART')
                         expect(table.locator('[data-catalog-row]')).to_have_count(1)
                         frame.locator('[data-catalog-edit]').click()
