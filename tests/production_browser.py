@@ -71,16 +71,31 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                 f=page.frame_locator('#inventory-workspace-frame')
                 f.locator('[data-catalog-row="TEST-PART"]').click()
                 f.locator('[data-catalog-edit]').click()
-                f.locator('.product-locations summary').click()
-                f.get_by_label('测试仓货架',exact=True).fill('A-01')
-                f.get_by_label('测试仓层数',exact=True).fill('2')
-                f.get_by_label('第二测试仓货架',exact=True).fill('B-03')
+                f.get_by_text('所在仓库 · 仓位',exact=True).click()
+                f.get_by_label('测试仓货位',exact=True).fill('A-01 · 2')
+                f.get_by_label('第二测试仓货位',exact=True).fill('B-03')
+                f.get_by_text('预设售价',exact=True).click()
+                f.get_by_label('预设售价1',exact=True).fill('358.00')
                 page.screenshot(path=str(REPORT/'product-locations.png'))
                 f.locator('#master-form [type=submit]').click()
                 expect(f.locator('#modal')).to_be_hidden()
+                with sqlite3.connect(db_path) as check_db:
+                    assert json.loads(check_db.execute("SELECT v FROM inv_meta WHERE k='prices:TEST-PART'").fetchone()[0])[0] == 35800
                 page.goto(base+'/service/#inventory/locations')
                 expect(f.locator('#main')).to_contain_text('A-01')
                 expect(f.locator('#main')).to_contain_text('B-03')
+                frame=page.frames[1]
+                frame.evaluate("""() => {
+                  const saved=data.docs,lines=data.lines;
+                  data.docs=[{id:'OLD',kind:'sale',status:'approved',party_id:'C',date:'2026-01-01'},{id:'NEW',kind:'sale',status:'approved',party_id:'C',date:'2026-02-01'},{id:'DRAFT',kind:'sale',status:'draft',party_id:'C',date:'2026-03-01'}];
+                  data.lines=[{doc_id:'OLD',product_id:'TEST-PART',price_cents:100},{doc_id:'NEW',product_id:'TEST-PART',price_cents:250},{doc_id:'DRAFT',product_id:'TEST-PART',price_cents:999}];
+                  const f=document.createElement('form'),o=document.createElement('form');f.innerHTML='<div class="item-fields"></div><input name="unit"><input name="discount">';o.innerHTML='<input name="party_id" value="C">';document.body.append(f);
+                  setupSalePricing(f,o,{id:'TEST-PART',sale_cents:700},()=>{});
+                  f.querySelector('[data-track-price]').click();if(f.elements.unit.value!=='2.50')throw Error('history selection');
+                  o.elements.party_id.value='OTHER';f.querySelector('[data-track-price]').click();f.querySelector('[data-track-price]').click();if(f.elements.unit.value!=='7.00')throw Error('fallback');
+                  f.querySelector('[data-pick-price]').click();document.querySelector('[data-price-index="0"]').click();if(f.elements.unit.value!=='358.00')throw Error('preset selection');
+                  f.remove();data.docs=saved;data.lines=lines;
+                }""")
                 page.goto(base+'/service/#inventory/boms')
                 f.locator('[data-production=template]').click()
                 f.locator('[name=name]').fill('Synthetic assembly')

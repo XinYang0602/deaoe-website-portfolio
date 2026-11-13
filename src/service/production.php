@@ -23,7 +23,7 @@ function productionLocations(PDO $d,string $id,array $rows):void {
  foreach($rows as $r){$w=it($r['warehouse_id']??'');if(isset($seen[$w]))iv('仓库重复');$seen[$w]=true;p2Warehouse($d,$w);
  $old=iq($d,'SELECT * FROM inv_locations WHERE product_id=? AND warehouse_id=?',[$id,$w])->fetch(PDO::FETCH_ASSOC);
  if((int)($old['version']??0)!==($r['version']??0))iv('仓位已更新，请重新打开产品');
- $s=it($r['shelf']??'',80);$l=it($r['level']??'',80);
+ $s=it($r['shelf']??'',161);$l=it($r['level']??'',80);
  if(!$old&&$s===''&&$l==='')continue;
  iq($d,'INSERT INTO inv_locations(product_id,warehouse_id,shelf,level) VALUES(?,?,?,?) ON CONFLICT(product_id,warehouse_id) DO UPDATE SET shelf=excluded.shelf,level=excluded.level,version=version+1',[$id,$w,$s,$l]);
  }

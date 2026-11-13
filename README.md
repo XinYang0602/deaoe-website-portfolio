@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Product price presets, customer price recall and simpler warehouse locations
+
 - 2026-11-13 — Per-warehouse shelf/floor notes and BOM-based assembly/disassembly with atomic inventory approval.
 
 - 2026-11-12 — Free-text product names with a full-width required field and clearer code guidance.
@@ -176,3 +178,4 @@ A push does not deploy an application. This repository supplies no production cr
 - External account integrations require separate configuration; demonstration identifiers do not connect to a real account.
 - Mobile browser tests use viewport emulation, not physical-device certification.
 - Brand assets are retained for project context. Third-party code notices are in [THIRD_PARTY_LICENSES.txt](docs/THIRD_PARTY_LICENSES.txt).
+
