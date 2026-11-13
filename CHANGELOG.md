@@ -1,3 +1,10 @@
+## 2026-11-12 — Service orders and product directory
+
+- Compact desktop service-order list and entry form, with searchable customer/product selection and existing status workflows.
+- Category sidebar, dense product table and selected-product image panel reuse product maintenance and pagination.
+- Standardized Product Records labels while preserving mobile layouts and existing persistence rules.
+- Validation: synthetic service save/status/selector flows and product pagination/filter/edit/delete-protection/export checks at 1440/1024/720/390 widths, plus existing sales/business regressions.
+
 ## 2026-11-12 — Desktop inventory workspace
 
 - Added a compact filter sidebar, product stock totals and selected-product warehouse details using existing inventory records.

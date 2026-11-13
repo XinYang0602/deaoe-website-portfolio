@@ -1,6 +1,6 @@
 'use strict';
 const $=s=>document.querySelector(s), E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const names={overview:'进销存总览',products:'商品档案',warehouses:'仓库管理',parties:'供应商与客户',purchase:'采购订单',receipt:'采购入库',sale:'销售单',issue:'销售出库',balances:'库存与期初归属',serials:'SN 与标签',ledger:'库存流水',events:'操作日志'};
+const names={overview:'进销存总览',products:'产品档案',warehouses:'仓库管理',parties:'供应商与客户',purchase:'采购订单',receipt:'采购入库',sale:'销售单',issue:'销售出库',balances:'库存与期初归属',serials:'SN 与标签',ledger:'库存流水',events:'操作日志'};
 const states={draft:'草稿',submitted:'待审核',approved:'已审核',rejected:'已驳回',void:'已作废'},kinds={purchase:'采购订单',receipt:'入库单',sale:'销售单',issue:'出库单'};
 let data=null,page='overview',search='',busy=false;
 const key=()=>crypto.randomUUID(), money=n=>n===null||n===undefined?'未记录':(n/100).toFixed(2), today=()=>new Date().toLocaleDateString('sv-SE');
