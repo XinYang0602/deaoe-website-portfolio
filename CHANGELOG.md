@@ -1,3 +1,9 @@
+## 2026-11-12 — Pending category validation
+
+- Product saves now require confirmation or cancellation of pending category edits.
+- Newly created products are revealed by category and code, preventing stale filters from hiding them.
+- Validated business checks and desktop/mobile catalog regression.
+
 ## 2026-11-12 — Catalog administration
 
 - Compact configurable product codes with transactional collision avoidance; category subtree moves and cleaner tree labels.

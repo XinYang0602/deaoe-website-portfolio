@@ -80,7 +80,7 @@ function categoryLevelFields(path){
  return [...parts,''].slice(0,8).map((value,i)=>{
   const siblings=[...new Set(data.products.map(categoryParts).filter(p=>parts.slice(0,i).every((x,j)=>p[j]===x)).map(p=>p[i]).filter(Boolean))];
   if(value&&!siblings.includes(value))siblings.push(value);
-  return `<div class="category-level"><label>第 ${i+1} 级<select data-category-level="${i}"><option value="">请选择分类</option>${siblings.map(n=>`<option value="${E(n)}" ${n===value?'selected':''}>${E(n)}</option>`).join('')}<option value="__new__">＋ 新增分类…</option></select></label><button type="button" data-category-remove="${i}" aria-label="移除第 ${i+1} 级及下级" ${value?'':'hidden'}>移除</button><div class="category-new" hidden><input aria-label="新分类名称" maxlength="60" placeholder="填写本级分类名称"><button type="button" data-category-confirm="${i}">添加</button></div></div>`;
+  return `<div class="category-level"><label>第 ${i+1} 级<select data-category-level="${i}"><option value="">请选择分类</option>${siblings.map(n=>`<option value="${E(n)}" ${n===value?'selected':''}>${E(n)}</option>`).join('')}<option value="__new__">＋ 新增分类…</option></select></label><button type="button" data-category-remove="${i}" aria-label="移除第 ${i+1} 级及下级" ${value?'':'hidden'}>移除</button><div class="category-new" hidden><input aria-label="新分类名称" maxlength="60" placeholder="填写本级分类名称"><button type="button" data-category-confirm="${i}">添加</button><button type="button" data-category-cancel>取消新增</button></div></div>`;
  }).join('');
 }
 function setCategoryEditor(editor,parts){
@@ -99,6 +99,7 @@ document.addEventListener('change',e=>{
 document.addEventListener('click',e=>{
  const b=e.target.closest('button'),editor=b?.closest('.category-editor');if(!editor)return;
  const parts=categoryDraft(editor);
+ if(b.hasAttribute('data-category-cancel'))setCategoryEditor(editor,parts);
  if(b.hasAttribute('data-category-reset'))setCategoryEditor(editor,[]);
  if(b.hasAttribute('data-category-remove'))setCategoryEditor(editor,parts.slice(0,Number(b.dataset.categoryRemove)));
  if(b.hasAttribute('data-category-add')){const select=editor.querySelector('.category-level:last-child select');if(parts.length<8){select.value='__new__';select.dispatchEvent(new Event('change',{bubbles:true}));}}
@@ -237,13 +238,18 @@ if(a==='labels')return await labels([...document.querySelectorAll('[data-sn]:che
 if(a==='sn'){const s=data.sn.find(s=>s.sn===id);show(`<h2>SN 流转历史</h2><p class="mono">${E(id)}</p><p>${E(product(s.product_id).name)} / ${E(s.manufacturer_sn||'无厂家编号')}</p>${table(['时间','单据','仓库','状态'],data.sn_events.filter(x=>x.sn===id).map(x=>[E(x.created_at),E(x.doc_id),E(warehouse(x.warehouse_id)),x.status==='sold'?'已售':'在库']))}<div class="foot">${button('关闭','close')}</div>`);return;}
 if(['submit','approve','reject','void'].includes(a)){const d=data.docs.find(d=>d.id===id);let reason='';if(['reject','void'].includes(a)){reason=prompt('请填写'+(a==='reject'?'驳回':'作废')+'原因');if(!reason)return;}if(a==='approve'&&!confirm(d.kind==='sale'?'确认审核销售单并直接扣库存？系统将校验本仓可售库存，已生效单据不可直接删除。':'确认审核生效？收发货审核会改变库存，已生效单据不可直接删除。'))return;busy=true;await call({action:'transition',id,version:d.version,transition:a,reason});await load();detail(id);toast('操作已保存');}
 }catch(e){toast(e.message);}finally{busy=false;}});
-document.addEventListener('submit',async e=>{const f=e.target;if(!f.id.endsWith('-form')||['code-rule-form','move-category-form'].includes(f.id))return;e.preventDefault();if(busy)return;busy=true;const submit=f.querySelector('[type=submit]');submit.disabled=true;const err=f.querySelector('.form-error');err.hidden=true;const values=Object.fromEntries(new FormData(f));try{let result;
+document.addEventListener('submit',async e=>{const f=e.target;if(!f.id.endsWith('-form')||['code-rule-form','move-category-form'].includes(f.id))return;e.preventDefault();if(busy)return;
+if(f.id==='master-form'&&f.dataset.type==='products'){
+ const pending=f.querySelector('.category-new:not([hidden])');
+ if(pending){const err=f.querySelector('.form-error');err.textContent='分类尚未添加，请先点击“添加”，或“取消新增”后再保存。';err.hidden=false;pending.querySelector('input').focus();return;}
+}
+busy=true;const submit=f.querySelector('[type=submit]');submit.disabled=true;const err=f.querySelector('.form-error');err.hidden=true;const values=Object.fromEntries(new FormData(f));try{let result;
 if(f.id==='product-names-form')result=await call({action:'save_product_names',version:f.dataset.version,entries:[...f.querySelectorAll('#product-name-rows tr')].filter(row=>row.querySelector('[name=product_name]').value.trim()).map(row=>({name:row.querySelector('[name=product_name]').value.trim(),kind:row.querySelector('[name=name_kind]').value,families:[...row.querySelectorAll('[name=name_family]:checked')].map(el=>el.value),unit:row.querySelector('[name=name_unit]').value,sn_enabled:row.querySelector('[name=name_sn]').checked}))});
 if(f.id==='master-form'){result=await call({...values,action:'master',name_config_version:data.product_names.version,apply_name_defaults:f.dataset.applyNameDefaults==='true',type:f.dataset.type,id:f.dataset.id,version:Number(f.dataset.version),active:!!f.elements.active.checked,sn_enabled:!!f.elements.sn_enabled?.checked});}
 if(f.id==='doc-form'){const ls=[...f.querySelectorAll('.line')].map(el=>({product_id:el.querySelector('[name=product]').value,warehouse_id:el.dataset.warehouse||f.elements.warehouse_id.value,qty:Number(el.querySelector('[name=qty]').value),price:el.querySelector('[name=price]').value,source_line:el.dataset.source,serials:serialParse(el.querySelector('[name=serials]')?.value||'')}));result=await call({action:'save_doc',...values,warehouse_id:f.elements.warehouse_id.value,party_id:f.elements.party_id.value,id:f.dataset.id,kind:f.dataset.kind,source_id:f.dataset.source,version:Number(f.dataset.version),request_key:f.dataset.key,lines:ls});}
 if(f.id==='opening-form')result=await call({...values,action:'opening',product_id:f.dataset.id,qty:Number(values.qty),serials:serialParse(values.serials||''),request_key:f.dataset.key});
 if(f.id==='image-form'){const body=new FormData(f);body.append('product_id',f.dataset.id);const r=await fetch('/service/api/images',{method:'POST',headers:{'X-CSRF-Token':data.csrf},body});let b;try{b=await r.json();}catch{throw Error('上传未完成，可能超过服务器上传限制');}if(!r.ok)throw Error(b.error);}
-await load();if(f.id==='image-form')images(f.dataset.id);else if(f.id==='doc-form')detail(result.id);else $('#modal').close();toast('已保存到服务器');
+await load();if(f.id==='master-form'&&f.dataset.type==='products'&&!f.dataset.id)document.dispatchEvent(new CustomEvent('catalog-product-created',{detail:{id:result.id}}));if(f.id==='image-form')images(f.dataset.id);else if(f.id==='doc-form')detail(result.id);else $('#modal').close();toast('已保存到服务器');
 }catch(e){err.textContent=e.message;err.hidden=false;}finally{busy=false;submit.disabled=false;}});
 document.addEventListener('change',async e=>{
 if(e.target.matches('#master-form[data-type="products"] [name=name]'))applyProductNameDefaults(e.target.form);

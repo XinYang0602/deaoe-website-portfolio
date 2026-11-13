@@ -496,3 +496,5 @@ main.compact-register{max-width:none;padding:16px 20px}
 }
 
 .category-editor [hidden]{display:none!important}
+
+.category-new input{min-width:0;flex:1}.category-new button{flex-shrink:0;white-space:nowrap}
