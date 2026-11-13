@@ -107,7 +107,10 @@ function invMoveCategory(PDO $d,array $a):array {
 }
 function invMaster(PDO $d,array $a):array{
  $type=$a['type']??'';$tables=['products'=>'inv_products','warehouses'=>'inv_warehouses','parties'=>'inv_parties'];if(!isset($tables[$type]))iv('档案类型错误');$table=$tables[$type];$id=it($a['id']??'');$old=$id?iq($d,"SELECT * FROM $table WHERE id=?",[$id])->fetch(PDO::FETCH_ASSOC):false;
- if($id&&!$old)iv('档案不存在');if($old&&(int)$old['version']!==($a['version']??null))iv('档案已更新，请刷新');$id=$id?:iid('M');$name=it($a['name']??'');if($name==='')iv('名称不能为空');$active=($a['active']??true)===true?1:0;
+ if($id&&!$old)iv('档案不存在');if($old&&(int)$old['version']!==($a['version']??null))iv('档案已更新，请刷新');$id=$id?:iid('M');$name=it($a['name']??'');if($name==='')iv('名称不能为空');// New products always start enabled; disabling remains an explicit edit/archive action.
+ $status=$a['active']??($old?(bool)$old['active']:true);
+ if(!in_array($status,[true,false,1,0,'1','0','on','off'],true))iv('启用状态无效，请刷新后重试');
+ $active=$type==='products'&&!$old?1:(in_array($status,[true,1,'1','on'],true)?1:0);
  if($type==='products'){
  $categoryPath=array_key_exists('category_path',$a)?invCategoryPath($a['category_path']):null;
  $config=invProductNames($d);

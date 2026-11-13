@@ -11,3 +11,14 @@ try{invMoveCategory($d,['from'=>'C','parent'=>'C / A']);throw new Exception('cyc
 if(cleanupValues('payment:key','source')!==['key','payment:key'])throw new Exception('payment closure');
 if(cleanupValues('customer','party_id')!==[])throw new Exception('party leaked');
 echo "PASS numbering, collisions, rule updates, subtree move and cleanup reference scoping\n";
+
+$config=invProductNames($d);
+foreach([null,false,0,'0',true,1,'1','on'] as $value){
+ $args=['type'=>'products','name'=>'热水器','name_config_version'=>$config['version']];
+ if($value!==null)$args['active']=$value;
+ $id=invMaster($d,$args)['id'];
+ if((int)iq($d,'SELECT active FROM inv_products WHERE id=?',[$id])->fetchColumn()!==1)throw new Exception('new product disabled');
+ invMaster($d,['type'=>'products','id'=>$id,'version'=>1,'name'=>'热水器','code'=>iq($d,'SELECT code FROM inv_products WHERE id=?',[$id])->fetchColumn(),'active'=>false]);
+ if((int)iq($d,'SELECT active FROM inv_products WHERE id=?',[$id])->fetchColumn()!==0)throw new Exception('explicit disable lost');
+}
+echo "PASS new product enabled for legacy clients; explicit edit can disable\n";

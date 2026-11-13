@@ -1,3 +1,10 @@
+## 2026-11-12 — Product activation and canonical navigation
+
+- New products start enabled, including requests from legacy clients. Explicit editing and bulk deactivation remain available.
+- Validated activation values and preserved existing status when omitted during editing.
+- Canonical workspace links and legacy inventory redirects keep navigation in the current interface.
+- Validated business checks, product creation/persistence and desktop/mobile navigation with synthetic data.
+
 ## 2026-11-12 — Pending category validation
 
 - Product saves now require confirmation or cancellation of pending category edits.

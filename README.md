@@ -64,6 +64,7 @@ Short feature summaries, newest first. Details and validation notes are in the [
 
 | Date | Update |
 | --- | --- |
+| 2026-11-12 | Enabled new products by default and unified legacy links with the current workspace. |
 | 2026-11-12 | Blocked saving unconfirmed category drafts and focused newly created products in the catalog. |
 | 2026-11-12 | Added configurable product numbering, category moves and linked test-ledger cleanup. |
 | 2026-11-12 | Added draggable table columns with server-side, per-account layout preferences. |

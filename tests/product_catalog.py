@@ -182,6 +182,31 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         page.set_viewport_size({'width':width,'height':height})
                         expect(frame.locator('.product-catalog')).to_be_visible()
                         print('PASS catalog category/search/select/edit/images/delete guard/export/resize',width,height)
+                    if width==1440:
+                        frame.locator('[data-action=master][data-id=products]').click()
+                        form=frame.locator('#master-form')
+                        expect(form.locator('[name=active]')).to_be_checked()
+                        form.locator('[name=name]').select_option(label='热水器')
+                        form.locator('[name=code]').fill('NEW-TEST')
+                        with page.expect_response(lambda r:'/api/inventory' in r.url and r.request.method=='POST') as created:
+                            form.locator('[type=submit]').click()
+                        assert created.value.status==200,created.value.text()
+                        created_id=created.value.json()['id']
+                        with sqlite3.connect(db_path) as db:
+                            assert db.execute('SELECT active FROM inv_products WHERE id=?',(created_id,)).fetchone()==(1,),created.value.request.post_data
+                        expect(frame.locator('[data-catalog-row="'+created_id+'"]')).to_be_visible()
+                        page.reload()
+                        expect(frame.locator('[data-catalog-row="'+created_id+'"]')).to_be_visible()
+                        page.goto(base+'/service/inventory#products')
+                        page.wait_for_url(base+'/service/#inventory/products')
+                        expect(frame.locator('[data-catalog-row="'+created_id+'"]')).to_be_visible()
+                        page.goto(base+'/service/#stock')
+                        page.wait_for_url(base+'/service/#inventory/balances')
+                        expect(frame.locator('#main')).to_contain_text('库存')
+                        with sqlite3.connect(db_path) as db:
+                            db.execute('DELETE FROM inv_product_categories WHERE product_id=?',(created_id,))
+                            db.execute('DELETE FROM inv_products WHERE id=?',(created_id,))
+                        print('PASS newly created product stays enabled and visible after reload')
                     assert not errors,errors
                     page.close()
                 browser.close()
