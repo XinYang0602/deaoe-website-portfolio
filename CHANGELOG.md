@@ -1,3 +1,9 @@
+## 2026-11-12 — Free-text product names
+
+- Added a full-width required name input (200 characters) and code guidance below its label.
+- Accepted custom names while preserving existing classification and inventory constraints.
+- Validated synthetic browser create/reload/filter flows, responsive regressions and JS/PHP syntax.
+
 ## 2026-11-12 — Product field helper text
 
 - Moved product-code guidance below its input and placed category/model explanations on dedicated secondary lines.

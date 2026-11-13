@@ -276,7 +276,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         frame.locator('[data-action=master][data-id=products]').click()
                         form=frame.locator('#master-form')
                         expect(form.locator('[name=active]')).to_be_checked()
-                        form.locator('[name=name]').select_option(label='热水器')
+                        form.locator('[name=name]').fill('DEAOE 自定义完整产品名称 CZBJ4Z【816】不锈钢四层直网')
                         expect(form).to_have_attribute('data-number-ready','true')
                         assert form.locator('[name=code]').input_value().startswith('P')
                         form.locator('[name=code]').fill('NEW-TEST')
@@ -285,7 +285,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         assert created.value.status==200,created.value.text()
                         created_id=created.value.json()['id']
                         with sqlite3.connect(db_path) as db:
-                            assert db.execute('SELECT active FROM inv_products WHERE id=?',(created_id,)).fetchone()==(1,),created.value.request.post_data
+                            assert db.execute('SELECT active,name FROM inv_products WHERE id=?',(created_id,)).fetchone()==(1,'DEAOE 自定义完整产品名称 CZBJ4Z【816】不锈钢四层直网'),created.value.request.post_data
                         expect(frame.locator('[data-catalog-row="'+created_id+'"]')).to_be_visible()
                         page.reload()
                         expect(frame.locator('[data-catalog-row="'+created_id+'"]')).to_be_visible()

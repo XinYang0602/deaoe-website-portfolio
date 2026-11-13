@@ -212,7 +212,9 @@ function invMaster(PDO $d,array $a):array{
  if($type==='products'){
  $categoryPath=array_key_exists('category_path',$a)?invCategoryPath($a['category_path']):null;
  $config=invProductNames($d);
- if(!$old||$name!==$old['name']||($a['apply_name_defaults']??false)===true){
+ if(($a['free_product_name']??false)===true){
+  $a['category']=$old['category']??($categoryPath?:'未分类');
+ }elseif(!$old||$name!==$old['name']||($a['apply_name_defaults']??false)===true){
   if(($a['name_config_version']??'')!==$config['version'])iv('名称配置已更新，请刷新后重新选择名称');
   $entry=null;foreach($config['entries'] as $item)if($item['name']===$name)$entry=$item;
   if(!$entry||!$entry['kind']||!$entry['families'])iv('请先在名称种类管理中完善该名称的类型与所属产品');

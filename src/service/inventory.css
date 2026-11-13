@@ -656,3 +656,10 @@ main.compact-register{max-width:none;padding:16px 20px}
  .single-product-form .code-edit-hint{position:static;grid-column:2;grid-row:2;font-size:10px;line-height:1.5;white-space:normal;margin:0}
  .single-product-form .product-field-caption{line-height:1.5}
 }
+
+@media(min-width:701px){
+ #master-form.single-product-form .grid>label:has([name=name]){grid-column:1/-1;grid-template-columns:84px minmax(0,1fr)}
+ #master-form.single-product-form .grid>label:has([name=code]){grid-template-columns:108px minmax(0,1fr)}
+ .single-product-form .product-code-caption{grid-column:1;grid-row:1;line-height:1.5}
+ .single-product-form .product-code-caption .code-edit-hint{display:block;white-space:normal;font-size:10px;line-height:1.5}
+}
