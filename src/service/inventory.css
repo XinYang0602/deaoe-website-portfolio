@@ -356,3 +356,51 @@ main.compact-register{max-width:none;padding:16px 20px}
  #sales-filter-panel [aria-label="日期排序"]{display:flex;gap:8px}
  #sales-filter-panel [data-document-sort]{flex:1;min-height:44px;font-size:13px;white-space:nowrap}
 }
+
+/* ERP workspace v2: dense, aligned work surfaces with stable shared spacing. */
+@media screen and (min-width:701px){
+ main#main,main#main.compact-register{padding:16px 20px}
+ #main>.bar,#main.compact-register>.bar{min-height:36px;margin-bottom:12px;gap:8px}
+ #main>.bar button,#main>.bar select,#main>.bar input[type=search]{height:36px;min-height:36px;padding:7px 10px}
+ #main>.panel,#main.compact-register>.panel{padding:16px;margin-bottom:16px;border-radius:5px}
+ #main>.panel>.head,#main.compact-register>.panel>.head{min-height:48px;margin-bottom:12px;gap:12px}
+ #main>.panel>.head h1{font-size:21px;margin-bottom:4px}
+ #main table td,#main table th{padding:9px 12px}
+ #main table tbody tr:hover{background:#fafbfc}
+ #main table button{min-height:32px;padding:6px 12px}
+ .finance-page .finance-summary-grid{margin:12px 0;gap:10px}
+ .finance-page .finance-summary{min-height:78px;padding:12px 14px;gap:6px;border-radius:5px}
+ .finance-page .finance-summary strong{font-size:20px}
+ .finance-page .finance-party-list>.finance-card{min-height:54px;padding:9px 12px}
+ .finance-page .finance-card button{min-height:34px;padding:6px 12px}
+ .sale-date-filters{gap:8px;margin:8px 0 12px}
+ .sale-date-filters input,.sale-date-filters button{height:36px;min-height:36px;padding:7px 10px}
+ dialog#modal{width:min(1180px,96vw);padding:20px;border-radius:6px}
+ dialog#modal h2{font-size:20px;margin-bottom:14px}
+ #doc-form>.grid{gap:10px 16px;padding:12px;background:#f8f9fb;border:1px solid #e2e6ea;border-radius:4px}
+ #doc-form>.grid>label:not([hidden]),#doc-form .sales-delivery>label{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:8px;min-width:0}
+ #doc-form>.grid>label[hidden]{display:none}
+ #doc-form>.grid label>input,#doc-form>.grid label>select,#doc-form .sales-customer-trigger{height:36px;min-height:36px;padding:7px 10px;font-size:14px;line-height:20px}
+ #doc-form .sales-customer-field{grid-column:span 2}
+ #doc-form .sales-delivery{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,2fr);gap:16px}
+ #doc-form .sales-delivery label:last-child{grid-column:auto}
+ #doc-form #lines{margin:12px 0;border-top:1px solid #e2e6ea}
+ #doc-form .compact-sale-line{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin:0;padding:6px 8px}
+ #doc-form .compact-sale-line .product-choose{padding:6px 0}
+ #doc-form .compact-sale-line .product-choose strong{font-size:14px}
+ #doc-form .compact-sale-line .product-choose small{margin-top:3px}
+ #doc-form .compact-sale-line>button[data-action=remove-line]{margin:0;align-self:center}
+ #doc-form .sales-last-note{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:8px}
+ #doc-form>.muted{font-size:12px;margin:8px 0}
+ #doc-form .foot{position:sticky;bottom:-20px;background:#fff;border-top:1px solid #e2e6ea;padding:12px 0;margin-top:12px;z-index:2}
+}
+@media screen and (max-width:700px){
+ /* Keep editable text at the iOS focus-safe size even in compact sales forms. */
+ #modal.mobile-sale-editor .grid input,#modal.mobile-sale-editor .grid select,
+ #sales-filter-panel select,.sales-item-sheet input,.sales-item-sheet select,
+ .sales-customer-picker input,.sales-product-picker input,.sales-product-picker select{font-size:16px}
+ #modal.mobile-sale-editor h2{margin-bottom:12px}
+ .sales-product-picker .picker-controls{padding:10px 12px}
+ .sales-product-picker .picker-product-row{padding:12px}
+ .sales-product-picker .picker-product-row strong{font-size:14px}
+}

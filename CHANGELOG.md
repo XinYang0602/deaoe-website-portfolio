@@ -1,3 +1,9 @@
+## 2026-11-12 — Compact ERP workspace
+
+- Added horizontal desktop modules, memory-only recent route shortcuts and business workflow links. Tabs do not retain unsaved drafts.
+- Compact aligned document entry and shared panels; preserved mobile filters and improved input sizing.
+- Validated with synthetic desktop/mobile sales workflows and stable panel geometry.
+
 # Changelog
 
 A concise engineering history for reviewers. Dates identify development updates, not deployments. No semantic-version tags or production release status are implied. Earlier overlapping patches are grouped by capability.

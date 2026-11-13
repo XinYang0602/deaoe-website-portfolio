@@ -77,7 +77,17 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                         child.evaluate('window.scrollTo(0,300)')
                     assert len({p[1:] for p in positions})==1,positions
                     print('PASS stable panel x/y/width at',width,positions)
+                    tabs=page.locator('.workspace-route-tabs')
+                    expect(tabs).to_be_visible()
+                    tabs.get_by_role('link',name='销售单',exact=True).click()
+                    expect(tabs.get_by_role('link',name='销售单',exact=True)).to_have_attribute('aria-current','page')
+                    tabs.get_by_role('button',name='关闭销售单页面标签',exact=True).click()
+                    expect(tabs.get_by_role('link',name='销售单',exact=True)).to_have_count(0)
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), 'shell horizontal overflow'
+                    page.screenshot(path=str(REPORT/f'workspace-{width}.png'),full_page=True)
+                    print('PASS recent route activation/close, no overflow',width)
                     page.close()
                 browser.close()
+                print('Report:', REPORT)
         finally:
             server.terminate();server.wait(timeout=5)

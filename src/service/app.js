@@ -15,7 +15,14 @@ function table(head,rows){return `<div class="table-wrap"><table><thead><tr>${he
 function tool(options,placeholder){return `<div class="toolbar"><input class="search" id="search" placeholder="${placeholder}" value="${esc(query)}" aria-label="搜索记录"><select id="filter" aria-label="筛选状态">${options.map(s=>`<option ${s===filter?'selected':''}>${s}</option>`).join('')}</select><span class="right">服务器数据库 · 已登录</span></div>`}
 function match(o){return Object.values(o).join(' ').toLowerCase().includes(query.toLowerCase())}
 function orderRows(list){return list.map(o=>`<tr><td class="mono">${esc(o.id)}<small>${esc(o.date)}</small></td><td>${tag(o.type)}</td><td>${esc(o.customer)}<small>${esc(o.phone)}</small></td><td>${esc(o.product)}<small>${esc(o.sn)}</small></td><td>${esc(o.channel)}<small>${esc(o.dealer)}</small></td><td>${tag(o.status)}</td><td>${esc(o.staff)}</td><td><button class="link" data-detail="${o.id}">查看详情 →</button></td></tr>`)}
-function businessEntries(){return `<section class="business-entries" aria-label="常用业务入口"><a href="/service/inventory#sale"><b>销售管理 →</b><span>客户拿货 · 销售开单 · 出库交付</span></a><a href="/service/inventory#purchase"><b>采购管理 →</b><span>采购订单 · 到货入库</span></a><a href="/service/inventory#balances"><b>库存管理 →</b><span>查库存 · 调拨盘点 · 标签打印</span></a></section>`;}
+function businessEntries(){
+ const flows=[
+  ['销售业务',[['inventory/sale/new','销售开单'],['inventory/sale','销售单 / 审核'],['inventory/finance_ar','应收款 / 收款']]],
+  ['采购业务',[['inventory/purchase','采购订单'],['inventory/receipt','采购入库'],['inventory/balances','查询库存']]],
+  ['售后服务',[['orders/new','服务开单'],['orders','工单跟进'],['cards','电子保修卡']]]
+ ];
+ return `<section class="business-workflows" aria-label="业务流程导航"><div class="workflow-heading"><h2>业务导航</h2><a href="#inventory/documents">全部单据 →</a></div>${flows.map(([name,steps])=>`<div class="business-workflow"><strong>${name}</strong><div>${steps.map(([route,label],i)=>`${i?'<span class="workflow-arrow" aria-hidden="true">→</span>':''}<a href="#${route}"><span class="workflow-step">${i+1}</span>${label}</a>`).join('')}</div></div>`).join('')}</section>`;
+}
 function dashboard(){let pending=db.orders.filter(x=>x.status==='待派工').length,active=db.orders.filter(x=>!['已完工','已关闭'].includes(x.status)).length,low=activeStock().filter(x=>x.qty<x.min).length;return title('工作台','每一台设备，每一次服务，都有迹可循。',btn('导出工单','export')+btn('新增工单','new-order',true))+businessEntries()+`<div class="metrics">${[['待处理工单',active,'▤',`其中 ${pending} 单等待派工`],['电子保修卡',db.cards.length,'▣','设备档案与服务记录关联'],['总部库存总量',activeStock().reduce((a,b)=>a+b.qty,0),'▦','整机与配件数量合计'],['合作经销商',db.dealers.length,'◇','直营与经销渠道统一管理']].map(([l,v,i,s])=>`<div class="metric"><span class="metric-label">${l}</span><span class="metric-icon">${i}</span><strong>${v}<span style="font-size:12px;color:#a1a8b0;margin-left:8px">${l==='总部库存总量'?'件':'个'}</span></strong><small>${s}</small></div>`).join('')}</div><div class="grid"><section class="panel"><div class="panel-head"><h2>常用功能</h2><a href="/service/inventory#documents">单据中心 →</a><span style="font-size:11px;color:#9ba3ac">从登记到服务，一站完成</span></div><div class="quick">${[['▤','新增工单','new-order'],['▣','登记保修卡','new-card'],['↓','采购入库','in']].map(([i,t,a])=>`<button data-action="${a}"><b>${i}</b>${t}</button>`).join('')}</div><div class="flow"><b>01 销售登记</b> → <b>02 出库交付</b> → <b>03 安装开卡</b> → <b>04 售后服务</b></div></section><section class="panel"><div class="panel-head"><h2>需要关注</h2><span class="tag red">${pending+low} 项</span></div><div class="todo"><button data-go="orders" data-filter="待派工">等待分配的工单 <span class="count">${pending} →</span></button><button data-go="stock" data-filter="库存不足">低于预警线的物料 <span class="count">${low} →</span></button><button data-go="cards">查看设备保修档案 <span class="count">${db.cards.length} →</span></button></div></section></div><section class="panel"><div class="panel-head"><h2>最近工单 <span style="font-weight:400;color:#a0a7af;margin-left:10px;font-size:11px">跟进每一次服务</span></h2><button class="link" data-go="orders">全部工单 →</button></div>${table(['工单编号 / 日期','类型','客户信息','产品 / 机身编号','销售渠道','状态','服务人员','操作'],orderRows(db.orders.slice(0,5)))}<div class="table-foot"><span>共 ${db.orders.length} 张工单</span><span>业务记录保存在服务器</span></div></section>`}
 function cards(){let rows=db.cards.filter(match).filter(c=>filter==='全部'||cardStatus(c)===filter);return title('电子保修卡','一机一卡，关联购买、安装与维修记录。',btn('新增保修卡','new-card',true))+`<section class="panel">${tool(['全部','保修中','已过保'],'搜索客户、机身编号或产品型号')}${table(['保修卡号','客户','产品 / 机身编号','销售归属','保修期限','状态','操作'],rows.map(c=>`<tr><td class="mono">${esc(c.id)}</td><td>${esc(c.customer)}<small>${esc(c.phone)}</small></td><td>${esc(c.product)}<small>${esc(c.sn)}${c.inventorySN?' · 库存 SN：'+esc(c.inventorySN):''}</small></td><td>${esc(c.dealer)}</td><td>${esc(c.start)}<small>至 ${esc(c.end)}</small></td><td>${tag(cardStatus(c))}</td><td><button class="link" data-card="${c.id}">查看保修卡 →</button></td></tr>`))}</section>`}
 function cardStatus(c){return c.end<localDate()?'已过保':'保修中'}
@@ -56,7 +63,7 @@ window.addEventListener('hashchange',()=>{query='';if(ready)render()});window.ad
  let trigger=null,timer;
  const find=el=>{const a=el?.closest?.('#nav a[data-section]');return a&&groups[a.dataset.section]?a:null;};
  function close(){clearTimeout(timer);menu.hidden=true;if(trigger)trigger.setAttribute('aria-expanded','false');}
- function place(){if(!trigger||menu.hidden)return;const r=trigger.getBoundingClientRect(),side=document.querySelector('aside').getBoundingClientRect();const width=Math.min(560,window.innerWidth-24);menu.style.width=width+'px';menu.style.left=Math.max(12,Math.min(side.right-1,window.innerWidth-width-12))+'px';menu.style.top=Math.max(12,Math.min(r.top,window.innerHeight-menu.offsetHeight-12))+'px';}
+ function place(){if(!trigger||menu.hidden)return;const r=trigger.getBoundingClientRect(),side=document.querySelector('aside').getBoundingClientRect();const width=Math.min(560,window.innerWidth-24);menu.style.width=width+'px';menu.style.left=Math.max(12,Math.min(r.left,window.innerWidth-width-12))+'px';menu.style.top=Math.max(12,Math.min(side.bottom,window.innerHeight-menu.offsetHeight-12))+'px';}
  function open(a){clearTimeout(timer);if(trigger&&trigger!==a)trigger.setAttribute('aria-expanded','false');trigger=a;const [title,items]=groups[a.dataset.section];menu.setAttribute('aria-label',title+'二级功能');menu.innerHTML='<div class="inventory-flyout-title">'+title+'</div><div class="business-subitems">'+items.map(([url,label])=>`<a href="${url}" ${url==='/service/inventory#'+inventoryRoute()?'aria-current="page"':''}>${label}<span>›</span></a>`).join('')+'</div>';a.setAttribute('aria-controls',menu.id);a.setAttribute('aria-expanded','true');menu.hidden=false;place();}
  function later(){clearTimeout(timer);timer=setTimeout(()=>{if(!menu.matches(':hover')&&!trigger?.matches(':hover')&&!menu.contains(document.activeElement)&&document.activeElement!==trigger)close();},220);}
  document.addEventListener('pointerover',e=>{const a=find(e.target);if(a)open(a);else if(menu.contains(e.target))clearTimeout(timer);});
@@ -294,4 +301,44 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
  }
  const previous=render;render=function(){previous();const now=location.hash==='#customers';const entering=now&&!active;active=now;if(entering)refreshCustomers();};
  document.addEventListener('click',e=>{if(e.target.closest('[data-customer-refresh]'))refreshCustomers();});
+})();
+
+
+// Recent workspace routes are navigation shortcuts, not retained form instances.
+// Memory-only: no customer names, documents or authentication data are persisted.
+(() => {
+ const strip=document.createElement('nav');
+ strip.className='workspace-route-tabs';
+ strip.setAttribute('aria-label','已打开的业务页面');
+ document.querySelector('.shell>header').after(strip);
+ const routes=['dashboard'];
+ function current(){return location.hash.slice(1)||'dashboard';}
+ function label(route){
+  if(route.startsWith('inventory/')){
+   const key=route.slice(10).replace(/\/new$/,'');
+   const name=inventoryRoutes[key]?.[1];
+   return name ? (route.endsWith('/new')?'新建'+name:name) : null;
+  }
+  return pages[route]?.[0]||null;
+ }
+ function paint(){
+  const active=current();
+  // New-document forms stay under their list tab: a tab never promises to retain a draft.
+  const route=active.replace(/\/new$/,'');
+  if(label(route)&&!routes.includes(route))routes.push(route);
+  if(routes.length>9)routes.splice(1,1);
+  strip.innerHTML=routes.map(r=>`<div class="workspace-route-tab ${r===route?'is-current':''}"><a href="#${esc(r)}" ${r===route?'aria-current="page"':''}>${esc(label(r))}</a>${r==='dashboard'?'':`<button type="button" data-close-route="${esc(r)}" aria-label="关闭${esc(label(r))}页面标签">×</button>`}</div>`).join('');
+  const selected=strip.querySelector('.is-current');
+  if(selected&&(selected.offsetLeft<strip.scrollLeft||selected.offsetLeft+selected.offsetWidth>strip.scrollLeft+strip.clientWidth))strip.scrollLeft=selected.offsetLeft;
+ }
+ strip.addEventListener('click',event=>{
+  const button=event.target.closest('[data-close-route]');if(!button)return;
+  const route=button.dataset.closeRoute,index=routes.indexOf(route);
+  if(index<1)return;routes.splice(index,1);
+  if(current().replace(/\/new$/,'')===route)location.hash=routes[Math.max(0,index-1)];
+  else paint();
+ });
+ window.addEventListener('hashchange',paint);
+ const before=render;render=function(){before();paint();};
+ paint();
 })();

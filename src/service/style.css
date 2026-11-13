@@ -138,3 +138,51 @@ aside{overflow-y:auto;overscroll-behavior:contain}aside .brand,aside .workspace,
 .customer-directory button:hover,.customer-profile-actions button:hover{border-color:#c84039;color:#b6322c}.customer-directory :is(button,a):focus-visible{outline:2px solid #c84039;outline-offset:2px}.customer-list-message{padding:20px 14px;color:#657282}
 .customer-profile{margin:0}.customer-profile>div{display:grid;grid-template-columns:80px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid #edf0f3}.customer-profile dt{font-size:13px;color:#657282}.customer-profile dd{margin:0;font-size:14px;overflow-wrap:anywhere}.customer-profile-actions{justify-content:flex-end;margin-top:16px}.service-customer-history summary{cursor:pointer;font-weight:500;font-size:13px;color:#657282}
 @media(max-width:700px){.customer-directory-head h1{font-size:20px}.customer-directory-head{gap:8px}.customer-directory-actions a,.customer-directory-actions button{font-size:12px;padding:8px 12px}.trade-customer-grid{grid-template-columns:1fr}.trade-customer{padding:10px 12px}.service-customer-history{margin-top:12px!important;padding:12px!important}}
+
+/* Compact ERP workspace: horizontal modules, route tabs and a fixed content origin. */
+.workspace-route-tabs{display:none}
+@media screen and (min-width:701px){
+ body>aside{inset:0 0 auto;width:100%;height:56px;padding:0 16px;flex-direction:row;align-items:center;gap:22px;overflow:visible;z-index:60;background:#202733}
+ body>aside .brand{flex:0 0 145px;padding:0}.brand-logo{width:145px}
+ body>aside .brand span,body>aside .workspace,body>aside .side-bottom,body>aside .nav-label{display:none}
+ body>aside #nav{display:flex;align-items:center;gap:2px;min-width:0;flex:1;overflow-x:auto;margin:0;height:56px;scrollbar-width:thin}
+ body>aside #nav a{flex:0 0 auto;margin:0;padding:0 12px;min-height:40px;border-radius:4px;gap:6px;font-size:13px;white-space:nowrap}
+ body>aside #nav i{font-size:15px;width:16px}
+ .shell{margin-left:0;padding-top:56px;min-width:0}
+ .shell>header{height:40px;min-height:40px;padding:0 20px;gap:12px}
+ .head-right{gap:12px}.head-right .avatar{width:25px;height:25px}
+ .workspace-route-tabs{display:flex;align-items:stretch;gap:2px;padding:0 16px;height:38px;margin:0;background:#eef1f5;border-bottom:1px solid #dce2e8;overflow-x:auto;white-space:nowrap;scrollbar-width:thin}
+ .workspace-route-tab{display:flex;align-items:stretch;flex:0 0 auto;border:1px solid transparent;border-bottom:0}
+ .workspace-route-tab.is-current{background:white;border-color:#dce2e8;border-top:2px solid var(--red)}
+ .workspace-route-tabs a{display:flex;align-items:center;margin:0;padding:0 13px;border-radius:0;font-size:12px;color:#637080}
+ .workspace-route-tabs a[aria-current]{color:#a8332d;font-weight:600}
+ .workspace-route-tabs button{border:0;border-radius:0;background:none;min-width:28px;padding:0 6px;font-size:17px;color:#8993a0}
+ .workspace-route-tabs button:hover{color:#b63c35;background:#faefed}
+ .workspace-route-tabs :is(a,button):focus-visible{outline:2px solid var(--red);outline-offset:-3px}
+ .inventory-flyout{border-radius:0 0 6px 6px;padding:16px;z-index:70}
+ main{max-width:none;padding:20px;margin:0;min-width:0}
+ .title{margin-bottom:16px}.title h1{font-size:22px;margin-bottom:6px}
+ .panel{border-radius:5px;margin-bottom:16px}.panel-head{padding:13px 16px}
+ .toolbar{padding:12px 16px;gap:8px}th{padding:10px 16px}td{padding:12px 16px}
+ .business-entries{gap:12px;margin-bottom:16px}.business-entries a{padding:16px;border-radius:5px;gap:7px}.business-entries b{font-size:18px}
+ .metrics{gap:12px;margin-bottom:16px}.metric{padding:16px;border-radius:5px}.metric strong{font-size:27px;margin:9px 0}
+ .grid{gap:16px;margin-bottom:16px}
+ #inventory-workspace-frame{height:calc(100dvh - 134px);min-height:360px}
+}
+@media screen and (min-width:701px) and (max-width:1050px){
+ body>aside{gap:12px;padding:0 12px}body>aside .brand{flex-basis:125px}.brand-logo{width:125px}
+ body>aside #nav a{padding:0 9px;font-size:12px}body>aside #nav i{display:none}
+}
+@media print{.workspace-route-tabs{display:none!important}}
+
+.business-workflows{background:#fff;border:1px solid var(--line);border-radius:5px;margin-bottom:16px;overflow:hidden}
+.workflow-heading{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--line)}
+.workflow-heading a{color:#a33a33;font-size:12px;text-decoration:none}
+.business-workflow{display:grid;grid-template-columns:100px minmax(0,1fr);align-items:center;padding:14px 16px;gap:16px;border-bottom:1px solid #edf0f3}
+.business-workflow:last-child{border-bottom:0}.business-workflow>strong{font-size:13px;color:#586574}
+.business-workflow>div{display:flex;align-items:center;gap:12px;min-width:0}
+.business-workflow a{display:flex;align-items:center;gap:9px;flex:1;padding:11px 12px;min-width:0;color:#344252;background:#f7f9fb;border:1px solid #e5e9ed;border-radius:4px;text-decoration:none;font-size:13px}
+.business-workflow a:hover{background:#fdf2f0;border-color:#e8c8c3;color:#a33a33}
+.workflow-step{display:grid;place-items:center;width:22px;height:22px;flex-shrink:0;background:#efe3e1;color:#a33a33;border-radius:50%;font-size:11px;font-variant-numeric:tabular-nums}
+.workflow-arrow{color:#aab3be;font-size:20px}
+@media(max-width:700px){.business-workflow{grid-template-columns:1fr;gap:9px}.business-workflow>div{flex-wrap:wrap;gap:6px}.business-workflow a{padding:10px 8px;flex-basis:100%}.workflow-arrow{display:none}}
