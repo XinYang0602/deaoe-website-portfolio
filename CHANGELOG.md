@@ -1,3 +1,9 @@
+## 2026-11-13 — Distinct product and service icons
+
+- Give product records a product-card icon while retaining the warehouse symbol.
+- Differentiate intake, dispatch, pending work, active repair, completion, and archiving with notebook/pen, person/arrow, clock, wrench, checklist, and archive-box artwork.
+- Retain the existing SVG stroke style, module colors, accessible labels, routes, and status filters. Verified syntax, desktop/mobile workflow navigation, screenshots, and status filtering.
+
 ## 2026-11-13 — Cached official logo
 
 - Keep the original official PNG and silhouette unchanged; share a content-versioned URL across login, workspace, inventory, and warranty cards.

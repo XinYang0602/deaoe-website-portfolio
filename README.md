@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Distinguish product records and service workflow stages with dedicated outline icons.
+
 - 2026-11-13 — Cache the versioned official logo locally and display it only after loading completes.
 
 - 2026-11-13 — Add account-specific global font sizing and simplify the sales representative filter.

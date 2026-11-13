@@ -77,6 +77,7 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                             assert box['width'] <= 1041, (width,module,'oversized workflow',box)
                             nodes=page.locator('.workflow-node').all()
                             assert all(n.bounding_box()['height'] <= 90 for n in nodes), (width,module,'oversized nodes')
+                        if module in ['orders','stock']:page.screenshot(path=str(REPORT/f'icons-{module}-{width}.png'),full_page=True)
                         if module=='sales':page.screenshot(path=str(REPORT/f'flow-{width}.png'),full_page=True)
                     page.evaluate('location.hash="workflow-orders"')
                     page.locator('.workflow-node[data-filter="处理中"]').first.click()
