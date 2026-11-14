@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Distinguish device profiles from customers and draw parallel stages in the service workflow.
+
 - 2026-11-13 — Show device users and customer management as parallel entries before warranty cards.
 
 - 2026-11-13 — Link freight receipts to sales and show optional workspace update notices.

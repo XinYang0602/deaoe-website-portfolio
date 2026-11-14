@@ -365,8 +365,8 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
    lanes:[['销售收款',[item('销售单','inventory/sale','sale'),item('应收款 / 登记收款','inventory/finance_ar','money'),item('往来余额与流水','inventory/finance','document')]],['采购付款',[item('采购入库','inventory/receipt','purchase'),item('应付款 / 登记付款','inventory/finance_ap','money'),item('往来余额与流水','inventory/finance','document')]],['预收与预付',[item('预收款','inventory/finance_advance_receipt','money'),item('往来账款','inventory/finance','money'),item('预付款','inventory/finance_advance_payment','money')]]]},
   orders:{label:'服务管理',title:'服务导航',icon:'service',groups:[
    ['服务工单',[item('工单受理','orders/new','intake'),item('待派工','orders','dispatch','待派工'),item('待处理','orders','pending','待处理'),item('处理中','orders','repair','处理中'),item('已完工','orders','check','已完工'),item('已关闭','orders','archive','已关闭'),item('全部工单','orders','document')]],
-   ['客户与设备',[item('用户档案','device-users','user'),item('客户管理','customers','user'),item('电子保修卡','cards','card'),item('经销商管理','dealers','user')]]],
-   lanes:[['工单处理',[item('工单受理','orders/new','intake'),item('待派工','orders','dispatch','待派工'),item('待处理','orders','pending','待处理'),item('处理中','orders','repair','处理中')]],['完工归档',[item('处理中','orders','repair','处理中'),item('已完工','orders','check','已完工'),item('已关闭','orders','archive','已关闭')]],['服务资料',[[item('用户档案','device-users','user'),item('客户管理','customers','user')],item('电子保修卡','cards','card'),item('全部工单','orders','document')]]]},
+   ['客户与设备',[item('用户档案','device-users','profile'),item('客户管理','customers','user'),item('电子保修卡','cards','card'),item('经销商管理','dealers','user')]]],
+   lanes:[['工单处理',[item('工单受理','orders/new','intake'),item('待派工','orders','dispatch','待派工'),item('待处理','orders','pending','待处理'),item('处理中','orders','repair','处理中')]],['完工归档',[item('处理中','orders','repair','处理中'),item('已完工','orders','check','已完工'),item('已关闭','orders','archive','已关闭')]],['服务资料',[[item('用户档案','device-users','profile'),item('客户管理','customers','user')],item('电子保修卡','cards','card'),item('全部工单','orders','document')]]]},
   customers:{label:'客户管理',title:'客户导航',icon:'user',groups:[
    ['客户资料',[item('客户与往来单位','inventory/parties','user'),item('业务员管理','inventory/salespeople','user'),item('经销商管理','dealers','user')]],
    ['客户业务',[item('销售开单','inventory/sale/new','sale'),item('电子保修卡','cards','card'),item('全部服务工单','orders','service')]]],
@@ -382,6 +382,7 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
   product:'M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2M7 7l5-2 5 2v6l-5 2-5-2zM7 7l5 2 5-2M12 9v6M7 18h10',
   intake:'M13 3H5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11v-7M1 7h4M1 12h4M1 17h4M8 17h3m1-4 1-4 6-6 3 3-6 6-4 1M18 4l3 3',
   dispatch:'M11 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0M2 21v-3a6 6 0 0 1 12 0v3M14 13h8m-3-3 3 3-3 3',
+  profile:'M3 4h18v16H3z M12 10a2.4 2.4 0 1 1-4.8 0 2.4 2.4 0 0 1 4.8 0 M5.6 17c0-4.8 8-4.8 8 0 M15.5 9h3 M15.5 13h3',
   pending:'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 6v6l4 2',
   repair:'M21 3l-4 4-3-3 4-3a6 6 0 0 0-8 8l-7 8a3 3 0 0 0 4 4l8-7a6 6 0 0 0 8-8zM5 19h.01',
   archive:'M3 3h18v5H3zM5 8v13h14V8M9 12h6M9 17l2 2 4-4'
@@ -392,12 +393,22 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
   const inner=icon(x.icon)+`<span>${esc(x.label)}</span>`;
   return x.status?`<button type="button" class="${cls}" data-go="orders" data-filter="${esc(x.status)}">${inner}</button>`:`<a class="${cls}" href="#${esc(x.route)}">${inner}</a>`;
  }
+ // Each column is a stage; entries within that stage are independent lanes.
+ function serviceMap(nodes){
+  const stages=nodes.map(n=>Array.isArray(n)?n:[n]);
+  const ports=stage=>stage.map((_,i)=>100*(i+.5)/stage.length);
+  function wire(left,right){
+   const lines=[...ports(left).map(y=>`M0 ${y} H50 V50`),...ports(right).map(y=>`M50 50 V${y} H98 m-7 -3 7 3 -7 3`)];
+   return `<svg class="service-wire" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="${lines.join(' ')}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
+  }
+  return `<div class="service-map" style="--stages:${stages.length}">${stages.map((stage,i)=>(i?wire(stages[i-1],stage):'')+`<div class="service-stage"${stage.length>1?' role="group" aria-label="并列档案入口"':''}>${stage.map(x=>action(x,'workflow-node')).join('')}</div>`).join('')}</div>`;
+ }
  Object.entries(modules).forEach(([key,m])=>{pages['workflow-'+key]=[m.title,m.icon];});
  window.deaoeWorkflowModules=modules;
  window.renderWorkflow=route=>{
   const key=route.replace('workflow-',''),m=modules[key];if(!m)return '';
   const related=m.groups.flatMap(g=>g[1]).filter(x=>!x.status);
-  return `<section class="workflow-page" aria-label="${m.title}"><nav class="workflow-switcher" aria-label="业务流程导航">${Object.entries(modules).map(([k,v])=>`<a href="#workflow-${k}" ${key===k?'aria-current="page"':''}>${icon(v.icon)}${v.label}</a>`).join('')}</nav><div class="workflow-canvas"><header class="workflow-canvas-head"><h1>${m.title}</h1><span>点击节点进入业务</span></header><div class="workflow-lanes">${m.lanes.map(([label,nodes])=>`<section class="workflow-lane"><h2>${label}</h2><div class="workflow-path">${nodes.map((n,i)=>(i?'<span class="workflow-arrow" aria-hidden="true">→</span>':'')+(Array.isArray(n)?'<div class="workflow-peers" role="group" aria-label="并列档案入口">'+n.map(x=>action(x,'workflow-node')).join('')+'</div>':action(n,'workflow-node'))).join('')}</div></section>`).join('')}</div></div><section class="workflow-related"><h2>相关记录与资料</h2>${related.map(x=>action(x,'workflow-related-link')).join('')}</section></section>`;
+  return `<section class="workflow-page" aria-label="${m.title}"><nav class="workflow-switcher" aria-label="业务流程导航">${Object.entries(modules).map(([k,v])=>`<a href="#workflow-${k}" ${key===k?'aria-current="page"':''}>${icon(v.icon)}${v.label}</a>`).join('')}</nav><div class="workflow-canvas"><header class="workflow-canvas-head"><h1>${m.title}</h1><span>点击节点进入业务</span></header><div class="workflow-lanes">${m.lanes.map(([label,nodes])=>`<section class="workflow-lane"><h2>${label}</h2>${key==='orders'?serviceMap(nodes):`<div class="workflow-path">${nodes.map((n,i)=>(i?'<span class="workflow-arrow" aria-hidden="true">→</span>':'')+action(n,'workflow-node')).join('')}</div>`}</section>`).join('')}</div></div><section class="workflow-related"><h2>相关记录与资料</h2>${related.map(x=>action(x,'workflow-related-link')).join('')}</section></section>`;
  };
  const menu=document.createElement('section');menu.id='workflow-menu';menu.hidden=true;menu.setAttribute('aria-label','业务功能面板');
  const shade=document.createElement('div');shade.id='workflow-shade';shade.hidden=true;shade.setAttribute('aria-hidden','true');document.body.append(shade,menu);

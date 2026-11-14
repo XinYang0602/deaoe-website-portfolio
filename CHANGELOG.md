@@ -1,3 +1,7 @@
+## 2026-11-13 · Distinguish device profiles from customers and draw parallel stages in the service workflow.
+
+Stage definitions drive node positions and branch connectors at desktop and mobile widths. Links and status filters retain their original behavior.
+
 ## 2026-11-13 · Show device users and customer management as parallel entries before warranty cards.
 
 Group the two independent links into one workflow stage on desktop and mobile. Existing records and routes are preserved.

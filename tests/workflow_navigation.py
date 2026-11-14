@@ -82,8 +82,13 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                             expect(peers.get_by_role('link',name='用户档案')).to_have_attribute('href','#device-users')
                             expect(peers.get_by_role('link',name='客户管理')).to_have_attribute('href','#customers')
                             boxes=[link.bounding_box() for link in peers.get_by_role('link').all()]
-                            assert boxes[0]['x']<boxes[1]['x'] and abs(boxes[0]['y']-boxes[1]['y'])<2
-                            expect(page.locator('.workflow-peers + .workflow-arrow + a')).to_have_attribute('href','#cards')
+                            assert abs(boxes[0]['x']-boxes[1]['x'])<2 and boxes[0]['y']<boxes[1]['y']
+                            card=page.locator('.service-stage[role=group] + svg + div a')
+                            expect(card).to_have_attribute('href','#cards')
+                            box=card.bounding_box()
+                            assert box['x']>boxes[0]['x'] and abs(box['y']+box['height']/2-sum(b['y']+b['height']/2 for b in boxes)/2)<2
+                            expect(peers.locator('a[href="#device-users"] .icon-profile')).to_have_count(1)
+                            expect(peers.locator('a[href="#customers"] .icon-user')).to_have_count(1)
                         if module in ['orders','stock']:page.screenshot(path=str(REPORT/f'icons-{module}-{width}.png'),full_page=True)
                         if module=='sales':page.screenshot(path=str(REPORT/f'flow-{width}.png'),full_page=True)
                     page.evaluate('location.hash="workflow-orders"')
