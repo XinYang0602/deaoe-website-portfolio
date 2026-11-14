@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Show device users and customer management as parallel entries before warranty cards.
+
 - 2026-11-13 — Link freight receipts to sales and show optional workspace update notices.
 
 - 2026-11-13 — Added end-user machine records, QR photo registration, and consistent WebP uploads and downloads.

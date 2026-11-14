@@ -77,6 +77,13 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                             assert box['width'] <= 1041, (width,module,'oversized workflow',box)
                             nodes=page.locator('.workflow-node').all()
                             assert all(n.bounding_box()['height'] <= 90 for n in nodes), (width,module,'oversized nodes')
+                        if module=='orders':
+                            peers=page.get_by_role('group',name='并列档案入口')
+                            expect(peers.get_by_role('link',name='用户档案')).to_have_attribute('href','#device-users')
+                            expect(peers.get_by_role('link',name='客户管理')).to_have_attribute('href','#customers')
+                            boxes=[link.bounding_box() for link in peers.get_by_role('link').all()]
+                            assert boxes[0]['x']<boxes[1]['x'] and abs(boxes[0]['y']-boxes[1]['y'])<2
+                            expect(page.locator('.workflow-peers + .workflow-arrow + a')).to_have_attribute('href','#cards')
                         if module in ['orders','stock']:page.screenshot(path=str(REPORT/f'icons-{module}-{width}.png'),full_page=True)
                         if module=='sales':page.screenshot(path=str(REPORT/f'flow-{width}.png'),full_page=True)
                     page.evaluate('location.hash="workflow-orders"')

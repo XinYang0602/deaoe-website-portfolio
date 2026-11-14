@@ -1,3 +1,7 @@
+## 2026-11-13 · Show device users and customer management as parallel entries before warranty cards.
+
+Group the two independent links into one workflow stage on desktop and mobile. Existing records and routes are preserved.
+
 ## 2026-11-13 · Link freight receipts to sales and show optional workspace update notices.
 
 Record carrier slips against approved sales issues, attach multiple photos, and preview or download WebP receipts. The workspace checks the release manifest every minute and on return without extending the login session or interrupting edits.
