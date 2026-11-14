@@ -1,3 +1,7 @@
+## 2026-11-13 · Restore the device user directory button on work orders.
+
+The desktop and mobile buttons open the actual user’s machine records.
+
 ## 2026-11-13 · Correct the customer management button in the work order toolbar.
 
 Desktop and mobile work orders open customer management through the same navigation button.

@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Restore the device user directory button on work orders.
+
 - 2026-11-13 — Correct the customer management button in the work order toolbar.
 
 - 2026-11-13 — Separate work order fields into columns and add paging and selected-order details.
