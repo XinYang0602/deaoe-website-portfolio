@@ -305,3 +305,21 @@ aside{overflow-y:auto;overscroll-behavior:contain}aside .brand,aside .workspace,
 
 .workflow-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,112px));gap:4px}
 @media(max-width:700px){.workflow-options{grid-template-columns:repeat(auto-fit,minmax(88px,1fr))}.workflow-options .workflow-node{flex-direction:column;justify-content:center;text-align:center;gap:4px}}
+
+@media(min-width:701px){
+ .service-register-head{justify-content:flex-start;flex-wrap:wrap;gap:8px;background:#f6f8fa}
+ .service-register-head .toolbar{margin:0 0 0 auto;padding:0;border:0;background:none;display:flex;gap:6px;flex-wrap:wrap}
+ .service-register-head .search{width:clamp(180px,20vw,320px)}
+ .service-register>.table-wrap{height:clamp(220px,46vh,640px);max-height:none;overflow:auto}
+ .service-register table{min-width:1450px;border-collapse:separate;border-spacing:0}
+ .service-register th,.service-register td{white-space:nowrap;border-bottom:1px solid #e0e5eb;padding:6px 9px}
+ .service-register th{position:sticky!important;top:0;background:#eef2f6;z-index:2}
+ .service-register tr[data-service-row][aria-selected=true]{background:#20599c;color:white;box-shadow:none}
+ .service-register tr[aria-selected=true] .link{color:white}
+ .service-pager{display:flex;gap:8px;align-items:center;padding:6px 12px;background:#f6f8fa;border-top:1px solid #dde3eb}
+ .service-pager>span{margin-right:auto}.service-pager select{width:auto}
+ .service-register-summary nav{display:flex;gap:5px;border-bottom:1px solid #dde3eb;padding-bottom:4px}
+ .service-register-summary nav button[aria-pressed=true]{color:#204e80;border-color:#7293ba;font-weight:600}
+ .service-register-summary dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:10px 0}
+ .service-register-summary dd{margin:0;overflow-wrap:anywhere}.service-register-summary dt{color:#617285}
+}

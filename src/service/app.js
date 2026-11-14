@@ -20,6 +20,12 @@ function btn(t,action,primary=false){return `<button ${primary?'class="primary"'
 function table(head,rows){return `<div class="table-wrap"><table><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')||`<tr><td colspan="${head.length}" class="empty">没有找到符合条件的记录</td></tr>`}</tbody></table></div>`}
 function tool(options,placeholder){return `<div class="toolbar"><input class="search" id="search" placeholder="${placeholder}" value="${esc(query)}" aria-label="搜索记录"><select id="filter" aria-label="筛选状态">${options.map(s=>`<option ${s===filter?'selected':''}>${s}</option>`).join('')}</select></div>`}
 function match(o){return Object.values(o).join(' ').toLowerCase().includes(query.toLowerCase())}
+const serviceFields=[['工单编号','id'],['预约日期','date'],['服务类型','type'],['客户','customer'],['联系电话','phone'],['产品','product'],['机身编号','sn'],['销售渠道','channel'],['服务归属单位','dealer'],['状态','status'],['服务人员','staff'],['需求描述','note']];
+const serviceHeaders=serviceFields.map(([label])=>label);
+function serviceCells(order){
+ const cells=serviceFields.map(([,field])=>`<td>${field==='status'?tag(order.status):esc(order[field]||'—')}</td>`);
+ return cells.join('')+`<td><button type="button" class="link" data-detail="${esc(order.id)}">查看详情</button></td>`;
+}
 function orderRows(list){return list.map(o=>`<tr><td class="mono">${esc(o.id)}<small>${esc(o.date)}</small></td><td>${tag(o.type)}</td><td>${esc(o.customer)}<small>${esc(o.phone)}</small></td><td>${esc(o.product)}<small>${esc(o.sn)}</small></td><td>${esc(o.channel)}<small>${esc(o.dealer)}</small></td><td>${tag(o.status)}</td><td>${esc(o.staff)}</td><td><button class="link" data-detail="${o.id}">查看详情 →</button></td></tr>`)}
 function businessEntries(){
  const flows=[
@@ -48,7 +54,7 @@ function render(){page=pages[location.hash.slice(1)]?location.hash.slice(1):'das
  ['dashboard','工作台','⌂','#dashboard'],['sales','销售管理','↑','/service/#inventory/sale'],
  ['accounts','账款管理','¥','#inventory/finance'],['purchasing','采购管理','↓','/service/#inventory/purchase'],['stock','库存管理','▦','/service/#inventory/balances'],
  ['customers','客户管理','♧','#customers'],['orders','服务管理','▤','#orders'],['settings','基础设置','⚙','#settings']
-].map(([k,n,i,url])=>`<a href="${url}" data-section="${k}" class="${(page===k||(k==='customers'&&['cards','dealers'].includes(page)))?'active':''}"><i>${i}</i><span>${n}</span></a>`).join('');$('#crumb').textContent='工作空间 / '+(['cards','dealers'].includes(page)?'客户管理 / ':'')+pages[page][0];$('.workspace b').textContent=db.settings.name;$('#today').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});$('#main').innerHTML=page.startsWith('workflow-')?window.renderWorkflow(page):page==='dashboard'?dashboard():page==='orders'?title('业务管理','安装、维修与派工，在同一处跟进。','<a class="button" href="#device-users">用户管理</a>'+btn('导出工单','export')+btn('新增工单','new-order',true))+`<section class="panel">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索工单、客户、电话或机器编号')}${table(['工单编号 / 日期','类型','客户信息','产品 / 机身编号','销售渠道','状态','服务人员','操作'],orderRows(db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter)))}<div class="table-foot"><span>共 ${db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter).length} 条符合条件的记录</span><span>安装与维修统一受理</span></div></section>`:({'device-users':deviceUserPage,cards,stock,dealers,customers,settings,'customer-history':customerHistory}[page])();}
+].map(([k,n,i,url])=>`<a href="${url}" data-section="${k}" class="${(page===k||(k==='customers'&&['cards','dealers'].includes(page)))?'active':''}"><i>${i}</i><span>${n}</span></a>`).join('');$('#crumb').textContent='工作空间 / '+(['cards','dealers'].includes(page)?'客户管理 / ':'')+pages[page][0];$('.workspace b').textContent=db.settings.name;$('#today').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});$('#main').innerHTML=page.startsWith('workflow-')?window.renderWorkflow(page):page==='dashboard'?dashboard():page==='orders'?title('业务管理','安装、维修与派工，在同一处跟进。','<a class="button" href="#device-users">用户管理</a>'+btn('导出工单','export')+btn('新增工单','new-order',true))+`<section class="panel">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索工单、客户、电话或机器编号')}${table([...serviceHeaders,'操作'],db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter).map(o=>`<tr>${serviceCells(o)}</tr>`))}<div class="table-foot"><span>共 ${db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter).length} 条符合条件的记录</span><span>安装与维修统一受理</span></div></section>`:({'device-users':deviceUserPage,cards,stock,dealers,customers,settings,'customer-history':customerHistory}[page])();}
 function openModal(h,content){$('#modalBody').innerHTML=`<div class="modal-head"><h2>${h}</h2><button type="button" data-action="close" aria-label="关闭">×</button></div>${content}`;if(!$('#modal').open)$('#modal').showModal()}
 function field(label,name,type='text',value='',extra=''){return `<label>${label}<input name="${name}" type="${type}" value="${esc(value)}" required ${extra}></label>`}
 function select(label,name,items){return `<label>${label}<select name="${name}">${items.map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('')}</select></label>`}
@@ -486,9 +492,59 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
  const priorRender=render,priorNewForm=newForm;
  let pickers=new Set(),serviceSelected='';
  function closePickers(){for(const d of [...pickers])d.close();}
- function serviceList(){const rows=db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter);return `<section class="service-register"><div class="service-register-head"><h1>服务工单</h1><div><a class="button" href="#device-users">用户管理</a>${btn('导出工单','export')}${btn('服务开单','new-order',true)}</div></div><div class="service-register-filter">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索单号、客户、电话、产品或机身编号')}<span>共 ${rows.length} 张工单</span></div>${table(['工单编号 / 预约日期','服务类型','客户 / 电话','产品 / 机身编号','服务归属','状态','服务人员','操作'],orderRows(rows).map((html,i)=>html.replace('<tr>',`<tr tabindex="0" data-service-row="${esc(rows[i].id)}">`)))}<section class="service-register-summary" aria-label="工单摘要"></section></section>`;}
- render=function(){priorRender();const on=desktop()&&location.hash==='#orders';$('#main').classList.toggle('service-workspace',on);if(on){$('#main').innerHTML=serviceList();const rows=[...document.querySelectorAll('[data-service-row]')];if(!rows.some(r=>r.dataset.serviceRow===serviceSelected))serviceSelected=rows[0]?.dataset.serviceRow||'';rows.forEach(row=>{const choose=()=>{serviceSelected=row.dataset.serviceRow;summary();};row.onclick=e=>{if(!e.target.closest('button,a'))choose();};row.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target===row){e.preventDefault();choose();}};});summary();}};
- function summary(){const root=$('.service-register-summary'),o=db.orders.find(x=>x.id===serviceSelected);if(!root)return;document.querySelectorAll('[data-service-row]').forEach(row=>row.setAttribute('aria-selected',String(row.dataset.serviceRow===serviceSelected)));root.innerHTML=o?`<h2>工单摘要 <span>${esc(o.id)}</span></h2><div><p><b>服务地址</b> ${esc(o.address)}</p><p><b>需求描述</b> ${esc(o.note)}</p></div><details><summary>处理记录 · ${(o.history||[]).length} 条</summary>${(o.history||[]).map(h=>`<p>${esc(h)}</p>`).join('')}</details>`:'<p>暂无工单记录</p>';}
+ let servicePage=1, pageSize=20, previousFilter='', detailTab='info';
+ function serviceList(){
+  const rows=db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter);
+  const criteria=JSON.stringify([query,filter]);
+  if(previousFilter!==criteria){servicePage=1;previousFilter=criteria;}
+  const pages=Math.max(1,Math.ceil(rows.length/pageSize));
+  servicePage=Math.min(servicePage,pages);
+  const offset=(servicePage-1)*pageSize;
+  const visible=rows.slice(offset,offset+pageSize);
+  if(!visible.some(o=>o.id===serviceSelected))serviceSelected=visible[0]?.id||'';
+  const registerRows=visible.map((o,i)=>`<tr tabindex="0" data-service-row="${esc(o.id)}"><td>${offset+i+1}</td>${serviceCells(o)}</tr>`);
+  return `<section class="service-register"><div class="service-register-head"><h1>服务工单</h1><div>${btn('服务开单','new-order',true)}<button type="button" data-handle-selected>处理工单</button><a class="button" href="#device-users">用户管理</a>${btn('导出工单','export')}</div>
+   ${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索单号、客户、电话、产品或机身编号')}</div>
+   ${table(['序号',...serviceHeaders,'操作'],registerRows)}
+   <div class="service-pager"><span>当前 ${rows.length?offset+1:0}–${offset+visible.length} 条，共 ${rows.length} 条</span>
+   <button type="button" data-step="-1" ${servicePage===1?'disabled':''}>上一页</button> 第 ${servicePage} / ${pages} 页
+   <button type="button" data-step="1" ${servicePage===pages?'disabled':''}>下一页</button>
+   <select aria-label="每页工单数" data-service-size>${[20,50,100].map(n=>`<option value="${n}" ${pageSize===n?'selected':''}>${n} 条 / 页</option>`).join('')}</select></div>
+   <section class="service-register-summary" aria-label="选中工单详情"></section></section>`;
+ }
+ render=function(){
+  priorRender();
+  const on=desktop()&&location.hash==='#orders';
+  $('#main').classList.toggle('service-workspace',on);
+  if(!on)return;
+  $('#main').innerHTML=serviceList();
+  const register=$('.service-register');
+  register.onclick=e=>{
+   const row=e.target.closest('[data-service-row]');
+   if(row){serviceSelected=row.dataset.serviceRow;summary();}
+   const step=e.target.closest('[data-step]');
+   if(step){servicePage+=Number(step.dataset.step);render();}
+   const tab=e.target.closest('[data-service-tab]');
+   if(tab){detailTab=tab.dataset.serviceTab;summary();register.querySelector('[data-service-tab="'+detailTab+'"]').focus();}
+   if(e.target.closest('[data-handle-selected]')&&serviceSelected)detail(serviceSelected);
+  };
+  register.onkeydown=e=>{
+   if(e.target.matches('[data-service-row]')&&['Enter',' '].includes(e.key)){e.preventDefault();serviceSelected=e.target.dataset.serviceRow;summary();}
+  };
+  register.querySelector('[data-service-size]').onchange=e=>{pageSize=Number(e.target.value);servicePage=1;render();};
+  summary();
+ };
+ function summary(){
+  const root=$('.service-register-summary'),o=db.orders.find(x=>x.id===serviceSelected);
+  $('.service-register [data-handle-selected]').disabled=!o;
+  document.querySelectorAll('[data-service-row]').forEach(row=>row.setAttribute('aria-selected',String(row.dataset.serviceRow===serviceSelected)));
+  const tabs=[['info','工单详情'],['history','处理过程']];
+  const bar=tabs.map(([key,label])=>`<button type="button" data-service-tab="${key}" aria-pressed="${detailTab===key}">${label}</button>`).join('');
+  let content='<p>请选择工单查看详情</p>';
+  if(o&&detailTab==='history')content=(o.history||[]).length?`<ol>${o.history.map(h=>`<li>${esc(h)}</li>`).join('')}</ol>`:'<p>暂无处理记录</p>';
+  if(o&&detailTab==='info')content=`<dl>${[['工单编号',o.id],['服务地址',o.address],['需求描述',o.note]].map(([k,v])=>`<dt>${k}</dt><dd>${esc(v||'—')}</dd>`).join('')}</dl>`;
+  root.innerHTML=`<nav aria-label="工单详情栏目">${bar}</nav>${content}`;
+ }
  newForm=function(action){if(action!=='new-order'||!desktop())return priorNewForm(action);
   form('new-order',`<div class="service-form-section wide">客户与服务信息</div>${select('服务类型','type',['安装','维修'])}${select('服务归属','dealer',['总部直营',...db.dealers.map(d=>d.name)])}${field('预约日期','date','date',localDate())}<label class="service-input-choice">客户姓名<div><input name="customer" required><button type="button" data-service-pick="customer">选择客户</button></div></label>${field('联系电话','phone','tel','','pattern="[0-9]{11}" maxlength="11"')}<label class="wide">服务地址<input name="address" required></label><div class="service-form-section wide">产品与服务需求</div><label class="service-input-choice wide">产品 / 型号<div><input name="product" required placeholder="选择产品，或填写其他待服务产品"><button type="button" data-service-pick="product">选择产品</button></div></label>${field('机身 / 临时设备编号','sn')}<label class="wide">需求描述<textarea name="note" rows="2" required placeholder="填写安装要求或故障现象"></textarea></label>`,'保存工单');
   $('#modal').classList.add('desktop-service-form');$('#modal h2').textContent='服务开单';

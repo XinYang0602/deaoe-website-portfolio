@@ -1,3 +1,7 @@
+## 2026-11-13 · Separate work order fields into columns and add paging and selected-order details.
+
+The desktop register groups actions and filters in the toolbar. Users can page through orders, inspect individual fields, and switch between details and service history.
+
 ## 2026-11-13 · Redraw the user management icon with a person and a front-facing range hood.
 
 The service workflow, module menu, and related links share the same vector artwork.

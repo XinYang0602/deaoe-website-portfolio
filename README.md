@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Separate work order fields into columns and add paging and selected-order details.
+
 - 2026-11-13 — Redraw the user management icon with a person and a front-facing range hood.
 
 - 2026-11-13 — Separate independent navigation choices from ordered work and update device-user management artwork.
