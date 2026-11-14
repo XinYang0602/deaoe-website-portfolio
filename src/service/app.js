@@ -405,12 +405,19 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
   product:'M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2M7 7l5-2 5 2v6l-5 2-5-2zM7 7l5 2 5-2M12 9v6M7 18h10',
   intake:'M13 3H5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11v-7M1 7h4M1 12h4M1 17h4M8 17h3m1-4 1-4 6-6 3 3-6 6-4 1M18 4l3 3',
   dispatch:'M11 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0M2 21v-3a6 6 0 0 1 12 0v3M14 13h8m-3-3 3 3-3 3',
-  profile:'M8.5 8a2.8 2.8 0 1 1-5.6 0 2.8 2.8 0 0 1 5.6 0M1.5 20v-3a4.3 4.3 0 0 1 8.6 0v3 M15 3h4v6l3.5 4v2h-11v-2L15 9z M12 13h10 M14 18l-1 2m5-2-1 2',
   pending:'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 6v6l4 2',
   repair:'M21 3l-4 4-3-3 4-3a6 6 0 0 0-8 8l-7 8a3 3 0 0 0 4 4l8-7a6 6 0 0 0 8-8zM5 19h.01',
   archive:'M3 3h18v5H3zM5 8v13h14V8M9 12h6M9 17l2 2 4-4'
  });
- const svg=name=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="${paths[name]||paths.document}"/></svg>`;
+ // Keep the person compact so the hood canopy has room at menu icon sizes.
+ const profileIcon = `<svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true" focusable="false">
+  <circle cx="5.6" cy="12" r="3.3"/>
+  <path d="M.8 25v-3.1a4.8 4.8 0 0 1 9.6 0V25z"/>
+  <path d="M18.5 4h6v7.5h-6zM17 13h9l4.7 5.1H12.3zM12 19.5h19v2.8H12z"/>
+  <path d="M17.8 24.7c-1.8 2.1 1.6 2.4-.2 4.6m6.9-4.6c-1.8 2.1 1.6 2.4-.2 4.6"
+   fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+ </svg>`;
+ const svg=name=>name==='profile'?profileIcon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="${paths[name]||paths.document}"/></svg>`;
  const icon=name=>`<span class="workflow-icon icon-${esc(name)}" aria-hidden="true">${svg(name)}</span>`;
  function action(x,cls=''){
   const inner=icon(x.icon)+`<span>${esc(x.label)}</span>`;

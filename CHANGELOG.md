@@ -1,3 +1,7 @@
+## 2026-11-13 · Redraw the user management icon with a person and a front-facing range hood.
+
+The service workflow, module menu, and related links share the same vector artwork.
+
 ## 2026-11-13 · Separate independent navigation choices from ordered work and update device-user management artwork.
 
 Manual and imported sales converge at review before dispatch. Independent stock tools and master data use unconnected choices. Both active repair nodes use matching artwork and sizing. The device user icon pairs a person with a range hood.
