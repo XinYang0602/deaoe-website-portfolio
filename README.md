@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Import marketplace CSV orders as sales drafts and assign reusable salesperson commission rules.
+
 - 2026-11-13 — Distinguish product records and service workflow stages with dedicated outline icons.
 
 - 2026-11-13 — Cache the versioned official logo locally and display it only after loading completes.

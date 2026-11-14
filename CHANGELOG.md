@@ -1,3 +1,9 @@
+## 2026-11-13 — Marketplace order import and sales commissions
+
+- Map CSV columns to normalized marketplace orders, validate before saving, preserve identifiers, and deduplicate by marketplace, shop, and order. Imports create drafts through the existing approval workflow. The shared intake service is ready for future adapters; live synchronization is not enabled.
+- Assign configurable percentage, per-order, and per-unit rules to salespeople. Approval snapshots the customer owner and rule. Track returns, verify receipts or margin explicitly, and review commission details without posting payroll transactions.
+- Verified with synthetic multi-platform orders, conflicts, financial rounding, returns, snapshot and permissions tests, plus desktop and mobile browser scenarios.
+
 ## 2026-11-13 — Distinct product and service icons
 
 - Give product records a product-card icon while retaining the warehouse symbol.

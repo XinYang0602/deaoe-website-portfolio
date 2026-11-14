@@ -103,7 +103,7 @@ window.addEventListener('hashchange',()=>{query='';if(ready)render()});window.ad
 })();
 
 // One persistent workspace: inventory keeps its own scripts and data without reloading the shell.
-const inventoryRoutes={salespeople:['customers','业务员管理'],production:['stock','组装与拆装'],boms:['stock','生产模板'],locations:['stock','仓位记录'],numbering:['settings','编号管理'],finance_ar:['accounts','应收款'],finance_ap:['accounts','应付款'],finance_advance_receipt:['accounts','预收款'],finance_advance_payment:['accounts','预付款'],finance:['accounts','往来账款'],documents:['dashboard','单据中心'],sale:['sales','销售单'],issue:['sales','销售出库'],purchase:['purchasing','采购订单'],receipt:['purchasing','采购入库'],parties:['customers','客户与往来单位'],overview:['stock','进销存总览'],balances:['stock','库存查询'],products:['stock','产品档案'],warehouses:['stock','仓库管理'],operations:['stock','退换货与调拨'],counting:['stock','库存盘点'],lots:['stock','批次与分区'],serials:['stock','SN 与标签'],templates:['stock','打印模板'],ledger:['stock','库存流水'],events:['stock','操作日志']};
+const inventoryRoutes={platform_orders:['sales','平台订单导入'],commissions:['sales','业务员提成模板'],salespeople:['customers','业务员管理'],production:['stock','组装与拆装'],boms:['stock','生产模板'],locations:['stock','仓位记录'],numbering:['settings','编号管理'],finance_ar:['accounts','应收款'],finance_ap:['accounts','应付款'],finance_advance_receipt:['accounts','预收款'],finance_advance_payment:['accounts','预付款'],finance:['accounts','往来账款'],documents:['dashboard','单据中心'],sale:['sales','销售单'],issue:['sales','销售出库'],purchase:['purchasing','采购订单'],receipt:['purchasing','采购入库'],parties:['customers','客户与往来单位'],overview:['stock','进销存总览'],balances:['stock','库存查询'],products:['stock','产品档案'],warehouses:['stock','仓库管理'],operations:['stock','退换货与调拨'],counting:['stock','库存盘点'],lots:['stock','批次与分区'],serials:['stock','SN 与标签'],templates:['stock','打印模板'],ledger:['stock','库存流水'],events:['stock','操作日志']};
 window.deaoeInventoryRoutes=inventoryRoutes;
 function inventoryRoute(){const h=location.hash.slice(1);const route=h.replace(/\/new$/,'').slice(10);return h.startsWith('inventory/')&&inventoryRoutes[route]?route:null;}
 (()=>{
@@ -339,9 +339,10 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
  const item=(label,route,icon='document',status='')=>({label,route,icon,status});
  const modules={
   sales:{label:'销售管理',title:'销售导航',icon:'sale',groups:[
+   ['平台与提成',[item('平台订单导入','inventory/platform_orders','document'),item('业务员提成模板','inventory/commissions','money')]],
    ['销售业务',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale'),item('销售出库','inventory/issue')]],
    ['销售往来',[item('应收款 / 收款','inventory/finance_ar','money'),item('预收款','inventory/finance_advance_receipt','money'),item('退换货与补发','inventory/operations','return')]]],
-   lanes:[['销售出货',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale','check'),item('库存查询','inventory/balances','stock')]],['收款与交付',[item('销售出库记录','inventory/issue','stock'),item('应收款 / 收款','inventory/finance_ar','money'),item('电子保修卡','cards','card')]],['退换处理',[item('退换货与补发','inventory/operations','return'),item('库存流水','inventory/ledger','stock'),item('往来账款','inventory/finance','money')]]]},
+   lanes:[['平台与提成',[item('平台订单导入','inventory/platform_orders','document'),item('业务员提成模板','inventory/commissions','money')]],['销售出货',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale','check'),item('库存查询','inventory/balances','stock')]],['收款与交付',[item('销售出库记录','inventory/issue','stock'),item('应收款 / 收款','inventory/finance_ar','money'),item('电子保修卡','cards','card')]],['退换处理',[item('退换货与补发','inventory/operations','return'),item('库存流水','inventory/ledger','stock'),item('往来账款','inventory/finance','money')]]]},
   purchasing:{label:'采购管理',title:'采购导航',icon:'purchase',groups:[
    ['采购业务',[item('采购开单','inventory/purchase/new'),item('采购订单 / 审核','inventory/purchase'),item('采购入库','inventory/receipt')]],
    ['供应往来',[item('供应商与往来单位','inventory/parties','user'),item('应付款 / 付款','inventory/finance_ap','money'),item('预付款','inventory/finance_advance_payment','money')]]],

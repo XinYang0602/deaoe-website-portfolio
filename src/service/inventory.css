@@ -698,3 +698,6 @@ main.compact-register{max-width:none;padding:16px 20px}
  .party-directory .catalog-scroll tr[data-party-row] td:first-child{min-height:44px;align-items:center}
  .party-directory .catalog-toolbar>.check{min-height:44px;align-items:center}
 }
+
+/* Sales import and commission tools share the existing workspace controls. */
+.sales-tools-workspace .sales-tools-help{padding:12px 16px;line-height:1.6}.sales-tools-workspace .panel{overflow:auto}.sales-tools-workspace .bar{flex-wrap:wrap}.sales-tools-workspace td{overflow-wrap:anywhere}.sales-tools-workspace h2{margin:20px 0 12px}#platform-import-editor [data-order-confirm]{margin-top:12px}#platform-import-editor .panel{overflow:auto;max-height:320px}#platform-import-editor .error{max-height:200px;overflow:auto}#commission-trial [data-trial-result]{font-weight:700;font-size:18px}

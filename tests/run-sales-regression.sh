@@ -4,7 +4,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
 SOURCE_DIR="${1:-$SCRIPT_DIR/../src/service}"
 TEST_DIR="$(mktemp -d)"
 trap 'rm -rf -- "$TEST_DIR"' EXIT
-for name in inventory.php production.php salespeople.php storage.php phase2.php inventory-cleanup.php finance.php; do
+for name in inventory.php production.php salespeople.php sales-tools.php storage.php phase2.php inventory-cleanup.php finance.php; do
   cp -- "$SOURCE_DIR/$name" "$TEST_DIR/$name"
 done
 # Block any accidental call to database(): the destination does not exist.
