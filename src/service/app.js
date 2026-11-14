@@ -23,7 +23,7 @@ function match(o){return Object.values(o).join(' ').toLowerCase().includes(query
 function orderRows(list){return list.map(o=>`<tr><td class="mono">${esc(o.id)}<small>${esc(o.date)}</small></td><td>${tag(o.type)}</td><td>${esc(o.customer)}<small>${esc(o.phone)}</small></td><td>${esc(o.product)}<small>${esc(o.sn)}</small></td><td>${esc(o.channel)}<small>${esc(o.dealer)}</small></td><td>${tag(o.status)}</td><td>${esc(o.staff)}</td><td><button class="link" data-detail="${o.id}">查看详情 →</button></td></tr>`)}
 function businessEntries(){
  const flows=[
-  ['销售业务',[['inventory/sale/new','销售开单'],['inventory/sale','销售单 / 审核'],['inventory/finance_ar','应收款 / 收款']]],
+  ['销售业务',[['inventory/sale/new','销售开单'],['inventory/sale','销售单 / 审核'],['inventory/shipments','发货单'],['inventory/finance_ar','应收款 / 收款']]],
   ['采购业务',[['inventory/purchase','采购订单'],['inventory/receipt','采购入库'],['inventory/balances','查询库存']]],
   ['服务管理',[['orders/new','服务开单'],['orders','工单跟进'],['cards','电子保修卡']]]
  ];
@@ -110,7 +110,7 @@ window.addEventListener('hashchange',()=>{query='';if(ready)render()});window.ad
 })();
 
 // One persistent workspace: inventory keeps its own scripts and data without reloading the shell.
-const inventoryRoutes={platform_orders:['sales','平台订单导入'],commissions:['sales','业务员提成模板'],salespeople:['customers','业务员管理'],production:['stock','组装与拆装'],boms:['stock','生产模板'],locations:['stock','仓位记录'],numbering:['settings','编号管理'],finance_ar:['accounts','应收款'],finance_ap:['accounts','应付款'],finance_advance_receipt:['accounts','预收款'],finance_advance_payment:['accounts','预付款'],finance:['accounts','往来账款'],documents:['dashboard','单据中心'],sale:['sales','销售单'],issue:['sales','销售出库'],purchase:['purchasing','采购订单'],receipt:['purchasing','采购入库'],parties:['customers','客户与往来单位'],overview:['stock','进销存总览'],balances:['stock','库存查询'],products:['stock','产品档案'],warehouses:['stock','仓库管理'],operations:['stock','退换货与调拨'],counting:['stock','库存盘点'],lots:['stock','批次与分区'],serials:['stock','SN 与标签'],templates:['stock','打印模板'],ledger:['stock','库存流水'],events:['stock','操作日志']};
+const inventoryRoutes={shipments:['sales','发货单'],platform_orders:['sales','平台订单导入'],commissions:['sales','业务员提成模板'],salespeople:['customers','业务员管理'],production:['stock','组装与拆装'],boms:['stock','生产模板'],locations:['stock','仓位记录'],numbering:['settings','编号管理'],finance_ar:['accounts','应收款'],finance_ap:['accounts','应付款'],finance_advance_receipt:['accounts','预收款'],finance_advance_payment:['accounts','预付款'],finance:['accounts','往来账款'],documents:['dashboard','单据中心'],sale:['sales','销售单'],issue:['sales','销售出库'],purchase:['purchasing','采购订单'],receipt:['purchasing','采购入库'],parties:['customers','客户与往来单位'],overview:['stock','进销存总览'],balances:['stock','库存查询'],products:['stock','产品档案'],warehouses:['stock','仓库管理'],operations:['stock','退换货与调拨'],counting:['stock','库存盘点'],lots:['stock','批次与分区'],serials:['stock','SN 与标签'],templates:['stock','打印模板'],ledger:['stock','库存流水'],events:['stock','操作日志']};
 window.deaoeInventoryRoutes=inventoryRoutes;
 function inventoryRoute(){const h=location.hash.slice(1);const route=h.replace(/\/new$/,'').slice(10);return h.startsWith('inventory/')&&inventoryRoutes[route]?route:null;}
 (()=>{
@@ -347,15 +347,15 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
  const modules={
   sales:{label:'销售管理',title:'销售导航',icon:'sale',groups:[
    ['平台与提成',[item('平台订单导入','inventory/platform_orders','document'),item('业务员提成模板','inventory/commissions','money')]],
-   ['销售业务',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale'),item('销售出库','inventory/issue')]],
+   ['销售业务',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale'),item('销售出库','inventory/issue'),item('发货单','inventory/shipments','document')]],
    ['销售往来',[item('应收款 / 收款','inventory/finance_ar','money'),item('预收款','inventory/finance_advance_receipt','money'),item('退换货与补发','inventory/operations','return')]]],
-   lanes:[['平台与提成',[item('平台订单导入','inventory/platform_orders','document'),item('业务员提成模板','inventory/commissions','money')]],['销售出货',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale','check'),item('库存查询','inventory/balances','stock')]],['收款与交付',[item('销售出库记录','inventory/issue','stock'),item('应收款 / 收款','inventory/finance_ar','money'),item('电子保修卡','cards','card')]],['退换处理',[item('退换货与补发','inventory/operations','return'),item('库存流水','inventory/ledger','stock'),item('往来账款','inventory/finance','money')]]]},
+   lanes:[['平台与提成',[item('平台订单导入','inventory/platform_orders','document'),item('业务员提成模板','inventory/commissions','money')]],['销售出货',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale','check'),item('库存查询','inventory/balances','stock')]],['收款与交付',[item('销售出库记录','inventory/issue','stock'),item('发货单','inventory/shipments','document'),item('应收款 / 收款','inventory/finance_ar','money'),item('电子保修卡','cards','card')]],['退换处理',[item('退换货与补发','inventory/operations','return'),item('库存流水','inventory/ledger','stock'),item('往来账款','inventory/finance','money')]]]},
   purchasing:{label:'采购管理',title:'采购导航',icon:'purchase',groups:[
    ['采购业务',[item('采购开单','inventory/purchase/new'),item('采购订单 / 审核','inventory/purchase'),item('采购入库','inventory/receipt')]],
    ['供应往来',[item('供应商与往来单位','inventory/parties','user'),item('应付款 / 付款','inventory/finance_ap','money'),item('预付款','inventory/finance_advance_payment','money')]]],
    lanes:[['到货入库',[item('采购开单','inventory/purchase/new'),item('采购订单 / 审核','inventory/purchase','check'),item('采购入库','inventory/receipt','stock'),item('库存查询','inventory/balances','stock')]],['供应往来',[item('供应商档案','inventory/parties','user'),item('应付款 / 付款','inventory/finance_ap','money'),item('预付款','inventory/finance_advance_payment','money')]]]},
   stock:{label:'仓库管理',title:'仓库导航',icon:'stock',groups:[
-   ['库存业务',[item('库存查询','inventory/balances','stock'),item('采购入库','inventory/receipt'),item('销售出库','inventory/issue'),item('退换货与调拨','inventory/operations','return'),item('库存盘点','inventory/counting','check'),item('组装与拆装','inventory/production'),item('生产模板','inventory/boms'),item('仓位记录','inventory/locations')]],
+   ['库存业务',[item('库存查询','inventory/balances','stock'),item('采购入库','inventory/receipt'),item('销售出库','inventory/issue'),item('发货单','inventory/shipments','document'),item('退换货与调拨','inventory/operations','return'),item('库存盘点','inventory/counting','check'),item('组装与拆装','inventory/production'),item('生产模板','inventory/boms'),item('仓位记录','inventory/locations')]],
    ['库存资料',[item('产品档案','inventory/products','product'),item('仓库管理','inventory/warehouses','stock'),item('批次与分区','inventory/lots'),item('SN 与标签','inventory/serials'),item('库存流水','inventory/ledger'),item('打印模板','inventory/templates')]]],
    lanes:[['货物流转',[item('采购入库','inventory/receipt','purchase'),item('库存查询','inventory/balances','stock'),item('销售出库','inventory/issue','sale')]],['仓库作业',[item('库存盘点','inventory/counting','check'),item('库存流水','inventory/ledger','stock'),item('退换货与调拨','inventory/operations','return')]],['库存追溯',[item('产品档案','inventory/products','product'),item('批次与分区','inventory/lots'),item('SN 与标签','inventory/serials'),item('操作日志','inventory/events')]]]},
   accounts:{label:'账款管理',title:'账款导航',icon:'money',groups:[

@@ -60,6 +60,8 @@ This is a standalone, sanitized source snapshot with an independent Git history.
 
 ## Updates
 
+- 2026-11-13 — Link freight receipts to sales and show optional workspace update notices.
+
 - 2026-11-13 — Added end-user machine records, QR photo registration, and consistent WebP uploads and downloads.
 
 - 2026-11-13 — Import marketplace CSV orders as sales drafts and assign reusable salesperson commission rules.

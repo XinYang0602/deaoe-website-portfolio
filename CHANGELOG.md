@@ -1,3 +1,8 @@
+## 2026-11-13 · Link freight receipts to sales and show optional workspace update notices.
+
+Record carrier slips against approved sales issues, attach multiple photos, and preview or download WebP receipts. The workspace checks the release manifest every minute and on return without extending the login session or interrupting edits.
+Verified linked records, partial upload retry, WebP bytes and optional refresh behavior with synthetic desktop and mobile browser scenarios.
+
 ## 2026-11-13 — Service users, installed machines and WebP downloads
 
 - Group machines by their actual user across service orders, warranty cards and manual registration. Accept unlisted models and retain QR photos together with the registration, with later photo uploads available.
