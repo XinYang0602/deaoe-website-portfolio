@@ -9,7 +9,7 @@ function deviceUserPage() {
   if (!panel) return;
   try {
    const response = await fetch(deviceUsersUrl, {cache:'no-store'});
-   if (!response.ok) throw Error('读取用户档案失败，请刷新');
+   if (!response.ok) throw Error('读取用户管理失败，请刷新');
    const {users} = await response.json();
    if (!panel.isConnected || request !== directoryRequest) return;
    function draw() {
@@ -27,7 +27,7 @@ function deviceUserPage() {
    draw();
   } catch (error) { if (panel.isConnected) panel.querySelector('[data-profile-list]').textContent=error.message; }
  });
- return title('用户档案','实际使用人的机器、机身二维码和服务记录。','<button class="primary" type="button" data-register-device>登记机器</button>')+
+ return title('用户管理','实际使用人的机器、机身二维码和服务记录。','<button class="primary" type="button" data-register-device>登记机器</button>')+
   '<section class="panel" data-user-directory><div class="toolbar"><input type="search" placeholder="搜索姓名、电话、产品、机身编号或地址" aria-label="搜索使用人或机器"></div><div data-profile-list aria-live="polite">正在读取档案…</div></section>';
 }
 
@@ -42,7 +42,7 @@ function showDeviceUser(user) {
    ${m.orders.length?`<p>关联工单　${m.orders.map(id=>`<button type="button" data-detail="${esc(id)}">${esc(id)}</button>`).join(' ')}</p>`:''}
    ${m.cards.length?`<p>电子保修卡　${m.cards.map(id=>`<button type="button" data-card="${esc(id)}">${esc(id)}</button>`).join(' ')}</p>`:''}</section>`;
  }).join('');
- openModal('用户档案',`<p><strong>${esc(user.name)}</strong>　${esc(user.phone)}</p>${machines}`);
+ openModal('用户管理',`<p><strong>${esc(user.name)}</strong>　${esc(user.phone)}</p>${machines}`);
 }
 
 function machineRegistration(machineKey='') {

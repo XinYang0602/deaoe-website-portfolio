@@ -235,9 +235,6 @@ aside{overflow-y:auto;overscroll-behavior:contain}aside .brand,aside .workspace,
  .workflow-node svg{width:19px;height:19px}
  .workflow-path .workflow-arrow{font-size:20px;flex:0 0 22px;color:#bec8d1}
  .workflow-lane:first-child h2{color:#344252;font-weight:600}
- .workflow-lane:first-child .workflow-node{min-height:78px;font-weight:600}
- .workflow-lane:first-child .workflow-icon{width:35px;height:35px;flex-basis:35px}
- .workflow-lane:first-child .workflow-node svg{width:23px;height:23px}
  .workflow-related{padding:13px 12px;background:#fcfcfd}
  .workflow-related h2{font-size:12px;color:#687684;margin-bottom:9px;font-weight:500}
  .workflow-related-link{padding:6px 0;gap:6px;color:#63788a;font-size:11px}
@@ -305,3 +302,6 @@ aside{overflow-y:auto;overscroll-behavior:contain}aside .brand,aside .workspace,
  .service-map{grid-template-columns:repeat(calc(var(--stages) - 1),minmax(0,1fr) 14px) minmax(0,1fr)}
  .service-stage .workflow-node{flex-direction:column;justify-content:center;min-height:66px;gap:3px;padding:4px 0;border-color:transparent}
 }
+
+.workflow-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,112px));gap:4px}
+@media(max-width:700px){.workflow-options{grid-template-columns:repeat(auto-fit,minmax(88px,1fr))}.workflow-options .workflow-node{flex-direction:column;justify-content:center;text-align:center;gap:4px}}

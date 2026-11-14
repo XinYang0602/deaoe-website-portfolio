@@ -77,9 +77,17 @@ with tempfile.TemporaryDirectory(prefix='deaoe-browser-data-') as tmp:
                             assert box['width'] <= 1041, (width,module,'oversized workflow',box)
                             nodes=page.locator('.workflow-node').all()
                             assert all(n.bounding_box()['height'] <= 90 for n in nodes), (width,module,'oversized nodes')
+                        if module=='settings':
+                            expect(page.locator('.workflow-options')).to_have_count(3)
+                            expect(page.locator('.service-wire')).to_have_count(0)
+                        if module=='sales':
+                            expect(page.locator('.service-stage[role=group] + svg + div a')).to_have_attribute('href','#inventory/sale')
                         if module=='orders':
-                            peers=page.get_by_role('group',name='并列档案入口')
-                            expect(peers.get_by_role('link',name='用户档案')).to_have_attribute('href','#device-users')
+                            repairs=page.locator('.workflow-node[data-filter="处理中"] svg')
+                            expect(repairs).to_have_count(2)
+                            assert repairs.nth(0).bounding_box()['width']==repairs.nth(1).bounding_box()['width']
+                            peers=page.get_by_role('group',name='并列入口')
+                            expect(peers.get_by_role('link',name='用户管理')).to_have_attribute('href','#device-users')
                             expect(peers.get_by_role('link',name='客户管理')).to_have_attribute('href','#customers')
                             boxes=[link.bounding_box() for link in peers.get_by_role('link').all()]
                             assert abs(boxes[0]['x']-boxes[1]['x'])<2 and boxes[0]['y']<boxes[1]['y']

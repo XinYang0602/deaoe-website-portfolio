@@ -1,3 +1,7 @@
+## 2026-11-13 · Separate independent navigation choices from ordered work and update device-user management artwork.
+
+Manual and imported sales converge at review before dispatch. Independent stock tools and master data use unconnected choices. Both active repair nodes use matching artwork and sizing. The device user icon pairs a person with a range hood.
+
 ## 2026-11-13 · Distinguish device profiles from customers and draw parallel stages in the service workflow.
 
 Stage definitions drive node positions and branch connectors at desktop and mobile widths. Links and status filters retain their original behavior.

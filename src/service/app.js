@@ -3,7 +3,7 @@ let db={settings:{name:'德澳总部',months:36},orders:[],cards:[],stock:[],dea
 let selectedStock=new Set();
 function activeStock(){return db.stock.filter(s=>!s.deleted)}
 function visibleStock(){return activeStock().filter(match).filter(s=>filter==='全部'||s.kind===filter||(filter==='库存不足'&&s.qty<s.min))}
-const pages={'device-users':['用户档案','♧'],dashboard:['工作台','⌂'],orders:['服务管理','▤'],cards:['电子保修卡','▣'],stock:['库存管理','▦'],dealers:['经销商管理','◇'],customers:['客户管理','♧'],settings:['基础设置','⚙']};
+const pages={'device-users':['用户管理','♧'],dashboard:['工作台','⌂'],orders:['服务管理','▤'],cards:['电子保修卡','▣'],stock:['库存管理','▦'],dealers:['经销商管理','◇'],customers:['客户管理','♧'],settings:['基础设置','⚙']};
 async function loadData(renderPage=true){const r=await fetch('/service/api/state',{cache:'no-store'});if(r.status===401){location.replace('/service/');throw new Error('请重新登录')}if(!r.ok)throw new Error('加载失败，请稍后刷新');const result=await r.json();db=result.data;revision=result.revision;csrf=result.csrf;ready=true;if(renderPage)render();}
 async function persist(importing=false, machinePhoto=null){busy=true;document.body.classList.add('saving');try{
  const json=JSON.stringify({revision,data:db,import:importing});
@@ -48,7 +48,7 @@ function render(){page=pages[location.hash.slice(1)]?location.hash.slice(1):'das
  ['dashboard','工作台','⌂','#dashboard'],['sales','销售管理','↑','/service/#inventory/sale'],
  ['accounts','账款管理','¥','#inventory/finance'],['purchasing','采购管理','↓','/service/#inventory/purchase'],['stock','库存管理','▦','/service/#inventory/balances'],
  ['customers','客户管理','♧','#customers'],['orders','服务管理','▤','#orders'],['settings','基础设置','⚙','#settings']
-].map(([k,n,i,url])=>`<a href="${url}" data-section="${k}" class="${(page===k||(k==='customers'&&['cards','dealers'].includes(page)))?'active':''}"><i>${i}</i><span>${n}</span></a>`).join('');$('#crumb').textContent='工作空间 / '+(['cards','dealers'].includes(page)?'客户管理 / ':'')+pages[page][0];$('.workspace b').textContent=db.settings.name;$('#today').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});$('#main').innerHTML=page.startsWith('workflow-')?window.renderWorkflow(page):page==='dashboard'?dashboard():page==='orders'?title('业务管理','安装、维修与派工，在同一处跟进。','<a class="button" href="#device-users">用户档案</a>'+btn('导出工单','export')+btn('新增工单','new-order',true))+`<section class="panel">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索工单、客户、电话或机器编号')}${table(['工单编号 / 日期','类型','客户信息','产品 / 机身编号','销售渠道','状态','服务人员','操作'],orderRows(db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter)))}<div class="table-foot"><span>共 ${db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter).length} 条符合条件的记录</span><span>安装与维修统一受理</span></div></section>`:({'device-users':deviceUserPage,cards,stock,dealers,customers,settings,'customer-history':customerHistory}[page])();}
+].map(([k,n,i,url])=>`<a href="${url}" data-section="${k}" class="${(page===k||(k==='customers'&&['cards','dealers'].includes(page)))?'active':''}"><i>${i}</i><span>${n}</span></a>`).join('');$('#crumb').textContent='工作空间 / '+(['cards','dealers'].includes(page)?'客户管理 / ':'')+pages[page][0];$('.workspace b').textContent=db.settings.name;$('#today').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});$('#main').innerHTML=page.startsWith('workflow-')?window.renderWorkflow(page):page==='dashboard'?dashboard():page==='orders'?title('业务管理','安装、维修与派工，在同一处跟进。','<a class="button" href="#device-users">用户管理</a>'+btn('导出工单','export')+btn('新增工单','new-order',true))+`<section class="panel">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索工单、客户、电话或机器编号')}${table(['工单编号 / 日期','类型','客户信息','产品 / 机身编号','销售渠道','状态','服务人员','操作'],orderRows(db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter)))}<div class="table-foot"><span>共 ${db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter).length} 条符合条件的记录</span><span>安装与维修统一受理</span></div></section>`:({'device-users':deviceUserPage,cards,stock,dealers,customers,settings,'customer-history':customerHistory}[page])();}
 function openModal(h,content){$('#modalBody').innerHTML=`<div class="modal-head"><h2>${h}</h2><button type="button" data-action="close" aria-label="关闭">×</button></div>${content}`;if(!$('#modal').open)$('#modal').showModal()}
 function field(label,name,type='text',value='',extra=''){return `<label>${label}<input name="${name}" type="${type}" value="${esc(value)}" required ${extra}></label>`}
 function select(label,name,items){return `<label>${label}<select name="${name}">${items.map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('')}</select></label>`}
@@ -349,32 +349,55 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
    ['平台与提成',[item('平台订单导入','inventory/platform_orders','document'),item('业务员提成模板','inventory/commissions','money')]],
    ['销售业务',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale'),item('销售出库','inventory/issue'),item('发货单','inventory/shipments','document')]],
    ['销售往来',[item('应收款 / 收款','inventory/finance_ar','money'),item('预收款','inventory/finance_advance_receipt','money'),item('退换货与补发','inventory/operations','return')]]],
-   lanes:[['平台与提成',[item('平台订单导入','inventory/platform_orders','document'),item('业务员提成模板','inventory/commissions','money')]],['销售出货',[item('销售开单','inventory/sale/new'),item('销售单 / 审核','inventory/sale','check'),item('库存查询','inventory/balances','stock')]],['收款与交付',[item('销售出库记录','inventory/issue','stock'),item('发货单','inventory/shipments','document'),item('应收款 / 收款','inventory/finance_ar','money'),item('电子保修卡','cards','card')]],['退换处理',[item('退换货与补发','inventory/operations','return'),item('库存流水','inventory/ledger','stock'),item('往来账款','inventory/finance','money')]]]},
+   lanes:[
+    ['销售发货',[[item('销售开单','inventory/sale/new'),item('平台订单导入','inventory/platform_orders','document')],item('销售单 / 审核','inventory/sale','check'),item('销售出库记录','inventory/issue','stock'),item('发货单','inventory/shipments','document')]],
+    ['收款与售后',[[item('应收款 / 收款','inventory/finance_ar','money'),item('电子保修卡','cards','card'),item('退换货与补发','inventory/operations','return')]]],
+    ['查询与配置',[[item('库存查询','inventory/balances','stock'),item('库存流水','inventory/ledger','stock'),item('往来账款','inventory/finance','money'),item('业务员提成模板','inventory/commissions','money')]]]
+   ]},
   purchasing:{label:'采购管理',title:'采购导航',icon:'purchase',groups:[
    ['采购业务',[item('采购开单','inventory/purchase/new'),item('采购订单 / 审核','inventory/purchase'),item('采购入库','inventory/receipt')]],
    ['供应往来',[item('供应商与往来单位','inventory/parties','user'),item('应付款 / 付款','inventory/finance_ap','money'),item('预付款','inventory/finance_advance_payment','money')]]],
-   lanes:[['到货入库',[item('采购开单','inventory/purchase/new'),item('采购订单 / 审核','inventory/purchase','check'),item('采购入库','inventory/receipt','stock'),item('库存查询','inventory/balances','stock')]],['供应往来',[item('供应商档案','inventory/parties','user'),item('应付款 / 付款','inventory/finance_ap','money'),item('预付款','inventory/finance_advance_payment','money')]]]},
+   lanes:[
+    ['到货入库',[item('采购开单','inventory/purchase/new'),item('采购订单 / 审核','inventory/purchase','check'),item('采购入库','inventory/receipt','stock')]],
+    ['供应往来',[[item('供应商档案','inventory/parties','user'),item('应付款 / 付款','inventory/finance_ap','money'),item('预付款','inventory/finance_advance_payment','money'),item('库存查询','inventory/balances','stock')]]]
+   ]},
   stock:{label:'仓库管理',title:'仓库导航',icon:'stock',groups:[
    ['库存业务',[item('库存查询','inventory/balances','stock'),item('采购入库','inventory/receipt'),item('销售出库','inventory/issue'),item('发货单','inventory/shipments','document'),item('退换货与调拨','inventory/operations','return'),item('库存盘点','inventory/counting','check'),item('组装与拆装','inventory/production'),item('生产模板','inventory/boms'),item('仓位记录','inventory/locations')]],
    ['库存资料',[item('产品档案','inventory/products','product'),item('仓库管理','inventory/warehouses','stock'),item('批次与分区','inventory/lots'),item('SN 与标签','inventory/serials'),item('库存流水','inventory/ledger'),item('打印模板','inventory/templates')]]],
-   lanes:[['货物流转',[item('采购入库','inventory/receipt','purchase'),item('库存查询','inventory/balances','stock'),item('销售出库','inventory/issue','sale')]],['仓库作业',[item('库存盘点','inventory/counting','check'),item('库存流水','inventory/ledger','stock'),item('退换货与调拨','inventory/operations','return')]],['库存追溯',[item('产品档案','inventory/products','product'),item('批次与分区','inventory/lots'),item('SN 与标签','inventory/serials'),item('操作日志','inventory/events')]]]},
+   lanes:[
+    ['出入库业务',[[item('采购入库','inventory/receipt','purchase'),item('销售出库','inventory/issue','sale')]]],
+    ['仓库作业',[[item('库存盘点','inventory/counting','check'),item('退换货与调拨','inventory/operations','return'),item('组装与拆装','inventory/production')]]],
+    ['查询与追溯',[[item('库存查询','inventory/balances','stock'),item('库存流水','inventory/ledger','stock'),item('批次与分区','inventory/lots'),item('SN 与标签','inventory/serials'),item('产品档案','inventory/products','product'),item('操作日志','inventory/events')]]]
+   ]},
   accounts:{label:'账款管理',title:'账款导航',icon:'money',groups:[
    ['收款业务',[item('应收款','inventory/finance_ar','money'),item('预收款','inventory/finance_advance_receipt','money')]],
    ['付款业务',[item('应付款','inventory/finance_ap','money'),item('预付款','inventory/finance_advance_payment','money')]],
    ['往来管理',[item('往来余额与流水','inventory/finance','money'),item('往来单位','inventory/parties','user')]]],
-   lanes:[['销售收款',[item('销售单','inventory/sale','sale'),item('应收款 / 登记收款','inventory/finance_ar','money'),item('往来余额与流水','inventory/finance','document')]],['采购付款',[item('采购入库','inventory/receipt','purchase'),item('应付款 / 登记付款','inventory/finance_ap','money'),item('往来余额与流水','inventory/finance','document')]],['预收与预付',[item('预收款','inventory/finance_advance_receipt','money'),item('往来账款','inventory/finance','money'),item('预付款','inventory/finance_advance_payment','money')]]]},
+   lanes:[
+    ['销售收款',[item('销售单','inventory/sale','sale'),item('应收款 / 登记收款','inventory/finance_ar','money')]],
+    ['采购付款',[item('采购入库','inventory/receipt','purchase'),item('应付款 / 登记付款','inventory/finance_ap','money')]],
+    ['预收与预付',[[item('预收款','inventory/finance_advance_receipt','money'),item('预付款','inventory/finance_advance_payment','money')],item('往来余额与流水','inventory/finance','document')]]
+   ]},
   orders:{label:'服务管理',title:'服务导航',icon:'service',groups:[
    ['服务工单',[item('工单受理','orders/new','intake'),item('待派工','orders','dispatch','待派工'),item('待处理','orders','pending','待处理'),item('处理中','orders','repair','处理中'),item('已完工','orders','check','已完工'),item('已关闭','orders','archive','已关闭'),item('全部工单','orders','document')]],
-   ['客户与设备',[item('用户档案','device-users','profile'),item('客户管理','customers','user'),item('电子保修卡','cards','card'),item('经销商管理','dealers','user')]]],
-   lanes:[['工单处理',[item('工单受理','orders/new','intake'),item('待派工','orders','dispatch','待派工'),item('待处理','orders','pending','待处理'),item('处理中','orders','repair','处理中')]],['完工归档',[item('处理中','orders','repair','处理中'),item('已完工','orders','check','已完工'),item('已关闭','orders','archive','已关闭')]],['服务资料',[[item('用户档案','device-users','profile'),item('客户管理','customers','user')],item('电子保修卡','cards','card'),item('全部工单','orders','document')]]]},
+   ['客户与设备',[item('用户管理','device-users','profile'),item('客户管理','customers','user'),item('电子保修卡','cards','card'),item('经销商管理','dealers','user')]]],
+   lanes:[['工单处理',[item('工单受理','orders/new','intake'),item('待派工','orders','dispatch','待派工'),item('待处理','orders','pending','待处理'),item('处理中','orders','repair','处理中')]],['完工归档',[item('处理中','orders','repair','处理中'),item('已完工','orders','check','已完工'),item('已关闭','orders','archive','已关闭')]],['服务资料',[[item('用户管理','device-users','profile'),item('客户管理','customers','user')],item('电子保修卡','cards','card'),item('全部工单','orders','document')]]]},
   customers:{label:'客户管理',title:'客户导航',icon:'user',groups:[
    ['客户资料',[item('客户与往来单位','inventory/parties','user'),item('业务员管理','inventory/salespeople','user'),item('经销商管理','dealers','user')]],
    ['客户业务',[item('销售开单','inventory/sale/new','sale'),item('电子保修卡','cards','card'),item('全部服务工单','orders','service')]]],
-   lanes:[['客户业务',[item('客户管理','customers','user'),item('销售开单','inventory/sale/new','sale'),item('应收款 / 收款','inventory/finance_ar','money')]],['设备服务',[item('电子保修卡','cards','card'),item('工单受理','orders/new','intake'),item('全部服务工单','orders','document')]]]},
+   lanes:[
+    ['客户资料',[[item('客户管理','customers','user'),item('业务员管理','inventory/salespeople','user'),item('经销商管理','dealers','user')]]],
+    ['客户销售',[item('销售开单','inventory/sale/new','sale'),item('销售单 / 审核','inventory/sale','check'),item('应收款 / 收款','inventory/finance_ar','money')]],
+    ['设备服务',[[item('电子保修卡','cards','card'),item('工单受理','orders/new','intake'),item('全部服务工单','orders','document')]]]
+   ]},
   settings:{label:'基础数据',title:'基础导航',icon:'settings',groups:[
    ['业务资料',[item('产品档案','inventory/products','product'),item('仓库管理','inventory/warehouses','stock'),item('往来单位','inventory/parties','user')]],
    ['系统维护',[item('基础设置','settings','settings'),item('打印模板','inventory/templates','document'),item('操作日志','inventory/events','document')]]],
-   lanes:[['基础建档',[item('产品档案','inventory/products','product'),item('仓库管理','inventory/warehouses','stock'),item('往来单位','inventory/parties','user')]],['业务应用',[item('采购订单','inventory/purchase','purchase'),item('销售单','inventory/sale','sale'),item('库存查询','inventory/balances','stock')]],['系统维护',[item('基础设置','settings','settings'),item('打印模板','inventory/templates','document'),item('操作日志','inventory/events','document')]]]}
+   lanes:[
+    ['基础建档',[[item('产品档案','inventory/products','product'),item('仓库管理','inventory/warehouses','stock'),item('往来单位','inventory/parties','user')]]],
+    ['业务应用',[[item('采购订单','inventory/purchase','purchase'),item('销售单','inventory/sale','sale'),item('库存查询','inventory/balances','stock')]]],
+    ['系统维护',[[item('基础设置','settings','settings'),item('打印模板','inventory/templates','document'),item('操作日志','inventory/events','document')]]]
+   ]}
  };
  // Original 24px outline artwork; no external font or icon CDN dependency.
  const paths={"home":"M3 10 12 3l9 7M5 9v12h5v-7h4v7h5V9","apps":"M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z","document":"M6 3h8l4 4v14H6zM14 3v5h4M9 12h6M9 16h4","sale":"M3 4h9l9 9-8 8-10-10zM7 8h.01","purchase":"M4 8h16l-1 13H5zM8 9V6a4 4 0 0 1 8 0v3","stock":"M3 21V8l9-5 9 5v13M3 21h18M7 21V11h10v10M7 15h10M7 18h10","money":"M4 6V5a2 2 0 0 1 2-2h12v4M4 7h15a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2M21 11h-6v6h6M17 14h.01","user":"M14 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M3 21v-3a7 7 0 0 1 14 0v3M17 4a4 4 0 0 1 0 7M20 14a6 6 0 0 1 2 4v3","service":"M4 13V10a8 8 0 0 1 16 0v3M4 11H2v7h4v-7zM20 11h2v7h-4v-7zM20 18v1a2 2 0 0 1-2 2h-6M10 21h2","settings":"M5 3v5m0 4v9M12 3v11m0 4v3M19 3v2m0 4v12M2 8h6v4H2zM9 14h6v4H9zM16 5h6v4h-6z","card":"M3 4h18v16H3zM3 8h18M7 12h4M7 16h3M14 14l2 2 3-4","check":"M8 4H5v17h14V4h-3M8 3h8v4H8zM8 14l3 3 5-6","return":"M8 4 3 9l5 5M3 9h11a6 6 0 0 1 0 12h-3","star":"m12 3 2.8 5.7 6.3.9-4.6 4.4 1.1 6.3-5.6-3-5.6 3 1.1-6.3L2.9 9.6l6.3-.9z"};
@@ -382,7 +405,7 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
   product:'M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2M7 7l5-2 5 2v6l-5 2-5-2zM7 7l5 2 5-2M12 9v6M7 18h10',
   intake:'M13 3H5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11v-7M1 7h4M1 12h4M1 17h4M8 17h3m1-4 1-4 6-6 3 3-6 6-4 1M18 4l3 3',
   dispatch:'M11 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0M2 21v-3a6 6 0 0 1 12 0v3M14 13h8m-3-3 3 3-3 3',
-  profile:'M3 4h18v16H3z M12 10a2.4 2.4 0 1 1-4.8 0 2.4 2.4 0 0 1 4.8 0 M5.6 17c0-4.8 8-4.8 8 0 M15.5 9h3 M15.5 13h3',
+  profile:'M8.5 8a2.8 2.8 0 1 1-5.6 0 2.8 2.8 0 0 1 5.6 0M1.5 20v-3a4.3 4.3 0 0 1 8.6 0v3 M15 3h4v6l3.5 4v2h-11v-2L15 9z M12 13h10 M14 18l-1 2m5-2-1 2',
   pending:'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 6v6l4 2',
   repair:'M21 3l-4 4-3-3 4-3a6 6 0 0 0-8 8l-7 8a3 3 0 0 0 4 4l8-7a6 6 0 0 0 8-8zM5 19h.01',
   archive:'M3 3h18v5H3zM5 8v13h14V8M9 12h6M9 17l2 2 4-4'
@@ -394,21 +417,22 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
   return x.status?`<button type="button" class="${cls}" data-go="orders" data-filter="${esc(x.status)}">${inner}</button>`:`<a class="${cls}" href="#${esc(x.route)}">${inner}</a>`;
  }
  // Each column is a stage; entries within that stage are independent lanes.
- function serviceMap(nodes){
+ function workflowMap(label,nodes){
   const stages=nodes.map(n=>Array.isArray(n)?n:[n]);
+  if(stages.length===1)return `<div class="workflow-options" role="group" aria-label="${esc(label)}">${stages[0].map(x=>action(x,'workflow-node')).join('')}</div>`;
   const ports=stage=>stage.map((_,i)=>100*(i+.5)/stage.length);
   function wire(left,right){
    const lines=[...ports(left).map(y=>`M0 ${y} H50 V50`),...ports(right).map(y=>`M50 50 V${y} H98 m-7 -3 7 3 -7 3`)];
    return `<svg class="service-wire" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="${lines.join(' ')}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
   }
-  return `<div class="service-map" style="--stages:${stages.length}">${stages.map((stage,i)=>(i?wire(stages[i-1],stage):'')+`<div class="service-stage"${stage.length>1?' role="group" aria-label="并列档案入口"':''}>${stage.map(x=>action(x,'workflow-node')).join('')}</div>`).join('')}</div>`;
+  return `<div class="service-map" style="--stages:${stages.length}">${stages.map((stage,i)=>(i?wire(stages[i-1],stage):'')+`<div class="service-stage"${stage.length>1?' role="group" aria-label="并列入口"':''}>${stage.map(x=>action(x,'workflow-node')).join('')}</div>`).join('')}</div>`;
  }
  Object.entries(modules).forEach(([key,m])=>{pages['workflow-'+key]=[m.title,m.icon];});
  window.deaoeWorkflowModules=modules;
  window.renderWorkflow=route=>{
   const key=route.replace('workflow-',''),m=modules[key];if(!m)return '';
   const related=m.groups.flatMap(g=>g[1]).filter(x=>!x.status);
-  return `<section class="workflow-page" aria-label="${m.title}"><nav class="workflow-switcher" aria-label="业务流程导航">${Object.entries(modules).map(([k,v])=>`<a href="#workflow-${k}" ${key===k?'aria-current="page"':''}>${icon(v.icon)}${v.label}</a>`).join('')}</nav><div class="workflow-canvas"><header class="workflow-canvas-head"><h1>${m.title}</h1><span>点击节点进入业务</span></header><div class="workflow-lanes">${m.lanes.map(([label,nodes])=>`<section class="workflow-lane"><h2>${label}</h2>${key==='orders'?serviceMap(nodes):`<div class="workflow-path">${nodes.map((n,i)=>(i?'<span class="workflow-arrow" aria-hidden="true">→</span>':'')+action(n,'workflow-node')).join('')}</div>`}</section>`).join('')}</div></div><section class="workflow-related"><h2>相关记录与资料</h2>${related.map(x=>action(x,'workflow-related-link')).join('')}</section></section>`;
+  return `<section class="workflow-page" aria-label="${m.title}"><nav class="workflow-switcher" aria-label="业务流程导航">${Object.entries(modules).map(([k,v])=>`<a href="#workflow-${k}" ${key===k?'aria-current="page"':''}>${icon(v.icon)}${v.label}</a>`).join('')}</nav><div class="workflow-canvas"><header class="workflow-canvas-head"><h1>${m.title}</h1><span>点击节点进入业务</span></header><div class="workflow-lanes">${m.lanes.map(([label,nodes])=>`<section class="workflow-lane"><h2>${label}</h2>${workflowMap(label,nodes)}</section>`).join('')}</div></div><section class="workflow-related"><h2>相关记录与资料</h2>${related.map(x=>action(x,'workflow-related-link')).join('')}</section></section>`;
  };
  const menu=document.createElement('section');menu.id='workflow-menu';menu.hidden=true;menu.setAttribute('aria-label','业务功能面板');
  const shade=document.createElement('div');shade.id='workflow-shade';shade.hidden=true;shade.setAttribute('aria-hidden','true');document.body.append(shade,menu);
@@ -455,7 +479,7 @@ document.addEventListener('click',event=>{if(event.target.closest('[data-close-c
  const priorRender=render,priorNewForm=newForm;
  let pickers=new Set(),serviceSelected='';
  function closePickers(){for(const d of [...pickers])d.close();}
- function serviceList(){const rows=db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter);return `<section class="service-register"><div class="service-register-head"><h1>服务工单</h1><div><a class="button" href="#device-users">用户档案</a>${btn('导出工单','export')}${btn('服务开单','new-order',true)}</div></div><div class="service-register-filter">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索单号、客户、电话、产品或机身编号')}<span>共 ${rows.length} 张工单</span></div>${table(['工单编号 / 预约日期','服务类型','客户 / 电话','产品 / 机身编号','服务归属','状态','服务人员','操作'],orderRows(rows).map((html,i)=>html.replace('<tr>',`<tr tabindex="0" data-service-row="${esc(rows[i].id)}">`)))}<section class="service-register-summary" aria-label="工单摘要"></section></section>`;}
+ function serviceList(){const rows=db.orders.filter(match).filter(o=>filter==='全部'||o.status===filter);return `<section class="service-register"><div class="service-register-head"><h1>服务工单</h1><div><a class="button" href="#device-users">用户管理</a>${btn('导出工单','export')}${btn('服务开单','new-order',true)}</div></div><div class="service-register-filter">${tool(['全部','待派工','待处理','处理中','已完工','已关闭'],'搜索单号、客户、电话、产品或机身编号')}<span>共 ${rows.length} 张工单</span></div>${table(['工单编号 / 预约日期','服务类型','客户 / 电话','产品 / 机身编号','服务归属','状态','服务人员','操作'],orderRows(rows).map((html,i)=>html.replace('<tr>',`<tr tabindex="0" data-service-row="${esc(rows[i].id)}">`)))}<section class="service-register-summary" aria-label="工单摘要"></section></section>`;}
  render=function(){priorRender();const on=desktop()&&location.hash==='#orders';$('#main').classList.toggle('service-workspace',on);if(on){$('#main').innerHTML=serviceList();const rows=[...document.querySelectorAll('[data-service-row]')];if(!rows.some(r=>r.dataset.serviceRow===serviceSelected))serviceSelected=rows[0]?.dataset.serviceRow||'';rows.forEach(row=>{const choose=()=>{serviceSelected=row.dataset.serviceRow;summary();};row.onclick=e=>{if(!e.target.closest('button,a'))choose();};row.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target===row){e.preventDefault();choose();}};});summary();}};
  function summary(){const root=$('.service-register-summary'),o=db.orders.find(x=>x.id===serviceSelected);if(!root)return;document.querySelectorAll('[data-service-row]').forEach(row=>row.setAttribute('aria-selected',String(row.dataset.serviceRow===serviceSelected)));root.innerHTML=o?`<h2>工单摘要 <span>${esc(o.id)}</span></h2><div><p><b>服务地址</b> ${esc(o.address)}</p><p><b>需求描述</b> ${esc(o.note)}</p></div><details><summary>处理记录 · ${(o.history||[]).length} 条</summary>${(o.history||[]).map(h=>`<p>${esc(h)}</p>`).join('')}</details>`:'<p>暂无工单记录</p>';}
  newForm=function(action){if(action!=='new-order'||!desktop())return priorNewForm(action);
