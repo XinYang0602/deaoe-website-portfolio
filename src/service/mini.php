@@ -110,7 +110,10 @@ function handleMini(string $path):never{
    if($bytes===false||strlen($bytes)>262144)throw new InvalidArgumentException('头像不能超过256KB');
    $info=@getimagesizefromstring($bytes);
    if(!$info||!in_array($info['mime'],['image/jpeg','image/png'],true)||$info[0]>2048||$info[1]>2048)throw new InvalidArgumentException('请选择2048像素以内的PNG或JPG头像');
-   $image='data:'.$info['mime'].';base64,'.base64_encode($bytes);
+   require_once __DIR__.'/upload-webp.php';
+   $decoded=@imagecreatefromstring($bytes);
+   if(!$decoded)throw new InvalidArgumentException('头像无法解码');
+   $image='data:image/webp;base64,'.base64_encode(serviceEncodeWebp($decoded));
    $q=$db->prepare('INSERT OR REPLACE INTO mini_avatars(user_id,image) VALUES(?,?)');$q->execute([$user['id'],$image]);
    jsonReply(200,['user'=>miniPublicUser($db,$user['id'])]);
   }

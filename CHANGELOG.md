@@ -1,3 +1,9 @@
+## 2026-11-13 — Service users, installed machines and WebP downloads
+
+- Group machines by their actual user across service orders, warranty cards and manual registration. Accept unlisted models and retain QR photos together with the registration, with later photo uploads available.
+- Encode new product photos, thumbnails, machine QR photos and mobile avatars as quality-80 WebP. Explicit downloads use the stored bytes and a WebP filename.
+- Verified registration and downloads with synthetic records in desktop and mobile browser layouts.
+
 ## 2026-11-13 — Marketplace order import and sales commissions
 
 - Map CSV columns to normalized marketplace orders, validate before saving, preserve identifiers, and deduplicate by marketplace, shop, and order. Imports create drafts through the existing approval workflow. The shared intake service is ready for future adapters; live synchronization is not enabled.

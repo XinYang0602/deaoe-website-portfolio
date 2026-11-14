@@ -52,8 +52,10 @@ function handleDataApi():never{
   if($_SERVER['REQUEST_METHOD']==='GET'){$row=$db->query('SELECT * FROM state WHERE id=1')->fetch(PDO::FETCH_ASSOC);jsonReply(200,['revision'=>(int)$row['revision'],'data'=>compatInventory($db,json_decode($row['body'],true)),'csrf'=>$_SESSION['csrf']]);}
   if($_SERVER['REQUEST_METHOD']!=='POST')jsonReply(405,['error'=>'请求方法不支持']);
   if(!hash_equals($_SESSION['csrf'],$_SERVER['HTTP_X_CSRF_TOKEN']??''))jsonReply(403,['error'=>'页面已过期，请刷新后重试']);
-  if((int)($_SERVER['CONTENT_LENGTH']??0)>8000000)jsonReply(413,['error'=>'数据超过 8MB，请联系管理员']);
-  $raw=file_get_contents('php://input',false,null,0,8000001);if(strlen($raw)>8000000)jsonReply(413,['error'=>'数据超过 8MB']);
+  $multipart = str_starts_with($_SERVER['CONTENT_TYPE']??'', 'multipart/form-data');
+  if ($multipart && !isset($_FILES['image'])) throw new InvalidArgumentException('未收到二维码图片，请检查上传大小限制');
+  $raw=$multipart ? ($_POST['state']??'') : file_get_contents('php://input',false,null,0,8000001);
+  if(!is_string($raw)||strlen($raw)>8000000)jsonReply(413,['error'=>'业务数据超过8MB']);
   $input=json_decode($raw,true,512,JSON_THROW_ON_ERROR);validateData($input['data']??null);
   if(!is_int($input['revision']??null))throw new InvalidArgumentException('数据版本不正确');
   $db->exec('BEGIN IMMEDIATE');$row=$db->query('SELECT * FROM state WHERE id=1')->fetch(PDO::FETCH_ASSOC);
@@ -93,6 +95,16 @@ $before=[];foreach($previous['stock'] as $item)$before[$item['id']]=$item;
   unset($card);
   $oldOrders=[];foreach($previous['orders'] as $o)$oldOrders[$o['id']]=$o;
   foreach($input['data']['orders'] as &$o){if(isset($oldOrders[$o['id']])&&$oldOrders[$o['id']]['status']!==$o['status'])$o['publicUpdatedAt']=gmdate('c');}unset($o);
+  if ($multipart) {
+   require_once __DIR__.'/device-users.php';
+   $source=$_POST['photo_source']??''; $id=$_POST['photo_record']??'';
+   if (!in_array($source,['cards','orders'],true) || !is_string($id)) throw new InvalidArgumentException('二维码关联无效');
+   $record=array_column($input['data'][$source],null,'id')[$id]??null;
+   if (!$record || in_array($id,array_column($previous[$source],'id'),true)) throw new InvalidArgumentException('二维码须关联本次新增的设备');
+   deviceUserSchema($db);
+   [, $key]=deviceUserKeys($record,$source.':'.$id);
+   deviceUserPhoto($db,$key,$_FILES['image']);
+  }
   $body=json_encode($input['data'],JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);$rev=(int)$row['revision']+1;$now=gmdate('c');
   $q=$db->prepare('INSERT INTO audit VALUES(?,?,?,?)');$q->execute([$row['revision'],$_SESSION['user'],$now,$row['body']]);
   $q=$db->prepare('UPDATE state SET revision=?,body=?,updated_at=? WHERE id=1');$q->execute([$rev,$body,$now]);$db->exec('COMMIT');

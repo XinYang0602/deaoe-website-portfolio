@@ -34,7 +34,7 @@ $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
 function e(string $s):string{return htmlspecialchars($s,ENT_QUOTES,'UTF-8');}
 function redirectHome():never{header('Location: /service/',true,303);exit;}
 $error='';
-if($_SERVER['REQUEST_METHOD']==='POST' && !in_array($path,['/service/api/ui-preferences','/service/api/column-widths','/service/api/state','/service/api/inventory','/service/api/images'],true)){
+if($_SERVER['REQUEST_METHOD']==='POST' && !in_array($path,['/service/api/ui-preferences','/service/api/column-widths','/service/api/device-users','/service/api/state','/service/api/inventory','/service/api/images'],true)){
  if(!is_string($_POST['csrf']??null)||!hash_equals($_SESSION['csrf'],$_POST['csrf'])){http_response_code(403);exit('页面已过期，请刷新后重试。');}
  if(($_POST['action']??'')==='logout'){$_SESSION=[];session_destroy();setcookie(session_name(),'', ['expires'=>time()-3600,'path'=>'/service/','secure'=>true,'httponly'=>true,'samesite'=>'Strict']);redirectHome();}
  if(($_POST['action']??'')==='login'){
@@ -82,6 +82,7 @@ if($path==='/service/api/inventory'){require __DIR__.'/inventory.php';handleInve
 if($path==='/service/api/ui-preferences'){require __DIR__.'/ui-preferences.php';handleUiPreferences();}
 if($path==='/service/api/images'){require __DIR__.'/images.php';handleImages();}
 if($path==='/service/inventory'){header('Content-Type: text/html; charset=utf-8');readfile(__DIR__.'/inventory.html');exit;}
+if($path==='/service/api/device-users'){require __DIR__.'/device-users.php';handleDeviceUsers();}
 if($path==='/service/api/state'){require __DIR__.'/storage.php';handleDataApi();}
 if(in_array($path,['/service/','/service/index.php','/service/index.html'],true)){
  header('Content-Type: text/html; charset=utf-8');
@@ -89,6 +90,6 @@ if(in_array($path,['/service/','/service/index.php','/service/index.html'],true)
  $logout='<form id="logout-form" method="post" action="/service/" style="margin:0"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="'.e($_SESSION['csrf']).'"><button type="submit">退出登录</button></form>';
  echo str_replace('<span id="today"></span>','<span id="today"></span>'.$logout,$html);exit;
 }
-$files=['/service/order-csv.js'=>['order-csv.js','application/javascript; charset=utf-8'],'/service/sales-tools.js'=>['sales-tools.js','application/javascript; charset=utf-8'],'/service/font-preferences.js'=>['font-preferences.js','application/javascript; charset=utf-8'],'/service/salespeople.js'=>['salespeople.js','application/javascript; charset=utf-8'],'/service/production.js'=>['production.js','application/javascript; charset=utf-8'],'/service/column-widths.js'=>['column-widths.js','application/javascript; charset=utf-8'],'/service/finance.js'=>['finance.js','application/javascript; charset=utf-8'],'/service/phase2.js'=>['phase2.js','application/javascript; charset=utf-8'],'/service/label-templates.js'=>['label-templates.js','application/javascript; charset=utf-8'],'/service/inventory.js'=>['inventory.js','application/javascript; charset=utf-8'],'/service/inventory.css'=>['inventory.css','text/css; charset=utf-8'],'/service/labels.js'=>['labels.js','application/javascript; charset=utf-8'],'/service/qrcode.js'=>['qrcode.js','application/javascript; charset=utf-8'],'/service/app.js'=>['app.js','application/javascript; charset=utf-8'],'/service/style.css'=>['style.css','text/css; charset=utf-8']];
+$files=['/service/device-users.js'=>['device-users.js','application/javascript; charset=utf-8'],'/service/order-csv.js'=>['order-csv.js','application/javascript; charset=utf-8'],'/service/sales-tools.js'=>['sales-tools.js','application/javascript; charset=utf-8'],'/service/font-preferences.js'=>['font-preferences.js','application/javascript; charset=utf-8'],'/service/salespeople.js'=>['salespeople.js','application/javascript; charset=utf-8'],'/service/production.js'=>['production.js','application/javascript; charset=utf-8'],'/service/column-widths.js'=>['column-widths.js','application/javascript; charset=utf-8'],'/service/finance.js'=>['finance.js','application/javascript; charset=utf-8'],'/service/phase2.js'=>['phase2.js','application/javascript; charset=utf-8'],'/service/label-templates.js'=>['label-templates.js','application/javascript; charset=utf-8'],'/service/inventory.js'=>['inventory.js','application/javascript; charset=utf-8'],'/service/inventory.css'=>['inventory.css','text/css; charset=utf-8'],'/service/labels.js'=>['labels.js','application/javascript; charset=utf-8'],'/service/qrcode.js'=>['qrcode.js','application/javascript; charset=utf-8'],'/service/app.js'=>['app.js','application/javascript; charset=utf-8'],'/service/style.css'=>['style.css','text/css; charset=utf-8']];
 if(isset($files[$path])){header('Content-Type: '.$files[$path][1]);readfile(__DIR__.'/'.$files[$path][0]);exit;}
 http_response_code(404);echo '页面不存在';

@@ -200,7 +200,11 @@ function opening(id){const p=product(id),b=data.balances.find(b=>b.product_id===
 function productImageEditor(id){
  return `<section class="wide product-image-editor" data-image-product="${E(id)}"><h3>产品图片</h3><div class="product-edit-gallery">${productImageGallery(id)}</div><label>选择图片<input data-product-image-file type="file" multiple accept="image/jpeg,image/png,image/webp"></label>${id?'<button type="button" data-upload-product-image>上传图片</button>':''}<small>JPG / PNG / WebP，单张不超过 8MB，可多选，张数不限；第一张为主图。${id?'图片单独保存。':'选择后随产品档案保存并上传。'}</small><p data-image-status role="status"></p></section>`;
 }
-function productImageGallery(id){return data.images.filter(i=>i.product_id===id).map(i=>`<a href="/service/api/images?id=${E(i.id)}" target="_blank" rel="noopener"><img tabindex="0" src="/service/api/images?id=${E(i.id)}&thumb=1" alt="${E(i.name)}"></a>`).join('')||'<span class="muted">暂无图片</span>';}
+function productImageLinks(image){
+ const url='/service/api/images?id='+encodeURIComponent(image.id);
+ return `<span class="product-image-links"><a href="${url}" target="_blank" rel="noopener"><img tabindex="0" src="${url}&amp;thumb=1" alt="${E(image.name)}"></a><a href="${url}&amp;download=1" download>下载 WebP</a></span>`;
+}
+function productImageGallery(id){return data.images.filter(i=>i.product_id===id).map(productImageLinks).join('')||'<span class="muted">暂无图片</span>';}
 async function uploadProductImages(section){
  const field=section.querySelector('[data-product-image-file]'),status=section.querySelector('[data-image-status]'),files=[...field.files];
  if(!files.length)return true;
